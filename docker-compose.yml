@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16
+    container_name: girabrasil-db
+    restart: always
+    environment:
+      POSTGRES_USER: girauser
+      POSTGRES_PASSWORD: Teste2026senha
+      POSTGRES_DB: girabrasil
+      POSTGRES_HOST_AUTH_METHOD: md5
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    ports:
+      - "5433:5432"
+    volumes:
+      - girabrasil-data:/var/lib/postgresql/data
+
+volumes:
+  girabrasil-data:

@@ -1,0 +1,20 @@
+# Dependências do Node.js (nunca versiona isso, é gerado automaticamente)
+node_modules/
+
+# Variáveis de ambiente (senhas, chaves de API - NUNCA deve ir pro GitHub)
+.env
+
+# Arquivos de log
+*.log
+npm-debug.log*
+
+# Arquivos de sistema operacional
+.DS_Store
+Thumbs.db
+
+# Pasta de build/dist (caso a gente gere algo compilado no futuro, ex: do React)
+dist/
+build/
+
+# Arquivos de configuração de editor
+.vscode/
