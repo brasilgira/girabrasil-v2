@@ -10,6 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const regioesRoutes = require('./routes/regioes.routes');
 const noticiasRoutes = require('./routes/noticias.routes');
+const comentariosRoutes = require('./routes/comentarios.routes');
 
 app.use('/api/regioes', regioesRoutes);
 
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/noticias', noticiasRoutes);
+app.use('/api/comentarios', comentariosRoutes);
 
 // Rota de teste, só pra confirmar que o servidor está de pé
 app.get('/api/status', (req, res) => {
