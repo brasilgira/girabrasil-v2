@@ -9,6 +9,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const regioesRoutes = require('./routes/regioes.routes');
+const noticiasRoutes = require('./routes/noticias.routes');
 
 app.use('/api/regioes', regioesRoutes);
 
@@ -17,6 +18,8 @@ app.use(express.json());
 
 // Serve os arquivos estáticos do front-end (HTML, CSS, JS puro)
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/api/noticias', noticiasRoutes);
 
 // Rota de teste, só pra confirmar que o servidor está de pé
 app.get('/api/status', (req, res) => {
