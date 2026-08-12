@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GiraBrasil — A natureza brasileira tem uma história para contar</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  /* Estilos específicos da página Início */
+
+  .hero {
+    position: relative;
+    background: var(--cor-floresta);
+    color: var(--cor-texto-claro);
+    padding: 100px 32px 64px;
+    overflow: hidden;
+  }
+  /* Foto de floresta no fundo do hero, com um véu escuro por cima para manter o texto legível */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(22,40,31,0.55), rgba(22,40,31,0.85)),
+                url('assets/hero-floresta.jpg') center/cover;
+    z-index: 0;
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: var(--largura-max);
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    max-width: 16ch;
+    margin: 16px 0 20px;
+  }
+  .hero p.dek {
+    font-size: 1.05rem;
+    color: var(--cor-texto-suave-claro);
+    max-width: 52ch;
+    margin-bottom: 32px;
+  }
+  .hero-botoes { display: flex; gap: 14px; margin-bottom: 56px; }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    padding-top: 28px;
+    border-top: 1px solid var(--cor-borda-escura);
+  }
+  .hero-stats .stat b {
+    display: block;
+    font-family: var(--fonte-titulo);
+    font-size: 1.6rem;
+    font-weight: 500;
+  }
+  .hero-stats .stat span {
+    font-size: 0.82rem;
+    color: var(--cor-texto-suave-claro);
+  }
+
+  /* Seção de notícias em destaque */
+  .secao-noticias { padding: 72px 32px; }
+  .secao-cabecalho { margin-bottom: 36px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .secao-cabecalho h2 { font-size: 2rem; margin-top: 10px; }
+  .secao-cabecalho p { color: var(--cor-texto-suave); margin-top: 8px; max-width: 50ch; }
+  .link-ver-todas { font-size: 0.88rem; font-weight: 600; color: var(--cor-destaque); }
+
+  .grid-destaque {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 40px;
+  }
+
+  .noticia-destaque img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    border-radius: var(--raio);
+    margin-bottom: 18px;
+  }
+  .noticia-destaque h3 {
+    font-size: 1.5rem;
+    margin: 10px 0 10px;
+  }
+  .noticia-destaque p { color: var(--cor-texto-suave); }
+
+  .lista-noticias { display: flex; flex-direction: column; }
+  .item-noticia {
+    display: flex;
+    gap: 16px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .item-noticia:first-child { padding-top: 0; }
+  .item-noticia img {
+    width: 92px;
+    height: 92px;
+    object-fit: cover;
+    border-radius: var(--raio-pequeno);
+    flex-shrink: 0;
+  }
+  .item-noticia h4 { font-size: 0.98rem; font-weight: 600; font-family: var(--fonte-corpo); margin: 6px 0 6px; line-height: 1.35; }
+  .item-noticia .meta { font-size: 0.76rem; color: var(--cor-texto-suave); }
+
+  /* Faixa CTA institucional */
+  .cta-institucional {
+    background: var(--cor-floresta);
+    color: var(--cor-texto-claro);
+    text-align: center;
+    padding: 80px 32px;
+  }
+  .cta-institucional .eyebrow { justify-content: center; display: flex; margin-bottom: 18px; }
+  .cta-institucional h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); max-width: 26ch; margin: 0 auto 18px; }
+  .cta-institucional p { color: var(--cor-texto-suave-claro); max-width: 52ch; margin: 0 auto 32px; }
+  .cta-botoes { display: flex; justify-content: center; gap: 14px; }
+
+  @media (max-width: 860px) {
+    .grid-destaque { grid-template-columns: 1fr; }
+    .hero-stats { flex-wrap: wrap; row-gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site"><span class="folha">◆</span> Gira Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html" class="ativo">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">GiraBot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="#" class="link-entrar">Entrar</a>
+      <a href="#" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow claro">TECNOLOGIA • NATUREZA • BRASIL</div>
+    <h1>A natureza brasileira tem uma história para contar.</h1>
+    <p class="dek">Explore os biomas, descubra espécies, acompanhe notícias ambientais e aprenda de forma interativa.</p>
+    <div class="hero-botoes">
+      <a href="regioes.html" class="botao botao-primario" style="background:var(--cor-texto-claro); color:var(--cor-floresta);">Explorar o Brasil →</a>
+      <a href="girabot.html" class="botao botao-secundario sobre-escuro">Conhecer o GiraBot →</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><b>6</b><span>biomas brasileiros</span></div>
+      <div class="stat"><b>+120 mil</b><span>espécies catalogadas</span></div>
+      <div class="stat"><b>4</b><span>jogos educativos</span></div>
+      <div class="stat"><b>1</b><span>assistente ambiental</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="secao-noticias container">
+  <div class="secao-cabecalho">
+    <div>
+      <div class="eyebrow">JORNALISMO AMBIENTAL</div>
+      <h2>Últimas notícias</h2>
+      <p>Reportagens sobre desmatamento, clima, água e conservação em todo o país.</p>
+    </div>
+    <a href="noticias.html" class="link-ver-todas">Ir para Notícias →</a>
+  </div>
+
+  <!-- ATENÇÃO: os dados abaixo são de exemplo (placeholder).
+       Quando a API de /api/noticias estiver com conteúdo real,
+       esta seção deve ser preenchida via JavaScript (fetch),
+       substituindo os cards estáticos abaixo. -->
+  <div class="grid-destaque">
+    <a href="#" class="noticia-destaque">
+      <img src="assets/noticia-destaque.jpg" alt="">
+      <span class="tag">Desmatamento</span>
+      <h3>Título da notícia em destaque vai aqui</h3>
+      <p>Um parágrafo curto de resumo da notícia, explicando do que se trata a reportagem em uma ou duas linhas.</p>
+    </a>
+
+    <div class="lista-noticias">
+      <a href="#" class="item-noticia">
+        <img src="assets/noticia-1.jpg" alt="">
+        <div>
+          <div class="tag">Queimadas</div>
+          <h4>Título curto da notícia secundária</h4>
+          <div class="meta">Data · Tempo de leitura</div>
+        </div>
+      </a>
+      <a href="#" class="item-noticia">
+        <img src="assets/noticia-2.jpg" alt="">
+        <div>
+          <div class="tag">Biodiversidade</div>
+          <h4>Outro título curto de notícia</h4>
+          <div class="meta">Data · Tempo de leitura</div>
+        </div>
+      </a>
+      <a href="#" class="item-noticia">
+        <img src="assets/noticia-3.jpg" alt="">
+        <div>
+          <div class="tag">Recursos Hídricos</div>
+          <h4>Mais um título de notícia de exemplo</h4>
+          <div class="meta">Data · Tempo de leitura</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="cta-institucional">
+  <div class="eyebrow claro">PROJETO ESCOLAR DE TECNOLOGIA</div>
+  <h2>Onde a tecnologia ajuda a entender a natureza brasileira.</h2>
+  <p>O Gira Brasil nasceu como um site informativo e evoluiu para uma plataforma interativa de jornalismo e educação ambiental.</p>
+  <div class="cta-botoes">
+    <a href="sobre.html" class="botao botao-primario" style="background:var(--cor-texto-claro); color:var(--cor-floresta);">Sobre o projeto →</a>
+    <a href="noticias.html" class="botao botao-secundario sobre-escuro">Ler as notícias →</a>
+  </div>
+</section>
+
+<footer class="footer-site">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <div class="logo-site"><span class="folha">◆</span> Gira Brasil</div>
+      <p>Informação, tecnologia e educação para preservar a natureza brasileira.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar</h4>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="noticias.html">Notícias</a></li>
+        <li><a href="regioes.html">Regiões</a></li>
+        <li><a href="jogos.html">Jogos</a></li>
+        <li><a href="girabot.html">GiraBot</a></li>
+        <li><a href="sobre.html">Sobre</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Projeto</h4>
+      <ul>
+        <li><a href="#">Plataforma de educação ambiental</a></li>
+        <li><a href="#">Desenvolvido por estudantes</a></li>
+        <li><a href="#">Versão 2026 — em desenvolvimento</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-base">
+    <span>Gira Brasil © 2026</span>
+    <span>Natureza • Informação • Educação • Tecnologia</span>
+  </div>
+</footer>
+
+</body>
+</html>
