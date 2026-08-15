@@ -1,0 +1,76 @@
+/* ==========================================================================
+   GiraBrasil — Estilos da página Notícias
+   Importa base.css. Reaproveita o mesmo estilo de cartão de notícia
+   usado na Início, adaptado pra um grid de 3 colunas.
+   ========================================================================== */
+
+.pagina-titulo {
+  padding: 56px 32px 40px;
+  max-width: var(--largura-max);
+  margin: 0 auto;
+}
+.pagina-titulo h1 {
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  max-width: 22ch;
+  margin-bottom: 14px;
+}
+.pagina-titulo p {
+  color: var(--cor-texto-suave);
+  max-width: 56ch;
+}
+
+.secao-noticias-grid {
+  padding: 0 32px 96px;
+  max-width: var(--largura-max);
+  margin: 0 auto;
+}
+
+.grid-noticias {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.card-noticia {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Espaço reservado pra imagem — ainda sem notícias reais, então fica
+   só um retângulo neutro no lugar. Quando o conteúdo real existir,
+   isso vira uma <img src="..."> de verdade. */
+.card-noticia-imagem {
+  width: 100%;
+  aspect-ratio: 16/10;
+  border-radius: var(--raio);
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+  margin-bottom: 16px;
+}
+
+.card-noticia-corpo .tag { margin-bottom: 12px; }
+
+.card-noticia h3 {
+  font-size: 1.15rem;
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.card-noticia p {
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+.card-noticia-meta {
+  font-size: 0.76rem;
+  color: var(--cor-texto-suave);
+  margin-top: auto;
+}
+
+@media (max-width: 980px) {
+  .grid-noticias { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .grid-noticias { grid-template-columns: 1fr; }
+}
