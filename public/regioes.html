@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regiões — GiraBrasil</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  /* Estilos específicos da página Regiões */
+
+  .pagina-titulo {
+    padding: 56px 32px 40px;
+    max-width: var(--largura-max);
+    margin: 0 auto;
+  }
+  .pagina-titulo h1 {
+    font-size: clamp(2rem, 3.6vw, 2.8rem);
+    max-width: 20ch;
+    margin-bottom: 14px;
+  }
+  .pagina-titulo p {
+    color: var(--cor-texto-suave);
+    max-width: 56ch;
+  }
+
+  .secao-regioes {
+    padding: 0 32px 96px;
+    max-width: var(--largura-max);
+    margin: 0 auto;
+  }
+
+  .grid-regioes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  /* Card que envolve o mapa + os botões de seleção */
+  .mapa-card {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background: var(--cor-fundo-alt);
+    padding: 32px;
+  }
+
+  /* Espaço reservado pro mapa em SVG que os colegas vão produzir.
+     Por enquanto é só um placeholder visual — sem geometria real aqui. */
+  .mapa-placeholder {
+    aspect-ratio: 4/5;
+    border: 1.5px dashed var(--cor-borda);
+    border-radius: var(--raio);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    margin-bottom: 24px;
+    color: var(--cor-texto-suave);
+    font-size: 0.85rem;
+  }
+
+  .region-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pill-regiao {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--cor-borda);
+    background: transparent;
+    font-family: var(--fonte-corpo);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .pill-regiao:hover { border-color: var(--cor-floresta); }
+  .pill-regiao.ativo {
+    background: var(--cor-floresta);
+    border-color: var(--cor-floresta);
+    color: var(--cor-texto-claro);
+  }
+
+  /* Painel da direita — seu conteúdo é substituído via JS (ver js/regioes.js) */
+  .painel-regiao img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    border-radius: var(--raio);
+    margin-bottom: 20px;
+  }
+  .painel-regiao .tag { margin-bottom: 14px; }
+  .painel-regiao h2 { font-size: 2rem; margin-bottom: 10px; }
+  .painel-estados {
+    color: var(--cor-texto-suave);
+    font-size: 0.92rem;
+    margin-bottom: 18px;
+  }
+  .painel-descricao {
+    color: var(--cor-texto);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+  .painel-subtitulo {
+    font-family: var(--fonte-corpo);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 12px;
+  }
+  .lista-temas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .lista-noticias-regiao {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 32px;
+  }
+  .item-noticia-regiao {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .item-noticia-regiao:first-child { padding-top: 0; }
+  .item-noticia-regiao h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: var(--fonte-corpo);
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .item-noticia-regiao .meta {
+    font-size: 0.76rem;
+    color: var(--cor-texto-suave);
+  }
+
+  .painel-botoes { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .grid-regioes { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html" class="ativo">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">GiraBot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="#" class="link-entrar">Entrar</a>
+      <a href="#" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<div class="pagina-titulo">
+  <div class="eyebrow">GEOGRAFIA E BIOMAS</div>
+  <h1>O Brasil visto por suas regiões.</h1>
+  <p>Selecione uma região para conhecer seus estados, biomas predominantes, biodiversidade e os temas ambientais em pauta.</p>
+</div>
+
+<section class="secao-regioes">
+  <div class="grid-regioes">
+
+    <div class="mapa-card">
+      <!-- Espaço reservado para o mapa do Brasil em SVG (produzido pelos colegas em vetor).
+           Por enquanto os botões abaixo é que controlam qual região aparece no painel da direita. -->
+      <div class="mapa-placeholder">
+        Mapa do Brasil (SVG)<br>a ser inserido aqui
+      </div>
+
+      <div class="region-pills">
+        <button class="pill-regiao ativo" data-regiao="norte">Norte</button>
+        <button class="pill-regiao" data-regiao="nordeste">Nordeste</button>
+        <button class="pill-regiao" data-regiao="centro-oeste">Centro-Oeste</button>
+        <button class="pill-regiao" data-regiao="sudeste">Sudeste</button>
+        <button class="pill-regiao" data-regiao="sul">Sul</button>
+      </div>
+    </div>
+
+    <!-- Preenchido dinamicamente por js/regioes.js -->
+    <div class="painel-regiao"></div>
+
+  </div>
+</section>
+
+<footer class="footer-site">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <div class="logo-site">Gira Brasil</div>
+      <p>Informação, tecnologia e educação para preservar a natureza brasileira.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar</h4>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="noticias.html">Notícias</a></li>
+        <li><a href="regioes.html">Regiões</a></li>
+        <li><a href="jogos.html">Jogos</a></li>
+        <li><a href="girabot.html">GiraBot</a></li>
+        <li><a href="sobre.html">Sobre</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Projeto</h4>
+      <ul>
+        <li><a href="#">Plataforma de educação ambiental</a></li>
+        <li><a href="#">Desenvolvido por estudantes</a></li>
+        <li><a href="#">Versão 2026 — em desenvolvimento</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-base">
+    <span>Gira Brasil © 2026</span>
+    <span>Natureza • Informação • Educação • Tecnologia</span>
+  </div>
+</footer>
+
+<script src="js/regioes.js" defer></script>
+
+</body>
+</html>
