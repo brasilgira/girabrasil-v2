@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GiraBot — GiraBrasil</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/girabot.css">
+</head>
+<body class="pagina-girabot">
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html" class="ativo">GiraBot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="#" class="link-entrar">Entrar</a>
+      <a href="#" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<div class="girabot-layout">
+
+  <!-- Camada escura que aparece atrás da sidebar quando ela está aberta,
+       clicar nela também fecha (ver js/girabot.js) -->
+  <div class="girabot-overlay" id="girabotOverlay"></div>
+
+  <!-- Sidebar retrátil: escondida por padrão (fora da tela à esquerda),
+       recebe a classe .aberta via JS pra deslizar pra dentro -->
+  <aside class="girabot-sidebar" id="girabotSidebar">
+    <div class="sidebar-cabecalho">
+      <span>Conversas</span>
+      <button class="botao-fechar-sidebar" id="botaoFecharSidebar" aria-label="Fechar menu">✕</button>
+    </div>
+
+    <button class="botao-nova-conversa">+ Nova conversa</button>
+
+    <!-- ATENÇÃO: lista de exemplo (placeholder). O GiraBot ainda não tem
+         backend/persistência de conversas — quando existir, isso deve
+         vir de uma consulta real (API ou localStorage), não fixo no HTML. -->
+    <div class="sidebar-historico">
+      <span class="sidebar-secao-titulo">Recentes</span>
+      <button class="item-historico">Qual bioma é mais ameaçado?</button>
+      <button class="item-historico">Animais em extinção na Amazônia</button>
+      <button class="item-historico">O que são rios voadores?</button>
+    </div>
+  </aside>
+
+  <main class="girabot-main">
+
+    <div class="girabot-topbar">
+      <button class="botao-menu" id="botaoAbrirSidebar" aria-label="Abrir menu de conversas">☰</button>
+      <span class="girabot-topbar-titulo">Gira-Bot</span>
+    </div>
+
+    <div class="girabot-conteudo">
+
+      <!-- Estado inicial / boas-vindas. Recebe a classe .escondido via JS
+           assim que o usuário envia a primeira mensagem (fade out suave). -->
+      <div class="estado-vazio" id="estadoVazio">
+        <div class="estado-vazio-icone">🌿</div>
+        <h1>Olá! Eu sou o <em>Gira-Bot</em></h1>
+        <p>Sua inteligência artificial especializada na natureza e florestas do Brasil. Pergunte sobre biomas, fauna, flora, desmatamento, povos da floresta e muito mais.</p>
+
+        <div class="sugestoes-grid">
+          <button class="sugestao-chip">Qual bioma é mais ameaçado do Brasil?</button>
+          <button class="sugestao-chip">Animais em extinção na Amazônia</button>
+          <button class="sugestao-chip">O que são rios voadores?</button>
+          <button class="sugestao-chip">Como o desmatamento afeta o clima?</button>
+          <button class="sugestao-chip">Povos indígenas e a floresta</button>
+          <button class="sugestao-chip">Diferenças entre os biomas</button>
+        </div>
+      </div>
+
+      <!-- Lista de mensagens da conversa. Começa vazia — o JS injeta os
+           balões (.mensagem.usuario / .mensagem.erro) aqui conforme o
+           usuário interage. -->
+      <div class="chat-mensagens" id="chatMensagens"></div>
+
+    </div>
+
+    <form class="barra-input" id="formEnvio">
+      <input
+        type="text"
+        id="campoMensagem"
+        class="campo-mensagem"
+        placeholder="Pergunte sobre a floresta brasileira..."
+        autocomplete="off"
+      >
+      <button type="submit" class="botao-enviar" aria-label="Enviar mensagem">→</button>
+    </form>
+
+    <p class="girabot-aviso">O Gira-Bot pode cometer erros. Verifique informações importantes com fontes oficiais.</p>
+
+  </main>
+</div>
+
+<script src="js/girabot.js" defer></script>
+
+</body>
+</html>

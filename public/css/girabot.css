@@ -1,0 +1,342 @@
+/* ==========================================================================
+   GiraBrasil — Estilos da página GiraBot
+   Tema segue o padrão do site (fundo creme), com verde-floresta usado
+   com moderação em botões, balões do usuário e destaques.
+   ========================================================================== */
+
+/* Trava a rolagem da página inteira — quem rola é só a área de mensagens,
+   como em qualquer app de chat */
+.pagina-girabot,
+.pagina-girabot body {
+  height: 100%;
+}
+.pagina-girabot {
+  overflow: hidden;
+}
+
+.girabot-layout {
+  display: flex;
+  height: calc(100vh - 74px); /* 74px ≈ altura do header-site fixo */
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- Sidebar retrátil ------------------------------------------------- */
+
+.girabot-sidebar {
+  position: fixed;
+  top: 74px;
+  bottom: 0;
+  left: 0;
+  width: 280px;
+  background: var(--cor-fundo-alt);
+  border-right: 1px solid var(--cor-borda);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 110;
+}
+.girabot-sidebar.aberta {
+  transform: translateX(0);
+}
+
+.sidebar-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--fonte-titulo);
+  font-size: 1.05rem;
+}
+
+.botao-fechar-sidebar {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--cor-texto-suave);
+  cursor: pointer;
+  line-height: 1;
+}
+.botao-fechar-sidebar:hover { color: var(--cor-texto); }
+
+.botao-nova-conversa {
+  padding: 10px 14px;
+  border-radius: var(--raio-pequeno);
+  border: 1.5px solid var(--cor-borda);
+  background: transparent;
+  font-family: var(--fonte-corpo);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s ease;
+}
+.botao-nova-conversa:hover { border-color: var(--cor-floresta); }
+
+.sidebar-secao-titulo {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-texto-suave);
+  margin-bottom: 4px;
+}
+
+.sidebar-historico {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-historico {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: var(--raio-pequeno);
+  font-family: var(--fonte-corpo);
+  font-size: 0.86rem;
+  color: var(--cor-texto-suave);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.item-historico:hover {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+}
+
+/* Camada escura por trás da sidebar, só aparece (e captura cliques)
+   quando a sidebar está aberta */
+.girabot-overlay {
+  position: fixed;
+  inset: 74px 0 0 0;
+  background: rgba(22, 40, 31, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 105;
+}
+.girabot-overlay.visivel {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- Área principal do chat --------------------------------------------- */
+
+.girabot-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+}
+
+.girabot-topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+}
+
+.botao-menu {
+  background: none;
+  border: 1.5px solid var(--cor-borda);
+  border-radius: var(--raio-pequeno);
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--cor-texto);
+  transition: border-color 0.2s ease;
+}
+.botao-menu:hover { border-color: var(--cor-floresta); }
+
+.girabot-topbar-titulo {
+  font-family: var(--fonte-titulo);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* Contêiner relativo: o estado vazio fica sobreposto (absolute) por cima
+   da lista de mensagens, que ocupa o espaço normalmente por baixo */
+.girabot-conteudo {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* --- Estado vazio / boas-vindas ----------------------------------------- */
+
+.estado-vazio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+  overflow-y: auto;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  opacity: 1;
+}
+/* Classe adicionada via JS ao enviar a primeira mensagem — some suavemente */
+.estado-vazio.escondido {
+  opacity: 0;
+  transform: translateY(-14px);
+  pointer-events: none;
+}
+
+.estado-vazio-icone {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+}
+
+.estado-vazio h1 {
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin-bottom: 12px;
+}
+.estado-vazio h1 em {
+  font-style: italic;
+  color: var(--cor-destaque);
+}
+
+.estado-vazio > p {
+  color: var(--cor-texto-suave);
+  max-width: 52ch;
+  margin-bottom: 32px;
+}
+
+.sugestoes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 640px;
+  width: 100%;
+}
+
+.sugestao-chip {
+  padding: 12px 16px;
+  border-radius: var(--raio);
+  border: 1.5px solid var(--cor-borda);
+  background: var(--cor-fundo-alt);
+  font-family: var(--fonte-corpo);
+  font-size: 0.86rem;
+  color: var(--cor-texto);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.sugestao-chip:hover {
+  border-color: var(--cor-floresta);
+  background: var(--cor-fundo);
+}
+
+/* --- Lista de mensagens --------------------------------------------- */
+
+.chat-mensagens {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px 24px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.mensagem {
+  max-width: 72%;
+  padding: 12px 16px;
+  border-radius: var(--raio);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.mensagem.usuario {
+  align-self: flex-end;
+  background: var(--cor-floresta);
+  color: var(--cor-texto-claro);
+  border-bottom-right-radius: 4px;
+}
+
+.mensagem.erro {
+  align-self: flex-start;
+  background: #FBEDE4;
+  border: 1px solid var(--cor-alerta);
+  color: #8A4420;
+  border-bottom-left-radius: 4px;
+}
+
+/* --- Barra de input ------------------------------------------------- */
+
+.barra-input {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.campo-mensagem {
+  flex: 1;
+  padding: 13px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--cor-borda);
+  background: var(--cor-fundo-alt);
+  font-family: var(--fonte-corpo);
+  font-size: 0.92rem;
+  color: var(--cor-texto);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.campo-mensagem:focus { border-color: var(--cor-floresta); }
+
+.botao-enviar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--cor-floresta);
+  color: var(--cor-texto-claro);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.botao-enviar:hover { background: var(--cor-floresta-hover); }
+
+.girabot-aviso {
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--cor-texto-suave);
+  padding-bottom: 14px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  .sugestoes-grid { grid-template-columns: 1fr; }
+  .girabot-sidebar { width: 240px; }
+}
