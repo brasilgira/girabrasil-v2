@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/base.css">
 <style>
   /* Estilos específicos da página Início */
- 
+
   .hero {
     position: relative;
     background: var(--cor-floresta);
@@ -42,7 +42,7 @@
     margin-bottom: 32px;
   }
   .hero-botoes { display: flex; gap: 14px; margin-bottom: 56px; }
- 
+
   .hero-stats {
     display: flex;
     gap: 48px;
@@ -59,20 +59,20 @@
     font-size: 0.82rem;
     color: var(--cor-texto-suave-claro);
   }
- 
+
   /* Seção de notícias em destaque */
   .secao-noticias { padding: 72px 32px; }
   .secao-cabecalho { margin-bottom: 36px; display: flex; justify-content: space-between; align-items: flex-end; }
   .secao-cabecalho h2 { font-size: 2rem; margin-top: 10px; }
   .secao-cabecalho p { color: var(--cor-texto-suave); margin-top: 8px; max-width: 50ch; }
   .link-ver-todas { font-size: 0.88rem; font-weight: 600; color: var(--cor-destaque); }
- 
+
   .grid-destaque {
     display: grid;
     grid-template-columns: 1.3fr 1fr;
     gap: 40px;
   }
- 
+
   .noticia-destaque img {
     width: 100%;
     aspect-ratio: 16/10;
@@ -85,7 +85,7 @@
     margin: 10px 0 10px;
   }
   .noticia-destaque p { color: var(--cor-texto-suave); }
- 
+
   .lista-noticias { display: flex; flex-direction: column; }
   .item-noticia {
     display: flex;
@@ -103,7 +103,7 @@
   }
   .item-noticia h4 { font-size: 0.98rem; font-weight: 600; font-family: var(--fonte-corpo); margin: 6px 0 6px; line-height: 1.35; }
   .item-noticia .meta { font-size: 0.76rem; color: var(--cor-texto-suave); }
- 
+
   /* Faixa CTA institucional */
   .cta-institucional {
     background: var(--cor-floresta);
@@ -115,7 +115,7 @@
   .cta-institucional h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); max-width: 26ch; margin: 0 auto 18px; }
   .cta-institucional p { color: var(--cor-texto-suave-claro); max-width: 52ch; margin: 0 auto 32px; }
   .cta-botoes { display: flex; justify-content: center; gap: 14px; }
- 
+
   @media (max-width: 860px) {
     .grid-destaque { grid-template-columns: 1fr; }
     .hero-stats { flex-wrap: wrap; row-gap: 20px; }
@@ -123,7 +123,7 @@
 </style>
 </head>
 <body>
- 
+
 <header class="header-site">
   <div class="header-inner">
     <a href="index.html" class="logo-site">Gira Brasil</a>
@@ -141,7 +141,7 @@
     </div>
   </div>
 </header>
- 
+
 <section class="hero">
   <div class="hero-inner">
     <div class="eyebrow claro">TECNOLOGIA • NATUREZA • BRASIL</div>
@@ -159,7 +159,7 @@
     </div>
   </div>
 </section>
- 
+
 <section class="secao-noticias container">
   <div class="secao-cabecalho">
     <div>
@@ -169,21 +169,21 @@
     </div>
     <a href="noticias.html" class="link-ver-todas">Ir para Notícias →</a>
   </div>
- 
+
   <!-- ATENÇÃO: os dados abaixo são de exemplo (placeholder).
        Quando a API de /api/noticias estiver com conteúdo real,
        esta seção deve ser preenchida via JavaScript (fetch),
        substituindo os cards estáticos abaixo. -->
   <div class="grid-destaque">
-    <a href="#" class="noticia-destaque">
+    <a href="noticia.html" class="noticia-destaque">
       <img src="assets/noticias/news-desmatamento.jpg" alt="Área de floresta desmatada">
       <span class="tag">Desmatamento</span>
       <h3>Título da notícia em destaque vai aqui</h3>
       <p>Um parágrafo curto de resumo da notícia, explicando do que se trata a reportagem em uma ou duas linhas.</p>
     </a>
- 
+
     <div class="lista-noticias">
-      <a href="#" class="item-noticia">
+      <a href="noticia.html" class="item-noticia">
         <img src="assets/noticias/news-queimadas.jpg" alt="Fumaça de queimada no horizonte">
         <div>
           <div class="tag">Queimadas</div>
@@ -191,7 +191,7 @@
           <div class="meta">Data · Tempo de leitura</div>
         </div>
       </a>
-      <a href="#" class="item-noticia">
+      <a href="noticia.html" class="item-noticia">
         <img src="assets/noticias/news-biodiversidade.jpg" alt="Onça-pintada às margens de um rio">
         <div>
           <div class="tag">Biodiversidade</div>
@@ -199,7 +199,7 @@
           <div class="meta">Data · Tempo de leitura</div>
         </div>
       </a>
-      <a href="#" class="item-noticia">
+      <a href="noticia.html" class="item-noticia">
         <img src="assets/noticias/news-agua.jpg" alt="Rio de águas claras cercado por vegetação">
         <div>
           <div class="tag">Recursos Hídricos</div>
@@ -210,7 +210,7 @@
     </div>
   </div>
 </section>
- 
+
 <section class="cta-institucional">
   <div class="eyebrow claro">PROJETO ESCOLAR DE TECNOLOGIA</div>
   <h2>Onde a tecnologia ajuda a entender a natureza brasileira.</h2>
@@ -220,7 +220,7 @@
     <a href="noticias.html" class="botao botao-secundario sobre-escuro">Ler as notícias →</a>
   </div>
 </section>
- 
+
 <footer class="footer-site">
   <div class="footer-inner">
     <div class="footer-marca">
@@ -252,6 +252,6 @@
     <span>Natureza • Informação • Educação • Tecnologia</span>
   </div>
 </footer>
- 
+
 </body>
 </html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desmatamento na Amazônia — GiraBrasil</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/noticia.css">
+
+<!-- ATENÇÃO: esta é a única página do site que usa React — é a "ilha"
+     combinada no planejamento do projeto. Carregada via CDN (sem build/Vite),
+     igual decidimos: React + ReactDOM prontos, e o Babel Standalone traduz o
+     JSX pra JavaScript puro direto no navegador (por isso o script principal
+     é do tipo text/babel, mais abaixo). -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+</head>
+<body class="pagina-noticia">
+
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html" class="ativo">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">GiraBot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="#" class="link-entrar">Entrar</a>
+      <a href="#" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<!-- Tudo daqui pra baixo (exceto o footer, que é HTML normal) é renderizado
+     pelo React dentro do #root -->
+<div id="root"></div>
+
+<footer class="footer-site">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <div class="logo-site">Gira Brasil</div>
+      <p>Informação, tecnologia e educação para preservar a natureza brasileira.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar</h4>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="noticias.html">Notícias</a></li>
+        <li><a href="regioes.html">Regiões</a></li>
+        <li><a href="jogos.html">Jogos</a></li>
+        <li><a href="girabot.html">GiraBot</a></li>
+        <li><a href="sobre.html">Sobre</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Projeto</h4>
+      <ul>
+        <li><a href="#">Plataforma de educação ambiental</a></li>
+        <li><a href="#">Desenvolvida por estudantes</a></li>
+        <li><a href="#">Versão 2026 — em desenvolvimento</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-base">
+    <span>Gira Brasil © 2026</span>
+    <span>Natureza • Informação • Educação • Tecnologia</span>
+  </div>
+</footer>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ============================================================================
+// ATENÇÃO: dados de exemplo (placeholder).
+// O schema atual da tabela `noticias` só guarda título e um corpo de texto
+// (conteudo TEXT) — não seções estruturadas, estatísticas, citação em
+// destaque etc. como usadas aqui. Pra esta tela consumir a API de verdade
+// no futuro, o backend provavelmente vai precisar de um campo extra (tipo
+// `conteudo_html` ou `blocos JSONB`) pra guardar essa estrutura rica.
+// Por enquanto, isto é só a prova de que o React está funcionando.
+// ============================================================================
+
+const artigo = {
+  categoria: 'Desmatamento',
+  titulo: 'Desmatamento na Amazônia registra novas áreas de pressão ambiental',
+  deck: 'Novos dados revelam mudanças na cobertura vegetal e reforçam a importância do monitoramento contínuo da floresta.',
+  autor: 'Gira Brasil',
+  dataPublicacao: '15 de agosto de 2026',
+  dataAtualizacao: '15 de agosto de 2026',
+  tempoLeitura: '6 min de leitura',
+  imagemHero: 'assets/noticias/news-desmatamento.jpg',
+  legendaHero: 'Área de floresta amazônica vista de cima. Foto: Gira Brasil.',
+};
+
+const sumario = [
+  { id: 'sec-acontecendo', titulo: 'O que está acontecendo' },
+  { id: 'sec-impactos', titulo: 'Impactos ambientais' },
+  { id: 'sec-porque', titulo: 'Por que isso importa' },
+  { id: 'sec-fazer', titulo: 'O que pode ser feito' },
+];
+
+const leiaTambem = [
+  { categoria: 'Queimadas', titulo: 'Focos de calor aumentam no Pantanal neste período de seca', imagem: 'assets/noticias/news-queimadas.jpg' },
+  { categoria: 'Biodiversidade', titulo: 'Onça-pintada é registrada em nova área de monitoramento', imagem: 'assets/noticias/news-biodiversidade.jpg' },
+];
+
+const relacionadas = [
+  { categoria: 'Queimadas', titulo: 'Focos de calor aumentam no Pantanal neste período de seca', resumo: 'Dados de satélite mostram elevação nos registros de queimadas em relação ao ano anterior.', meta: '12 de agosto de 2026 · 4 min de leitura', imagem: 'assets/noticias/news-queimadas.jpg' },
+  { categoria: 'Biodiversidade', titulo: 'Onça-pintada é registrada em nova área de monitoramento', resumo: 'Câmeras de armadilhas fotográficas confirmam presença da espécie em região antes não mapeada.', meta: '9 de agosto de 2026 · 5 min de leitura', imagem: 'assets/noticias/news-biodiversidade.jpg' },
+  { categoria: 'Recursos Hídricos', titulo: 'Nível de rios na bacia amazônica preocupa pesquisadores', resumo: 'Estudo aponta relação entre desmatamento e alterações no regime hídrico da região.', meta: '5 de agosto de 2026 · 6 min de leitura', imagem: 'assets/noticias/news-agua.jpg' },
+];
+
+// Comentários de exemplo (usuários fictícios), pra já deixar a seção
+// com uma cara mais real
+const comentariosIniciais = [
+  { id: 1, iniciais: 'LC', nome: 'Lucas', data: '14 de agosto', texto: 'É importante que essas informações cheguem para mais pessoas.', curtidas: 12, curtido: false },
+  { id: 2, iniciais: 'MA', nome: 'Marina', data: '14 de agosto', texto: 'Muito boa a reportagem, mostra bem a urgência do monitoramento contínuo da floresta.', curtidas: 7, curtido: false },
+  { id: 3, iniciais: 'RS', nome: 'Rafael', data: '13 de agosto', texto: 'Gostaria de ver mais dados sobre as regiões com maior incidência de alertas.', curtidas: 3, curtido: false },
+];
+
+function RailAcoes({ curtido, salvo, onCurtir, onSalvar, onCompartilhar, onIrComentarios, onFonteMenor, onFonteMaior }) {
+  return (
+    <aside className="rail" aria-label="Ações do artigo">
+      <button className={`rail-btn ${curtido ? 'active' : ''}`} onClick={onCurtir} aria-pressed={curtido} aria-label="Curtir notícia">
+        {curtido ? '♥' : '♡'}<span className="count">Curtir</span>
+      </button>
+      <button className="rail-btn" onClick={onIrComentarios} aria-label="Ir para comentários">
+        💬<span className="count">Comentar</span>
+      </button>
+      <button className="rail-btn" onClick={onCompartilhar} aria-label="Compartilhar">
+        ↗<span className="count">Compartilhar</span>
+      </button>
+      <button className={`rail-btn ${salvo ? 'active' : ''}`} onClick={onSalvar} aria-pressed={salvo} aria-label="Salvar notícia">
+        🔖<span className="count">Salvar</span>
+      </button>
+      <div className="rail-divider"></div>
+      <div className="rail-font">
+        <button onClick={onFonteMenor} aria-label="Diminuir fonte">Aa−</button>
+        <button onClick={onFonteMaior} aria-label="Aumentar fonte">Aa+</button>
+      </div>
+    </aside>
+  );
+}
+
+function RailMobile({ curtido, salvo, onCurtir, onSalvar, onCompartilhar, onIrComentarios }) {
+  return (
+    <div className="mobile-rail" aria-label="Ações do artigo">
+      <button className={curtido ? 'active' : ''} onClick={onCurtir}>{curtido ? '♥' : '♡'}</button>
+      <button onClick={onIrComentarios}>💬</button>
+      <button onClick={onCompartilhar}>↗</button>
+      <button className={salvo ? 'active' : ''} onClick={onSalvar}>🔖</button>
+    </div>
+  );
+}
+
+function ModalCompartilhar({ aberto, onFechar }) {
+  const [copiado, setCopiado] = useState(false);
+
+  function copiarLink() {
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 1800);
+  }
+
+  return (
+    <div className={`modal-overlay ${aberto ? 'open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) onFechar(); }}>
+      <div className="share-modal">
+        <div className="share-header">
+          <h4>Compartilhar</h4>
+          <button onClick={onFechar} aria-label="Fechar">×</button>
+        </div>
+        <div className="share-options">
+          <button className="share-opt" onClick={copiarLink}><span className="ic">🔗</span> Copiar link</button>
+          <a className="share-opt" href="#"><span className="ic">💬</span> WhatsApp</a>
+          <a className="share-opt" href="#"><span className="ic">📷</span> Instagram</a>
+          <a className="share-opt" href="#"><span className="ic">✕</span> X</a>
+          <a className="share-opt" href="#"><span className="ic">📘</span> Facebook</a>
+        </div>
+        <div className={`copy-feedback ${copiado ? 'show' : ''}`}>Link copiado!</div>
+      </div>
+    </div>
+  );
+}
+
+function Comentarios({ comentarios, onCurtirComentario, onEnviar }) {
+  const [texto, setTexto] = useState('');
+
+  function enviar() {
+    const limpo = texto.trim();
+    if (!limpo) return;
+    onEnviar(limpo);
+    setTexto('');
+  }
+
+  return (
+    <section className="comments" id="comentarios">
+      <h2>Comentários</h2>
+      <p className="sub">Compartilhe sua opinião sobre esta notícia.</p>
+
+      <div className="comment-form">
+        <textarea
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          placeholder="Escreva um comentário..."
+          aria-label="Escrever comentário"
+        ></textarea>
+        <div className="comment-form-actions">
+          <button onClick={enviar}>Comentar</button>
+        </div>
+      </div>
+
+      <div className="comment-list">
+        {comentarios.map((c) => (
+          <div className="comment" key={c.id}>
+            <div className="avatar">{c.iniciais}</div>
+            <div className="comment-content">
+              <span className="name">{c.nome}</span><span className="date">{c.data}</span>
+              <p>{c.texto}</p>
+              <div className="comment-actions">
+                <button className={c.curtido ? 'liked' : ''} onClick={() => onCurtirComentario(c.id)}>
+                  {c.curtido ? '♥' : '♡'} {c.curtidas} curtidas
+                </button>
+                {/* "Responder" é só visual por enquanto — sem threading implementado ainda */}
+                <button>Responder</button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function App() {
+  const [curtido, setCurtido] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [fontScale, setFontScale] = useState(1);
+  const [tocAtivo, setTocAtivo] = useState('');
+  const [comentarios, setComentarios] = useState(comentariosIniciais);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--reading-scale', fontScale);
+  }, [fontScale]);
+
+  // Barra de progresso de leitura + sumário lateral acompanhando o scroll +
+  // efeito de revelar os números da faixa de estatísticas
+  useEffect(() => {
+    const progressFill = document.getElementById('progressFill');
+
+    function atualizarProgresso() {
+      const artigoEl = document.querySelector('.article-body');
+      if (!artigoEl) return;
+      const rect = artigoEl.getBoundingClientRect();
+      const total = artigoEl.offsetHeight - window.innerHeight;
+      const rolado = Math.min(Math.max(-rect.top, 0), total);
+      const pct = total > 0 ? (rolado / total) * 100 : 0;
+      if (progressFill) progressFill.style.width = pct + '%';
+    }
+
+    function atualizarSumario() {
+      let atual = null;
+      sumario.forEach((item) => {
+        const el = document.getElementById(item.id);
+        if (el && el.getBoundingClientRect().top < 140) atual = item.id;
+      });
+      setTocAtivo(atual);
+    }
+
+    function aoRolar() {
+      atualizarProgresso();
+      atualizarSumario();
+    }
+
+    document.addEventListener('scroll', aoRolar, { passive: true });
+    aoRolar();
+
+    const statCells = document.querySelectorAll('.stat-cell');
+    const observer = new IntersectionObserver((entradas) => {
+      entradas.forEach((entrada) => {
+        if (entrada.isIntersecting) entrada.target.classList.add('in-view');
+      });
+    }, { threshold: 0.4 });
+    statCells.forEach((c) => observer.observe(c));
+
+    return () => {
+      document.removeEventListener('scroll', aoRolar);
+      observer.disconnect();
+    };
+  }, []);
+
+  function alternarCurtida() {
+    setCurtido((atual) => !atual);
+  }
+
+  function irParaComentarios() {
+    document.getElementById('comentarios').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function curtirComentario(id) {
+    setComentarios((lista) =>
+      lista.map((c) =>
+        c.id === id
+          ? { ...c, curtido: !c.curtido, curtidas: c.curtido ? c.curtidas - 1 : c.curtidas + 1 }
+          : c
+      )
+    );
+  }
+
+  function enviarComentario(texto) {
+    const novo = {
+      id: Date.now(),
+      iniciais: 'VC',
+      nome: 'Você',
+      data: 'agora',
+      texto,
+      curtidas: 0,
+      curtido: false,
+    };
+    setComentarios((lista) => [novo, ...lista]);
+  }
+
+  return (
+    <React.Fragment>
+
+      <div className="breadcrumb">
+        <a href="index.html">Início</a><span className="sep">/</span>
+        <a href="noticias.html">Notícias</a><span className="sep">/</span>
+        <span className="current">{artigo.categoria}</span>
+      </div>
+
+      <header className="article-header">
+        <span className="category-badge">{artigo.categoria}</span>
+        <h1 className="headline">{artigo.titulo}</h1>
+        <p className="deck">{artigo.deck}</p>
+        <div className="meta-row">
+          <span className="author">Por {artigo.autor}</span>
+          <span className="meta-dot"></span>
+          <span>{artigo.dataPublicacao}</span>
+          <span className="meta-dot"></span>
+          <span>Atualizado em {artigo.dataAtualizacao}</span>
+          <span className="meta-dot"></span>
+          <span>{artigo.tempoLeitura}</span>
+        </div>
+      </header>
+
+      <div className="hero">
+        <div className="hero-frame">
+          <img src={artigo.imagemHero} alt="Fotografia aérea de área de floresta amazônica com trecho desmatado ao fundo" />
+        </div>
+      </div>
+      <p className="hero-caption">{artigo.legendaHero}</p>
+
+      <div className="layout">
+
+        <RailAcoes
+          curtido={curtido}
+          salvo={salvo}
+          onCurtir={alternarCurtida}
+          onSalvar={() => setSalvo((s) => !s)}
+          onCompartilhar={() => setModalAberto(true)}
+          onIrComentarios={irParaComentarios}
+          onFonteMenor={() => setFontScale((s) => Math.max(s - 0.1, 0.85))}
+          onFonteMaior={() => setFontScale((s) => Math.min(s + 0.1, 1.3))}
+        />
+
+        {/* ATENÇÃO: o corpo do artigo abaixo é texto de exemplo (placeholder),
+            igual ao resto da notícia — não vem de nenhuma API ainda */}
+        <article className="article-body">
+          <h2 id="sec-intro">Introdução</h2>
+          <p>Imagens de satélite analisadas nas últimas semanas mostram um avanço expressivo do desmatamento em regiões da Amazônia Legal historicamente associadas à expansão de atividades agropecuárias. O aumento chama atenção de pesquisadores e órgãos ambientais, que reforçam a necessidade de monitoramento contínuo e ações coordenadas de fiscalização.</p>
+          <p>Segundo dados preliminares, a área afetada nos últimos doze meses é significativamente maior do que a registrada no mesmo período do ciclo anterior, revertendo parte da tendência de queda observada em anos recentes.</p>
+
+          <h2 id="sec-acontecendo">O que está acontecendo</h2>
+          <p>O monitoramento por satélite identificou novos polígonos de desmatamento concentrados principalmente ao longo do chamado "arco do desmatamento", faixa que corta o sul e o sudeste da Amazônia. A maior parte da vegetação suprimida se converteu, no curto prazo, em pastagens e áreas de cultivo.</p>
+          <ul>
+            <li>Abertura de novas estradas não oficiais facilitando o acesso a áreas antes preservadas.</li>
+            <li>Aumento de queimadas associadas à limpeza de terreno para uso agropecuário.</li>
+            <li>Concentração de alertas em unidades de conservação e terras indígenas no entorno da floresta.</li>
+          </ul>
+
+          <div className="stat-strip">
+            <div className="stat-cell"><span className="stat-num">+18%</span><span className="stat-label">Aumento registrado na área afetada em relação ao ciclo anterior.</span></div>
+            <div className="stat-cell"><span className="stat-num">6</span><span className="stat-label">Biomas brasileiros monitorados pelos sistemas de alerta ambiental.</span></div>
+            <div className="stat-cell"><span className="stat-num">120 mil+</span><span className="stat-label">Espécies já catalogadas nas regiões de floresta acompanhadas.</span></div>
+          </div>
+
+          <h2 id="sec-impactos">Os impactos ambientais</h2>
+          <p>A perda de cobertura vegetal em larga escala compromete diretamente a capacidade da floresta de regular o clima regional, armazenar carbono e manter o ciclo de chuvas que abastece boa parte do território brasileiro. Especialistas apontam que a fragmentação de grandes áreas contínuas também isola populações de fauna e flora, reduzindo a resiliência dos ecossistemas.</p>
+          <p><strong>O desmatamento acumulado também eleva o risco de a floresta atingir um ponto de savanização</strong> em regiões mais secas, um processo de degradação que pode ser difícil de reverter no longo prazo.</p>
+
+          <div className="quote-block">
+            <blockquote>A preservação da floresta depende de informação, monitoramento e participação da sociedade.</blockquote>
+            <cite>— Equipe de Monitoramento Ambiental, Gira Brasil</cite>
+          </div>
+
+          <h3 id="sec-porque">Por que isso importa?</h3>
+          <p>A Amazônia desempenha um papel central na estabilidade climática da América do Sul. Mudanças na cobertura florestal afetam desde o regime de chuvas em regiões agrícolas distantes até a disponibilidade de água em grandes centros urbanos, tornando o tema relevante para todo o país — não apenas para quem vive próximo à floresta.</p>
+
+          <h2 id="sec-fazer">O que pode ser feito</h2>
+          <p>Órgãos de fiscalização ambiental têm reforçado o uso de tecnologia de monitoramento em tempo real para identificar focos de desmatamento com mais agilidade. Entre as medidas discutidas por especialistas estão:</p>
+          <ul>
+            <li>Ampliação da fiscalização em áreas de maior incidência de alertas.</li>
+            <li>Incentivo a cadeias produtivas livres de desmatamento.</li>
+            <li>Fortalecimento da proteção de terras indígenas e unidades de conservação.</li>
+            <li>Investimento em <a className="inline-link" href="#">tecnologias de monitoramento por satélite</a> acessíveis a comunidades locais.</li>
+          </ul>
+          <p>Iniciativas de ciência cidadã e plataformas educativas, como o próprio Gira Brasil, também têm papel importante ao aproximar o público desses dados e estimular o acompanhamento contínuo da situação da floresta.</p>
+
+          <div className="region-card">
+            <span className="region-eyebrow">Esta notícia está relacionada</span>
+            <h3 className="region-name">Amazônia</h3>
+            <p className="region-desc">Explore informações sobre o bioma, espécies, características e principais desafios ambientais da maior floresta tropical do planeta.</p>
+            <a className="region-btn" href="regioes.html">Explorar região →</a>
+          </div>
+        </article>
+
+        <aside className="sidebar">
+          <div className="side-block">
+            <div className="side-title">Neste artigo</div>
+            <ul className="toc-list">
+              {sumario.map((item) => (
+                <li key={item.id}>
+                  <a href={`#${item.id}`} className={tocAtivo === item.id ? 'active' : ''}>{item.titulo}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="side-block">
+            <div className="side-title">Leia também</div>
+            {leiaTambem.map((n, i) => (
+              <a className="side-article" href="noticia.html" key={i}>
+                <img src={n.imagem} alt="" />
+                <div><div className="cat">{n.categoria}</div><div className="t">{n.titulo}</div></div>
+              </a>
+            ))}
+          </div>
+        </aside>
+
+      </div>
+
+      <div className="engagement">
+        <p>Você gostou desta notícia?</p>
+        <div className="engage-actions">
+          <button className={`pill-btn ${curtido ? 'active' : ''}`} onClick={alternarCurtida}>
+            {curtido ? '♥ Curtido' : '♡ Gostei'}
+          </button>
+          <button className={`pill-btn ${salvo ? 'active' : ''}`} onClick={() => setSalvo((s) => !s)}>
+            {salvo ? '🔖 Salvo' : '🔖 Salvar notícia'}
+          </button>
+          <button className="pill-btn" onClick={() => setModalAberto(true)}>↗ Compartilhar</button>
+        </div>
+      </div>
+
+      <section className="related">
+        <span className="section-label">Continue lendo</span>
+        <h2>Mais notícias sobre meio ambiente</h2>
+        <div className="related-grid">
+          {relacionadas.map((n, i) => (
+            <a className="news-card" href="noticia.html" key={i}>
+              <div className="thumb"><img src={n.imagem} alt={n.titulo} /></div>
+              <div className="body">
+                <span className="cat">{n.categoria}</span>
+                <h3>{n.titulo}</h3>
+                <p>{n.resumo}</p>
+                <span className="meta">{n.meta}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <Comentarios
+        comentarios={comentarios}
+        onCurtirComentario={curtirComentario}
+        onEnviar={enviarComentario}
+      />
+
+      <section className="newsletter">
+        <div className="newsletter-inner">
+          <div className="newsletter-text">
+            <h3>Continue conectado à natureza.</h3>
+            <p>Receba novidades, descobertas e notícias sobre o meio ambiente brasileiro.</p>
+          </div>
+          <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
+            <input type="email" placeholder="Seu e-mail" aria-label="Seu e-mail" required />
+            <button type="submit">Quero acompanhar</button>
+          </form>
+        </div>
+      </section>
+
+      <div className="back-link">
+        <a href="noticias.html">← Voltar para notícias</a>
+      </div>
+
+      <RailMobile
+        curtido={curtido}
+        salvo={salvo}
+        onCurtir={alternarCurtida}
+        onSalvar={() => setSalvo((s) => !s)}
+        onCompartilhar={() => setModalAberto(true)}
+        onIrComentarios={irParaComentarios}
+      />
+
+      <ModalCompartilhar aberto={modalAberto} onFechar={() => setModalAberto(false)} />
+
+    </React.Fragment>
+  );
+}
+
+const raiz = ReactDOM.createRoot(document.getElementById('root'));
+raiz.render(<App />);
+</script>
+
+</body>
+</html>
