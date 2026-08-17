@@ -54,7 +54,7 @@
 
 /* --- Evolução do projeto (seção escura) --- */
 .secao-evolucao {
-  background: var(--cor-floresta);
+  background: #11331f;
   color: var(--cor-texto-claro);
   padding: 72px 32px;
 }
@@ -85,7 +85,7 @@
   padding: 28px;
 }
 .card-evolucao-destaque {
-  border-color: var(--cor-destaque);
+  border-color: #6f6c39;
   background: rgba(246, 244, 236, 0.05);
 }
 
@@ -124,11 +124,11 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 19px;
+  top: 20px;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #8FC9A6;
+  background: #e5ac4c;
 }
 .card-evolucao li:last-child { border-bottom: none; padding-bottom: 0; }
 .card-evolucao li:first-child { padding-top: 0; }
@@ -160,4 +160,8 @@
   .secao-sobre-grid { grid-template-columns: 1fr; }
   .sobre-imagem { position: static; order: -1; }
   .grid-evolucao { grid-template-columns: 1fr; }
+}
+
+body > section.secao-evolucao > div > div.eyebrow.claro {
+    color: #d8a440;
 }
