@@ -36,9 +36,9 @@
   flex-direction: column;
 }
 
-/* Espaço reservado pra imagem — ainda sem notícias reais, então fica
-   só um retângulo neutro no lugar. Quando o conteúdo real existir,
-   isso vira uma <img src="..."> de verdade. */
+/* Espaço da imagem do card. Funciona nos dois cenários:
+   1) placeholder vazio, enquanto não há imagem real (<div class="card-noticia-imagem"></div>)
+   2) imagem de verdade, no mesmo padrão usado na Início — <img class="card-noticia-imagem" src="..."> */
 .card-noticia-imagem {
   width: 100%;
   aspect-ratio: 16/10;
@@ -46,6 +46,19 @@
   background: var(--cor-fundo-alt);
   border: 1px solid var(--cor-borda);
   margin-bottom: 16px;
+  overflow: hidden;      /* garante cantos arredondados mesmo se a imagem vier dentro da div */
+  display: block;
+}
+/* Se a imagem real for a própria .card-noticia-imagem (igual ao padrão da Início) */
+img.card-noticia-imagem {
+  object-fit: cover;
+}
+/* Se a imagem real vier dentro da div placeholder */
+.card-noticia-imagem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .card-noticia-corpo .tag { margin-bottom: 12px; }
