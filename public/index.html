@@ -5,122 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GiraBrasil — A natureza brasileira tem uma história para contar</title>
 <link rel="stylesheet" href="css/base.css">
-<style>
-  /* Estilos específicos da página Início */
-
-  .hero {
-    position: relative;
-    background: var(--cor-floresta);
-    color: var(--cor-texto-claro);
-    padding: 100px 32px 64px;
-    overflow: hidden;
-  }
-  /* Foto de floresta no fundo do hero, com um véu escuro por cima para manter o texto legível */
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(22,40,31,0.55), rgba(22,40,31,0.85)),
-                url('assets/hero/hero-amazonia.jpg') center/cover;
-    z-index: 0;
-  }
-  .hero-inner {
-    position: relative;
-    z-index: 1;
-    max-width: var(--largura-max);
-    margin: 0 auto;
-  }
-  .hero h1 {
-    font-size: clamp(2.2rem, 4vw, 3.4rem);
-    max-width: 16ch;
-    margin: 16px 0 20px;
-  }
-  .hero p.dek {
-    font-size: 1.05rem;
-    color: var(--cor-texto-suave-claro);
-    max-width: 52ch;
-    margin-bottom: 32px;
-  }
-  .hero-botoes { display: flex; gap: 14px; margin-bottom: 56px; }
-
-  .hero-stats {
-    display: flex;
-    gap: 48px;
-    padding-top: 28px;
-    border-top: 1px solid var(--cor-borda-escura);
-  }
-  .hero-stats .stat b {
-    display: block;
-    font-family: var(--fonte-titulo);
-    font-size: 1.6rem;
-    font-weight: 500;
-  }
-  .hero-stats .stat span {
-    font-size: 0.82rem;
-    color: var(--cor-texto-suave-claro);
-  }
-
-  /* Seção de notícias em destaque */
-  .secao-noticias { padding: 72px 32px; }
-  .secao-cabecalho { margin-bottom: 36px; display: flex; justify-content: space-between; align-items: flex-end; }
-  .secao-cabecalho h2 { font-size: 3rem; margin-top: 10px; }
-  .secao-cabecalho p { color: var(--cor-texto-suave); margin-top: 8px; max-width: 50ch; }
-  .link-ver-todas { font-size: 0.88rem; font-weight: 600; color: var(--cor-destaque); }
-
-  .grid-destaque {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr;
-    gap: 40px;
-  }
-
-  .noticia-destaque img {
-    width: 100%;
-    aspect-ratio: 16/10;
-    object-fit: cover;
-    border-radius: var(--raio);
-    margin-bottom: 18px;
-  }
-  .noticia-destaque h3 {
-    font-size: 1.5rem;
-    margin: 10px 0 10px;
-  }
-  .noticia-destaque p { color: var(--cor-texto-suave); }
-
-  .lista-noticias { display: flex; flex-direction: column; }
-  .item-noticia {
-    display: flex;
-    gap: 16px;
-    padding: 18px 0;
-    border-bottom: 1px solid var(--cor-borda);
-  }
-  .item-noticia:first-child { padding-top: 0; }
-  .item-noticia img {
-    width: 92px;
-    height: 92px;
-    object-fit: cover;
-    border-radius: var(--raio-pequeno);
-    flex-shrink: 0;
-  }
-  .item-noticia h4 { font-size: 0.98rem; font-weight: 600; font-family: var(--fonte-corpo); margin: 6px 0 6px; line-height: 1.35; }
-  .item-noticia .meta { font-size: 0.76rem; color: var(--cor-texto-suave); }
-
-  /* Faixa CTA institucional */
-  .cta-institucional {
-    background: var(--cor-floresta);
-    color: var(--cor-texto-claro);
-    text-align: center;
-    padding: 80px 32px;
-  }
-  .cta-institucional .eyebrow { justify-content: center; display: flex; margin-bottom: 18px; }
-  .cta-institucional h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); max-width: 26ch; margin: 0 auto 18px; }
-  .cta-institucional p { color: var(--cor-texto-suave-claro); max-width: 52ch; margin: 0 auto 32px; }
-  .cta-botoes { display: flex; justify-content: center; gap: 14px; }
-
-  @media (max-width: 860px) {
-    .grid-destaque { grid-template-columns: 1fr; }
-    .hero-stats { flex-wrap: wrap; row-gap: 20px; }
-  }
-</style>
+<link rel="stylesheet" href="css/index.css">
 </head>
 <body>
 
@@ -157,6 +42,48 @@
       <div class="stat"><b>4</b><span>jogos educativos</span></div>
       <div class="stat"><b>1</b><span>assistente ambiental</span></div>
     </div>
+  </div>
+</section>
+
+<section class="secao-destaque">
+  <div class="secao-cabecalho">
+    <div>
+      <div class="eyebrow">SELEÇÃO DA REDAÇÃO</div>
+      <h2>Em destaque</h2>
+      <p>Quatro paisagens que explicam como o Brasil funciona por dentro.</p>
+    </div>
+    <a href="regioes.html" class="link-ver-todas">Ver todos os biomas →</a>
+  </div>
+
+  <div class="grid-bioma-destaque">
+    <a href="regioes.html" class="card-bioma-destaque">
+      <img src="assets/biomas/bioma-amazonia.jpg" alt="Paisagem do bioma Amazônia">
+      <span class="tag">Bioma</span>
+      <h3>Amazônia</h3>
+      <p>Cobre cerca de 49% do território brasileiro e abriga a maior diversidade biológica conhecida.</p>
+      <span class="link-explorar">Explorar →</span>
+    </a>
+    <a href="regioes.html" class="card-bioma-destaque">
+      <img src="assets/biomas/bioma-cerrado.jpg" alt="Paisagem do bioma Cerrado">
+      <span class="tag">Bioma</span>
+      <h3>Cerrado</h3>
+      <p>Conhecido como o berço das águas, alimenta oito das doze bacias hidrográficas do país.</p>
+      <span class="link-explorar">Explorar →</span>
+    </a>
+    <a href="regioes.html" class="card-bioma-destaque">
+      <img src="assets/biomas/bioma-caatinga.jpg" alt="Paisagem do bioma Caatinga">
+      <span class="tag">Bioma</span>
+      <h3>Caatinga</h3>
+      <p>Adaptada à seca, a Caatinga floresce em poucas horas após a chuva. É o único bioma inteiramente brasileiro.</p>
+      <span class="link-explorar">Explorar →</span>
+    </a>
+    <a href="regioes.html" class="card-bioma-destaque">
+      <img src="assets/biomas/bioma-mata-atlantica.jpg" alt="Paisagem do bioma Mata Atlântica">
+      <span class="tag">Bioma</span>
+      <h3>Mata Atlântica</h3>
+      <p>Restam cerca de 24% da cobertura original, mas ela ainda garante água para mais de 145 milhões de pessoas.</p>
+      <span class="link-explorar">Explorar →</span>
+    </a>
   </div>
 </section>
 
@@ -211,10 +138,143 @@
   </div>
 </section>
 
+<section class="secao-biomas">
+  <div class="secao-cabecalho">
+    <div>
+      <div class="eyebrow">EDUCAÇÃO AMBIENTAL</div>
+      <h2>Explore os biomas</h2>
+      <p>Cada bioma brasileiro tem seu próprio clima, solo, fauna e desafios de conservação.</p>
+    </div>
+  </div>
+
+  <div class="grid-biomas-completo">
+    <a href="regioes.html" class="card-bioma-completo">
+      <div class="fundo-imagem"><img src="assets/biomas/bioma-amazonia.jpg" alt="Paisagem do bioma Amazônia"></div>
+      <div class="card-bioma-completo-conteudo">
+        <h3>Amazônia</h3>
+        <div class="tagline">A maior floresta tropical do planeta</div>
+        <div class="meta-bioma"><span>4,2 milhões km²</span><span>+60 mil espécies de plantas</span></div>
+      </div>
+    </a>
+    <a href="regioes.html" class="card-bioma-completo">
+      <div class="fundo-imagem"><img src="assets/biomas/bioma-cerrado.jpg" alt="Paisagem do bioma Cerrado"></div>
+      <div class="card-bioma-completo-conteudo">
+        <h3>Cerrado</h3>
+        <div class="tagline">A savana mais biodiversa do mundo</div>
+        <div class="meta-bioma"><span>2 milhões km²</span><span>+11 mil espécies de plantas</span></div>
+      </div>
+    </a>
+    <a href="regioes.html" class="card-bioma-completo">
+      <div class="fundo-imagem"><img src="assets/biomas/bioma-caatinga.jpg" alt="Paisagem do bioma Caatinga"></div>
+      <div class="card-bioma-completo-conteudo">
+        <h3>Caatinga</h3>
+        <div class="tagline">O bioma exclusivamente brasileiro</div>
+        <div class="meta-bioma"><span>844 mil km²</span><span>+3 mil espécies vegetais</span></div>
+      </div>
+    </a>
+    <a href="regioes.html" class="card-bioma-completo">
+      <div class="fundo-imagem"><img src="assets/biomas/bioma-mata-atlantica.jpg" alt="Paisagem do bioma Mata Atlântica"></div>
+      <div class="card-bioma-completo-conteudo">
+        <h3>Mata Atlântica</h3>
+        <div class="tagline">A floresta que abastece as cidades</div>
+        <div class="meta-bioma"><span>1,1 milhão km²</span><span>+20 mil espécies de plantas</span></div>
+      </div>
+    </a>
+    <a href="regioes.html" class="card-bioma-completo">
+      <div class="fundo-imagem"><img src="assets/biomas/bioma-pantanal.jpg" alt="Paisagem do bioma Pantanal"></div>
+      <div class="card-bioma-completo-conteudo">
+        <h3>Pantanal</h3>
+        <div class="tagline">A maior planície alagável do mundo</div>
+        <div class="meta-bioma"><span>150 mil km²</span><span>+650 espécies de aves</span></div>
+      </div>
+    </a>
+    <a href="regioes.html" class="card-bioma-completo">
+      <div class="fundo-imagem"><img src="assets/biomas/bioma-pampa.jpg" alt="Paisagem do bioma Pampa"></div>
+      <div class="card-bioma-completo-conteudo">
+        <h3>Pampa</h3>
+        <div class="tagline">Campos nativos do extremo sul</div>
+        <div class="meta-bioma"><span>176 mil km²</span><span>+3,2 mil espécies de plantas</span></div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="secao-jogos-preview">
+  <div class="grid-jogos-preview-layout">
+    <div class="jogos-preview-texto">
+      <div class="eyebrow">🎮 JOGOS EDUCATIVOS</div>
+      <h2>Aprender também pode ser divertido.</h2>
+      <p>Conheça nossos jogos e descubra a natureza brasileira de um jeito diferente. Quatro experiências pensadas para crianças, adolescentes e turmas escolares.</p>
+      <a href="jogos.html" class="botao botao-primario">Explorar jogos →</a>
+    </div>
+    <div class="grid-jogos-mini">
+      <a href="jogos.html" class="card-jogo-mini">
+        <div class="fundo-imagem"><img src="assets/jogos/game-quiz.jpg" alt="Arte do jogo Quiz da Floresta"></div>
+        <div class="card-jogo-mini-conteudo">
+          <h4>Quiz da Floresta</h4>
+          <div class="meta-jogo-mini">Fácil · 8 a 12 anos</div>
+        </div>
+      </a>
+      <a href="jogos.html" class="card-jogo-mini">
+        <div class="fundo-imagem"><img src="assets/jogos/game-guardioes.jpg" alt="Arte do jogo Guardiões da Amazônia"></div>
+        <div class="card-jogo-mini-conteudo">
+          <h4>Guardiões da Amazônia</h4>
+          <div class="meta-jogo-mini">Intermediário · 11 a 15 anos</div>
+        </div>
+      </a>
+      <a href="jogos.html" class="card-jogo-mini">
+        <div class="fundo-imagem"><img src="assets/jogos/game-biomas.jpg" alt="Arte do jogo Desafio dos Biomas"></div>
+        <div class="card-jogo-mini-conteudo">
+          <h4>Desafio dos Biomas</h4>
+          <div class="meta-jogo-mini">Intermediário · 10 a 16 anos</div>
+        </div>
+      </a>
+      <a href="jogos.html" class="card-jogo-mini">
+        <div class="fundo-imagem"><img src="assets/jogos/game-biodiversidade.jpg" alt="Arte do jogo Missão Biodiversidade"></div>
+        <div class="card-jogo-mini-conteudo">
+          <h4>Missão Biodiversidade</h4>
+          <div class="meta-jogo-mini">Desafiador · 12 a 17 anos</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="secao-girabot-preview">
+  <div class="grid-girabot-preview">
+    <div class="girabot-preview-texto">
+      <div class="eyebrow claro">✨ INTELIGÊNCIA ARTIFICIAL</div>
+      <h2>Conheça o GiraBot</h2>
+      <p>Seu guia digital para descobrir a natureza brasileira. O GiraBot é um assistente de conhecimento ambiental dedicado a florestas, biomas, fauna, flora, biodiversidade, desmatamento, queimadas e preservação no Brasil.</p>
+      <ul class="lista-recursos-girabot">
+        <li>Respostas focadas em temas ambientais brasileiros</li>
+        <li>Linguagem acessível para estudantes</li>
+        <li>Sugestões de leitura ligadas às notícias da plataforma</li>
+      </ul>
+      <a href="girabot.html" class="botao botao-primario" style="background:var(--cor-texto-claro); color:var(--cor-floresta);">Conversar com o GiraBot →</a>
+    </div>
+
+    <div class="card-chat-preview">
+      <div class="chat-preview-cabecalho">
+        <div class="chat-preview-avatar">🌿</div>
+        <div>
+          <div class="nome">GiraBot</div>
+          <div class="status">Assistente ambiental</div>
+        </div>
+      </div>
+      <div class="chat-preview-bolhas">
+        <p class="bolha-preview bot">Olá! Eu sou o GiraBot. Pergunte sobre biomas, animais, plantas, florestas ou preservação.</p>
+        <p class="bolha-preview usuario">Por que a Amazônia é tão importante?</p>
+        <p class="bolha-preview bot">Ela armazena bilhões de toneladas de carbono e produz os rios voadores, que levam chuva para boa parte da América do Sul.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="cta-institucional">
   <div class="eyebrow claro">PROJETO ESCOLAR DE TECNOLOGIA</div>
   <h2>Onde a tecnologia ajuda a entender a natureza brasileira.</h2>
-  <p>O Gira Brasil nasceu como um site informativo e evoluiu para uma plataforma interativa de jornalismo e educação ambiental.</p>
+  <p>O Gira Brasil nasceu em 2025 como um site informativo e evoluiu para uma plataforma interativa de jornalismo e educação ambiental.</p>
   <div class="cta-botoes">
     <a href="sobre.html" class="botao botao-primario" style="background:var(--cor-texto-claro); color:var(--cor-floresta);">Sobre o projeto →</a>
     <a href="noticias.html" class="botao botao-secundario sobre-escuro">Ler as notícias →</a>
