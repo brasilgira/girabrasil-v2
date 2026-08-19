@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 const regioesRoutes = require('./routes/regioes.routes');
 const noticiasRoutes = require('./routes/noticias.routes');
 const comentariosRoutes = require('./routes/comentarios.routes');
+const girabotRoutes = require('./routes/girabot.routes');
+app.use('/api/girabot', girabotRoutes);
 
 app.use('/api/regioes', regioesRoutes);
 
