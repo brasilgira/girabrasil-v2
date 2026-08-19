@@ -8,22 +8,24 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Middleware que permite o Express entender JSON no corpo das requisições.
+// IMPORTANTE: precisa vir ANTES de qualquer rota que leia req.body
+// (senão req.body chega undefined nas rotas registradas antes dele).
+app.use(express.json());
+
 const regioesRoutes = require('./routes/regioes.routes');
 const noticiasRoutes = require('./routes/noticias.routes');
 const comentariosRoutes = require('./routes/comentarios.routes');
 const girabotRoutes = require('./routes/girabot.routes');
-app.use('/api/girabot', girabotRoutes);
 
 app.use('/api/regioes', regioesRoutes);
-
-// Middleware que permite o Express entender JSON no corpo das requisições
-app.use(express.json());
+app.use('/api/noticias', noticiasRoutes);
+app.use('/api/comentarios', comentariosRoutes);
+app.use('/api/girabot', girabotRoutes);
 
 // Serve os arquivos estáticos do front-end (HTML, CSS, JS puro)
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/api/noticias', noticiasRoutes);
-app.use('/api/comentarios', comentariosRoutes);
 
 // Rota de teste, só pra confirmar que o servidor está de pé
 app.get('/api/status', (req, res) => {

@@ -29,9 +29,8 @@ REGRA IMPORTANTE: Se o usuário perguntar sobre algo fora desses temas, responda
 
 Formato das respostas:
 - Respostas em português brasileiro
-- Use parágrafos bem estruturados
-- Use negrito (**texto**) para destacar nomes de espécies e conceitos importantes
-- Seja informativo mas não excessivamente longo
+- Escreva em texto corrido, sem usar formatação markdown (nunca use #, ##, ** ou qualquer símbolo de marcação — nada de negrito nem títulos, só texto puro)
+- Seja direto e conciso: no máximo 2 ou 3 parágrafos curtos por resposta
 - Sempre que possível, termine com um dado curioso ou convite para explorar mais o tema`;
 
 // POST /api/girabot
@@ -61,12 +60,14 @@ async function conversar(req, res) {
         'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        // A Groq descontinuou o llama-3.3-70b-versatile (usado no v1) em 2026.
+        // openai/gpt-oss-120b é o modelo recomendado atual pra uso geral.
+        model: 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages,
         ],
-        max_tokens: 1024,
+        max_tokens: 400,
         temperature: 0.7,
       }),
     });

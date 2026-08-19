@@ -16,6 +16,9 @@ const campoMensagem = document.getElementById('campoMensagem');
 let estadoVazioEscondido = false;
 let historicoMensagens = []; // [{ role: 'user'|'assistant', content: '...' }, ...]
 
+// Velocidade da digitação letra por letra, em milissegundos por caractere
+const VELOCIDADE_DIGITACAO_MS = 18;
+
 // --- Sidebar retrátil ----------------------------------------------------
 
 function abrirSidebar() {
@@ -62,6 +65,7 @@ document.querySelectorAll('.sugestao-chip').forEach((chip) => {
 
 // Cria e insere um balão de mensagem na conversa. Retorna o elemento
 // criado, útil pra depois remover (ex: o indicador de "digitando...")
+// ou preencher aos poucos (ex: efeito de digitação).
 function adicionarMensagem(texto, tipo) {
   const balao = document.createElement('div');
   balao.className = `mensagem ${tipo}`;
@@ -69,6 +73,27 @@ function adicionarMensagem(texto, tipo) {
   chatMensagens.appendChild(balao);
   chatMensagens.scrollTop = chatMensagens.scrollHeight;
   return balao;
+}
+
+// Digita o texto letra por letra dentro de um balão já existente,
+// imitando o efeito "máquina de escrever" que o v1 também tinha.
+// Retorna uma Promise que resolve quando termina de digitar tudo.
+function digitarTexto(elemento, textoCompleto) {
+  return new Promise((resolve) => {
+    elemento.textContent = '';
+    let posicao = 0;
+
+    const intervalo = setInterval(() => {
+      posicao++;
+      elemento.textContent = textoCompleto.slice(0, posicao);
+      chatMensagens.scrollTop = chatMensagens.scrollHeight;
+
+      if (posicao >= textoCompleto.length) {
+        clearInterval(intervalo);
+        resolve();
+      }
+    }, VELOCIDADE_DIGITACAO_MS);
+  });
 }
 
 formEnvio.addEventListener('submit', async (evento) => {
@@ -104,7 +129,10 @@ formEnvio.addEventListener('submit', async (evento) => {
       return;
     }
 
-    adicionarMensagem(dados.resposta, 'bot');
+    // Cria o balão vazio primeiro, depois digita o texto aos poucos nele
+    const balaoResposta = adicionarMensagem('', 'bot');
+    await digitarTexto(balaoResposta, dados.resposta);
+
     historicoMensagens.push({ role: 'assistant', content: dados.resposta });
   } catch (erro) {
     // Erro de rede (sem internet, servidor fora do ar, etc.)
