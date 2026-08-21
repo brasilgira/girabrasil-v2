@@ -165,3 +165,33 @@
 body > section.secao-evolucao > div > div.eyebrow.claro {
     color: #d8a440;
 }
+
+/* --- Doação (CTA na página Sobre) --- */
+.secao-doacao {
+  padding: 80px 32px;
+  max-width: var(--largura-max);
+  margin: 0 auto;
+}
+.doacao-cta-inner {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 56px 40px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-fundo-alt);
+}
+.doacao-cta-inner .eyebrow { justify-content: center; margin-bottom: 14px; }
+.doacao-cta-inner h2 {
+  font-size: clamp(1.7rem, 3vw, 2.1rem);
+  margin-bottom: 16px;
+}
+.doacao-cta-inner p {
+  color: var(--cor-texto-suave);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 640px) {
+  .doacao-cta-inner { padding: 40px 24px; }
+}

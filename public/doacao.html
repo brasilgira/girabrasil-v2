@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apoiar o Gira Brasil — Doação</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/doacao.css">
+</head>
+<body>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">GiraBot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="#" class="link-entrar">Entrar</a>
+      <a href="#" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<div class="doacao-voltar">
+  <a href="sobre.html">← Voltar</a>
+</div>
+
+<div class="pagina-titulo-doacao">
+  <div class="eyebrow">APOIE O GIRA BRASIL</div>
+  <h1>Ajude a manter a floresta em foco.</h1>
+  <p>Seu apoio ajuda o Gira Brasil a continuar online, manter suas notícias atualizadas e criar novas experiências educativas sobre a natureza brasileira.</p>
+</div>
+
+<form class="doacao-layout" id="form-doacao">
+
+  <div class="doacao-principal">
+
+    <!-- Valor da doação -->
+    <section class="doacao-card">
+      <h2 class="doacao-card-titulo">Escolha um valor</h2>
+      <div class="valores-grid" role="group" aria-label="Valores sugeridos para doação">
+        <button type="button" class="valor-opcao" data-valor="1">
+          <span class="valor-numero">R$ 1</span>
+          <span class="valor-desc">Uma pequena ajuda</span>
+        </button>
+        <button type="button" class="valor-opcao" data-valor="5">
+          <span class="valor-numero">R$ 5</span>
+          <span class="valor-desc">Ajuda a manter o projeto</span>
+        </button>
+        <button type="button" class="valor-opcao" data-valor="10">
+          <span class="valor-numero">R$ 10</span>
+          <span class="valor-desc">Ajuda a desenvolver novas funcionalidades</span>
+        </button>
+      </div>
+
+      <div class="valor-outro">
+        <label for="valor-customizado">Outro valor</label>
+        <div class="valor-outro-input">
+          <span>R$</span>
+          <input type="text" inputmode="decimal" id="valor-customizado" name="valor-customizado" placeholder="0,00" aria-describedby="valor-erro">
+        </div>
+        <span class="valor-erro" id="valor-erro" role="alert"></span>
+      </div>
+    </section>
+
+    <!-- Mensagem opcional -->
+    <section class="doacao-card">
+      <h2 class="doacao-card-titulo">Deixe uma mensagem <span class="opcional">(opcional)</span></h2>
+      <textarea id="mensagem-doacao" name="mensagem" rows="3" placeholder="Escreva uma mensagem para a equipe do Gira Brasil..."></textarea>
+    </section>
+
+    <!-- Nome do doador -->
+    <section class="doacao-card">
+      <h2 class="doacao-card-titulo">Seu nome <span class="opcional">(opcional)</span></h2>
+      <input type="text" id="nome-doador" name="nome" placeholder="Como podemos te chamar?">
+      <label class="checkbox-anonimo">
+        <input type="checkbox" id="doacao-anonima" name="anonima">
+        <span>Quero fazer esta contribuição de forma anônima</span>
+      </label>
+    </section>
+
+    <!-- Método de pagamento -->
+    <section class="doacao-card">
+      <h2 class="doacao-card-titulo">Forma de pagamento</h2>
+      <div class="metodo-tabs" role="tablist" aria-label="Forma de pagamento">
+        <button type="button" class="metodo-tab ativo" id="tab-pix" role="tab" aria-selected="true" aria-controls="painel-pix">PIX</button>
+        <button type="button" class="metodo-tab" id="tab-cartao" role="tab" aria-selected="false" aria-controls="painel-cartao">Cartão</button>
+      </div>
+
+      <div class="painel-pagamento" id="painel-pix" role="tabpanel" aria-labelledby="tab-pix">
+        <h3>Pagamento via PIX</h3>
+        <div class="pix-conteudo">
+          <div class="pix-qr" aria-hidden="true">
+            <svg viewBox="0 0 120 120" width="120" height="120">
+              <rect width="120" height="120" rx="8" fill="var(--cor-fundo)"/>
+              <g fill="var(--cor-texto)">
+                <rect x="8" y="8" width="28" height="28"/><rect x="16" y="16" width="12" height="12" fill="var(--cor-fundo)"/>
+                <rect x="84" y="8" width="28" height="28"/><rect x="92" y="16" width="12" height="12" fill="var(--cor-fundo)"/>
+                <rect x="8" y="84" width="28" height="28"/><rect x="16" y="92" width="12" height="12" fill="var(--cor-fundo)"/>
+                <rect x="44" y="8" width="8" height="8"/><rect x="60" y="8" width="8" height="8"/>
+                <rect x="44" y="24" width="8" height="8"/><rect x="52" y="40" width="8" height="8"/>
+                <rect x="68" y="24" width="8" height="8"/><rect x="44" y="52" width="8" height="8"/>
+                <rect x="60" y="52" width="8" height="8"/><rect x="76" y="52" width="8" height="8"/>
+                <rect x="44" y="68" width="8" height="8"/><rect x="60" y="68" width="8" height="8"/>
+                <rect x="84" y="44" width="8" height="8"/><rect x="100" y="60" width="8" height="8"/>
+                <rect x="84" y="76" width="8" height="8"/><rect x="100" y="92" width="8" height="8"/>
+                <rect x="60" y="84" width="8" height="8"/><rect x="76" y="100" width="8" height="8"/>
+                <rect x="92" y="100" width="8" height="8"/><rect x="44" y="100" width="8" height="8"/>
+              </g>
+            </svg>
+            <span class="pix-qr-legenda">QR Code (protótipo)</span>
+          </div>
+          <div class="pix-info">
+            <p>Escaneie o código com o app do seu banco ou copie o código abaixo.</p>
+            <div class="pix-codigo" id="pix-codigo">00020126580014BR.GOV.BCB.PIX0136prototipo-girabrasil-nao-real5204000053039865802BR5913Gira Brasil6009Sao Paulo62070503***6304ABCD</div>
+            <button type="button" class="botao botao-secundario" id="botao-copiar-pix">Copiar código PIX</button>
+            <span class="pix-feedback" id="pix-feedback" role="status">PIX copiado!</span>
+          </div>
+        </div>
+        <p class="pagamento-aviso">Este é um protótipo de interface. Nenhuma cobrança real é gerada até que um provedor de pagamento seja integrado.</p>
+      </div>
+
+      <div class="painel-pagamento" id="painel-cartao" role="tabpanel" aria-labelledby="tab-cartao" hidden>
+        <h3>Pagamento com cartão</h3>
+        <div class="cartao-form">
+          <div class="campo-linha">
+            <label for="cartao-numero">Número do cartão</label>
+            <input type="text" id="cartao-numero" placeholder="0000 0000 0000 0000" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="campo-linha">
+            <label for="cartao-nome">Nome impresso no cartão</label>
+            <input type="text" id="cartao-nome" placeholder="Como está no cartão" autocomplete="off">
+          </div>
+          <div class="campo-grupo">
+            <div class="campo-linha">
+              <label for="cartao-validade">Validade</label>
+              <input type="text" id="cartao-validade" placeholder="MM/AA" autocomplete="off">
+            </div>
+            <div class="campo-linha">
+              <label for="cartao-cvv">CVV</label>
+              <input type="text" id="cartao-cvv" placeholder="000" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        <p class="pagamento-aviso">Este é um protótipo de interface. Nenhum dado de cartão é processado, coletado ou armazenado nesta etapa.</p>
+      </div>
+    </section>
+
+    <!-- Transparência -->
+    <section class="doacao-transparencia">
+      <h3>Transparência</h3>
+      <p>Esta página faz parte do projeto Gira Brasil. As contribuições têm como objetivo apoiar a manutenção, evolução e produção de conteúdo da plataforma.</p>
+    </section>
+
+  </div>
+
+  <!-- Resumo -->
+  <aside class="doacao-resumo">
+    <div class="resumo-card">
+      <h2>Sua contribuição</h2>
+      <div class="resumo-valor" id="resumo-valor">R$ 0,00</div>
+      <p class="resumo-obrigado">Obrigado por apoiar o Gira Brasil.</p>
+      <button type="submit" class="botao botao-primario resumo-botao" id="botao-doar" disabled>Continuar com a doação</button>
+      <p class="resumo-nota">Protótipo — nenhuma cobrança real será feita.</p>
+    </div>
+  </aside>
+
+</form>
+
+<section class="doacao-impacto">
+  <div class="impacto-inner">
+    <div class="impacto-item">
+      <span class="impacto-numero">01</span>
+      <h3>Plataforma</h3>
+      <p>Manutenção e hospedagem para manter o Gira Brasil disponível.</p>
+    </div>
+    <div class="impacto-item">
+      <span class="impacto-numero">02</span>
+      <h3>Conteúdo</h3>
+      <p>Atualização de notícias e produção de novos conteúdos ambientais.</p>
+    </div>
+    <div class="impacto-item">
+      <span class="impacto-numero">03</span>
+      <h3>Educação</h3>
+      <p>Desenvolvimento de jogos e experiências para tornar o aprendizado mais interessante.</p>
+    </div>
+    <div class="impacto-item">
+      <span class="impacto-numero">04</span>
+      <h3>Tecnologia</h3>
+      <p>Melhorias contínuas no GiraBot e nas ferramentas do projeto.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer-site">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <div class="logo-site">Gira Brasil</div>
+      <p>Informação, tecnologia e educação para preservar a natureza brasileira.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar</h4>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="noticias.html">Notícias</a></li>
+        <li><a href="regioes.html">Regiões</a></li>
+        <li><a href="jogos.html">Jogos</a></li>
+        <li><a href="girabot.html">GiraBot</a></li>
+        <li><a href="sobre.html">Sobre</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Projeto</h4>
+      <ul>
+        <li><a href="#">Plataforma de educação ambiental</a></li>
+        <li><a href="#">Desenvolvida por estudantes de TI</a></li>
+        <li><a href="#">Versão 2026 — em desenvolvimento</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-base">
+    <span>Gira Brasil © 2026</span>
+    <span>Natureza • Informação • Educação • Tecnologia</span>
+  </div>
+</footer>
+
+<script src="js/doacao.js"></script>
+
+</body>
+</html>

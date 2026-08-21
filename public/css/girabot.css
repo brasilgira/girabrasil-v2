@@ -340,16 +340,3 @@
   .sugestoes-grid { grid-template-columns: 1fr; }
   .girabot-sidebar { width: 240px; }
 }
-.mensagem.bot {
-  align-self: flex-start;
-  background: var(--cor-fundo-alt);
-  border: 1px solid var(--cor-borda);
-  border-bottom-left-radius: 4px;
-  white-space: pre-wrap; /* preserva quebras de linha/parágrafos da resposta da IA */
-}
- 
-/* Estado "digitando..." enquanto espera a resposta da Groq */
-.mensagem.bot.pensando {
-  color: var(--cor-texto-suave);
-  font-style: italic;
-}
