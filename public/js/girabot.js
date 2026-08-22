@@ -74,21 +74,60 @@ function adicionarMensagem(texto, tipo) {
   chatMensagens.scrollTop = chatMensagens.scrollHeight;
 }
 
-formEnvio.addEventListener('submit', (evento) => {
-  evento.preventDefault();
+let mensagens = [];
 
-  const texto = campoMensagem.value.trim();
-  if (!texto) return;
+formEnvio.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
 
-  esconderEstadoVazio();
-  adicionarMensagem(texto, 'usuario');
-  campoMensagem.value = '';
+    const texto = campoMensagem.value.trim();
 
-  // Pequeno atraso simulando o tempo de resposta, antes de mostrar o aviso
-  setTimeout(() => {
-    adicionarMensagem(
-      '⚠️ O Gira-Bot ainda está em desenvolvimento e não pode responder no momento. Volte em breve!',
-      'erro'
-    );
-  }, 500);
+    if (!texto) return;
+
+    esconderEstadoVazio();
+
+    // Mostra a mensagem do usuário
+    adicionarMensagem(texto, 'usuario');
+
+    // Adiciona ao histórico
+    mensagens.push({
+        role: 'user',
+        content: texto
+    });
+
+    campoMensagem.value = '';
+
+    try {
+        const resposta = await fetch('/api/girabot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messages: mensagens
+            })
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(dados.erro || 'Erro ao conversar com o Gira-Bot');
+        }
+
+        // Mostra resposta da IA
+        adicionarMensagem(dados.resposta, 'bot');
+
+        // Guarda resposta no histórico
+        mensagens.push({
+            role: 'assistant',
+            content: dados.resposta
+        });
+
+    } catch (erro) {
+        console.error('Erro no Gira-Bot:', erro);
+
+        adicionarMensagem(
+            '⚠️ Não foi possível conectar ao Gira-Bot no momento. Tente novamente.',
+            'erro'
+        );
+    }
 });
