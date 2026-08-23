@@ -37,11 +37,11 @@
   <div class="grid-regioes">
 
     <div class="mapa-card">
-      <!-- Espaço reservado para o mapa do Brasil em SVG (produzido pelos colegas em vetor).
-           Por enquanto os botões abaixo é que controlam qual região aparece no painel da direita. -->
-      <div class="mapa-placeholder">
-        Mapa do Brasil (SVG)<br>a ser inserido aqui
-      </div>
+      <!-- Mapa do Brasil em SVG (5 regiões). Preenchido via JS a partir de
+           window.MAPA_BRASIL_SVG (js/mapa-brasil-svg.js) — o mesmo mapa usado
+           nas páginas de bioma. Clicar em uma região tem o mesmo efeito que
+           clicar no botão correspondente abaixo. -->
+      <div class="mapa-regioes-wrap" id="mapa-regioes-wrap"></div>
 
       <div class="region-pills">
         <button class="pill-regiao ativo" data-regiao="norte">Norte</button>
@@ -90,6 +90,7 @@
   </div>
 </footer>
 
+<script src="js/mapa-brasil-svg.js"></script>
 <script src="js/regioes.js" defer></script>
 
 </body>

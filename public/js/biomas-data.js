@@ -154,7 +154,8 @@ const BIOMAS = {
       { nome: 'Ipê-amarelo', cientifico: 'Handroanthus albus', papel: 'Árvore símbolo do Cerrado, floresce intensamente durante a estação seca.', curiosidade: 'Perde todas as folhas antes de florescer, deixando a copa completamente amarela.' },
       { nome: 'Pequizeiro', cientifico: 'Caryocar brasiliense', papel: 'Árvore cujo fruto, o pequi, é base de pratos tradicionais do Centro-Oeste.', curiosidade: 'A polpa envolve um caroço coberto de espinhos finos, que exige cuidado ao consumir.' },
       { nome: 'Buriti', cientifico: 'Mauritia flexuosa', papel: 'Palmeira típica das veredas, áreas úmidas do Cerrado.', curiosidade: 'É considerada uma "árvore da vida" para comunidades tradicionais, que aproveitam quase todas as suas partes.' },
-      { nome: 'Lobeira', cientifico: 'Solanum lycocarpum', papel: 'Arbusto cujo fruto é um dos principais alimentos do lobo-guará.', curiosidade: 'Seu nome popular vem justamente da relação estreita com o lobo-guará.' }
+      { nome: 'Lobeira', cientifico: 'Solanum lycocarpum', papel: 'Arbusto cujo fruto é um dos principais alimentos do lobo-guará.', curiosidade: 'Seu nome popular vem justamente da relação estreita com o lobo-guará.' },
+      { nome: 'Barbatimão', cientifico: 'Stryphnodendron adstringens', papel: 'Árvore de casca grossa, historicamente usada na medicina popular do Cerrado.', curiosidade: 'Sua casca é rica em taninos, substâncias usadas tradicionalmente por suas propriedades adstringentes.' }
     ],
 
     redeDeVida: {
@@ -253,7 +254,8 @@ const BIOMAS = {
       { nome: 'Mandacaru', cientifico: 'Cereus jamacaru', papel: 'Cacto colunar símbolo da paisagem da Caatinga.', curiosidade: 'Armazena água em seu tecido interno, permitindo sobreviver a longos períodos de seca.' },
       { nome: 'Umbuzeiro', cientifico: 'Spondias tuberosa', papel: 'Árvore conhecida como "árvore da vida do sertão" pela importância de seus frutos.', curiosidade: 'Suas raízes tuberosas armazenam água e nutrientes, ajudando a árvore a sobreviver à estiagem.' },
       { nome: 'Xique-xique', cientifico: 'Pilosocereus gounellei', papel: 'Cacto ramificado amplamente usado como alimento para animais em períodos de seca extrema.', curiosidade: 'Seus espinhos densos protegem a planta da perda de água e de herbívoros.' },
-      { nome: 'Angico', cientifico: 'Anadenanthera colubrina', papel: 'Árvore de madeira resistente, tradicionalmente usada na construção rural.', curiosidade: 'Perde as folhas na seca para reduzir a perda de água, retomando-as com as primeiras chuvas.' }
+      { nome: 'Angico', cientifico: 'Anadenanthera colubrina', papel: 'Árvore de madeira resistente, tradicionalmente usada na construção rural.', curiosidade: 'Perde as folhas na seca para reduzir a perda de água, retomando-as com as primeiras chuvas.' },
+      { nome: 'Carnaúba', cientifico: 'Copernicia prunifera', papel: 'Palmeira conhecida como "árvore da vida" do sertão nordestino.', curiosidade: 'De suas folhas é extraída a cera de carnaúba, historicamente um dos principais produtos econômicos da região.' }
     ],
 
     redeDeVida: {
@@ -352,7 +354,8 @@ const BIOMAS = {
       { nome: 'Pau-brasil', cientifico: 'Paubrasilia echinata', papel: 'Árvore que deu nome ao país, historicamente explorada pelo corante extraído de seu tronco.', curiosidade: 'Foi tão intensamente explorada no período colonial que hoje é uma espécie ameaçada.' },
       { nome: 'Jequitibá-rosa', cientifico: 'Cariniana legalis', papel: 'Uma das árvores mais altas e longevas da Mata Atlântica.', curiosidade: 'Pode viver centenas de anos e ultrapassar 40 metros de altura.' },
       { nome: 'Bromélia', cientifico: 'Família Bromeliaceae', papel: 'Planta que acumula água entre suas folhas, criando pequenos microhabitats.', curiosidade: 'Algumas espécies de rãs completam todo o ciclo de vida dentro da água acumulada nas bromélias.' },
-      { nome: 'Palmeira-juçara', cientifico: 'Euterpe edulis', papel: 'Palmeira nativa cujo palmito é uma importante fonte de alimento para a fauna.', curiosidade: 'A extração predatória de seu palmito levou a espécie a ficar ameaçada de extinção.' }
+      { nome: 'Palmeira-juçara', cientifico: 'Euterpe edulis', papel: 'Palmeira nativa cujo palmito é uma importante fonte de alimento para a fauna.', curiosidade: 'A extração predatória de seu palmito levou a espécie a ficar ameaçada de extinção.' },
+      { nome: 'Araucária', cientifico: 'Araucaria angustifolia', papel: 'Conífera típica das matas de altitude da Mata Atlântica no Sul e Sudeste do país.', curiosidade: 'Suas sementes, os pinhões, são um alimento tradicional de inverno em partes do Sul do Brasil.' }
     ],
 
     redeDeVida: {
@@ -451,7 +454,8 @@ const BIOMAS = {
       { nome: 'Piúva', cientifico: 'Handroanthus impetiginosus', papel: 'Árvore de floração rosa intensa, comum nas cordilheiras do Pantanal.', curiosidade: 'Sua floração costuma marcar visualmente a transição entre as estações no bioma.' },
       { nome: 'Aguapé', cientifico: 'Eichhornia crassipes', papel: 'Planta aquática flutuante que forma extensos tapetes verdes sobre a água.', curiosidade: 'Suas raízes servem de abrigo para pequenos peixes e invertebrados aquáticos.' },
       { nome: 'Carandá', cientifico: 'Copernicia alba', papel: 'Palmeira típica de áreas periodicamente inundadas.', curiosidade: 'Forma densos palmeirais visíveis à distância na paisagem pantaneira.' },
-      { nome: 'Cambará', cientifico: 'Vochysia divergens', papel: 'Árvore que forma extensos "cambarazais" em áreas mais baixas e alagáveis.', curiosidade: 'Sua expansão em algumas áreas é estudada por pesquisadores como indicador de mudanças no regime de inundação.' }
+      { nome: 'Cambará', cientifico: 'Vochysia divergens', papel: 'Árvore que forma extensos "cambarazais" em áreas mais baixas e alagáveis.', curiosidade: 'Sua expansão em algumas áreas é estudada por pesquisadores como indicador de mudanças no regime de inundação.' },
+      { nome: 'Acuri', cientifico: 'Attalea phalerata', papel: 'Palmeira comum no Pantanal, cujos frutos alimentam diversas espécies da fauna local.', curiosidade: 'Araras e outros animais dependem de seus frutos, especialmente em períodos de escassez de outros alimentos.' }
     ],
 
     redeDeVida: {
@@ -550,7 +554,8 @@ const BIOMAS = {
       { nome: 'Capim-flechilha', cientifico: 'Gênero Piptochaetium', papel: 'Uma das gramíneas nativas típicas dos campos do Pampa.', curiosidade: 'Suas sementes têm uma estrutura pontiaguda que ajuda a se fixar no solo após dispersadas pelo vento.' },
       { nome: 'Butiazeiro', cientifico: 'Butia odorata', papel: 'Palmeira nativa típica da paisagem campestre do Rio Grande do Sul.', curiosidade: 'Seus frutos, o butiá, são usados tradicionalmente na culinária gaúcha.' },
       { nome: 'Barba-de-bode', cientifico: 'Vernonanthura tweedieana', papel: 'Arbusto nativo comum em áreas de campo e transição com mata.', curiosidade: 'Suas flores atraem grande variedade de polinizadores nativos.' },
-      { nome: 'Capim-caninha', cientifico: 'Andropogon lateralis', papel: 'Gramínea nativa que forma touceiras características da paisagem campestre.', curiosidade: 'É uma das espécies que ajuda a identificar áreas de campo nativo bem preservado.' }
+      { nome: 'Capim-caninha', cientifico: 'Andropogon lateralis', papel: 'Gramínea nativa que forma touceiras características da paisagem campestre.', curiosidade: 'É uma das espécies que ajuda a identificar áreas de campo nativo bem preservado.' },
+      { nome: 'Corticeira', cientifico: 'Erythrina crista-galli', papel: 'Árvore de flores vermelhas intensas, comum em áreas úmidas e margens de rios do Pampa.', curiosidade: 'Suas flores são a flor símbolo do Rio Grande do Sul e atraem beija-flores.' }
     ],
 
     redeDeVida: {

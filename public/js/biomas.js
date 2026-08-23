@@ -105,16 +105,27 @@
   `);
 
   // -------------------- FAUNA --------------------
+  // Estrutura de card compartilhada entre fauna e flora: ambas ganham uma
+  // área de foto grande (proporção 4:3) que é preenchida dinamicamente por
+  // uma foto real da espécie (ver carregarImagensEspecies mais abaixo).
+  // Enquanto a foto carrega — ou se a busca falhar — o emoji de fallback
+  // continua visível, sem quebrar o layout do card.
   function especieCard(item, tipo, idx) {
     const emojiFallback = tipo === 'fauna' ? '🐾' : '🌿';
+    const tagImagem = tipo === 'fauna'
+      ? (item.status || '')
+      : 'Nativa do bioma';
+
     return `
       <button class="especie-card" data-tipo="${tipo}" data-idx="${idx}">
-        <div class="especie-emoji">${emojiFallback}</div>
+        <div class="especie-imagem-wrap" data-especie-imagem="${item.nome.replace(/"/g, '&quot;')}" data-especie-tipo="${tipo}">
+          <span class="especie-emoji">${emojiFallback}</span>
+          ${tagImagem ? `<span class="especie-imagem-tag">${tagImagem}</span>` : ''}
+        </div>
         <div class="especie-corpo">
           <h3>${item.nome}</h3>
           <span class="cientifico">${item.cientifico}</span>
           <p class="desc">${item.desc || item.papel}</p>
-          ${item.status ? `<span class="status-tag">${item.status}</span>` : ''}
         </div>
       </button>
     `;
@@ -135,8 +146,8 @@
   const secaoFlora = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho">
       <div class="eyebrow">BIODIVERSIDADE</div>
-      <h2>A vida que cresce aqui</h2>
-      <p>Plantas e árvores que caracterizam a paisagem deste bioma.</p>
+      <h2>Plantas e árvores</h2>
+      <p>Espécies vegetais que caracterizam a paisagem deste bioma. Clique em um card para saber mais.</p>
     </div>
     <div class="bioma-cards-grid">${bioma.flora.map((f, i) => especieCard(f, 'flora', i)).join('')}</div>
   `);
@@ -327,21 +338,25 @@
   document.addEventListener('scroll', atualizarProgresso, { passive: true });
   atualizarProgresso();
 
-  // Mapa: desenha o SVG simplificado das 5 regiões e destaca a(s) do bioma
-  fetch('../assets/biomas/mapa-regioes-simplificado.svg')
-    .then(r => r.ok ? r.text() : Promise.reject())
-    .then(svgText => {
-      const wrap = document.getElementById('bioma-mapa-wrap');
-      wrap.innerHTML = svgText;
-      const destaque = bioma.mapaDestaque || [];
-      wrap.querySelectorAll('.regiao-mapa').forEach(g => {
-        if (destaque.includes(g.getAttribute('data-regiao'))) g.classList.add('destaque');
-      });
-    })
-    .catch(() => {
-      const wrap = document.getElementById('bioma-mapa-wrap');
-      if (wrap) wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--cor-texto-suave);font-size:0.85rem;text-align:center;padding:20px;">Mapa indisponível no momento</div>';
+  // Mapa: desenha o SVG simplificado das 5 regiões e destaca a(s) do bioma.
+  // O SVG vem embutido em js/mapa-brasil-svg.js (window.MAPA_BRASIL_SVG) em vez
+  // de ser buscado com fetch(): assim o mapa funciona tanto rodando pelo
+  // servidor Express quanto ao abrir o arquivo .html diretamente no navegador
+  // (fetch() de arquivo local é bloqueado por CORS em file://, o que fazia o
+  // mapa cair sempre no aviso de "indisponível").
+  (function desenharMapaBioma() {
+    const wrap = document.getElementById('bioma-mapa-wrap');
+    if (!wrap) return;
+    if (!window.MAPA_BRASIL_SVG) {
+      wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--cor-texto-suave);font-size:0.85rem;text-align:center;padding:20px;">Mapa indisponível no momento</div>';
+      return;
+    }
+    wrap.innerHTML = window.MAPA_BRASIL_SVG;
+    const destaque = bioma.mapaDestaque || [];
+    wrap.querySelectorAll('.regiao-mapa').forEach(g => {
+      if (destaque.includes(g.getAttribute('data-regiao'))) g.classList.add('destaque');
     });
+  })();
 
   // Contadores de estatística ao entrar na viewport
   const statCards = root.querySelectorAll('.bioma-stat-card');
@@ -368,6 +383,60 @@
   document.addEventListener('scroll', atualizarTimeline, { passive: true });
   atualizarTimeline();
 
+  // Carrega automaticamente uma foto real da espécie (fauna ou flora) pela
+  // Wikipédia/Wikimedia. Não exige alterar o banco ou adicionar uma imagem
+  // manualmente para cada espécie. Se a busca falhar, o emoji original
+  // continua aparecendo como fallback — o layout do card nunca quebra.
+  const cacheImagensEspecie = new Map();
+
+  async function buscarImagemEspecie(nome, tipo) {
+    const chave = `${tipo}:${nome}`;
+    if (cacheImagensEspecie.has(chave)) return cacheImagensEspecie.get(chave);
+
+    const sufixoBusca = tipo === 'flora' ? 'planta' : 'animal';
+    try {
+      const url = `https://pt.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(nome + ' ' + sufixoBusca)}&gsrnamespace=0&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=700&format=json&origin=*`;
+      const resposta = await fetch(url);
+      if (!resposta.ok) throw new Error('Falha na API da Wikipédia');
+      const dados = await resposta.json();
+      const paginas = dados.query && dados.query.pages ? Object.values(dados.query.pages) : [];
+      const imagem = paginas[0]?.thumbnail?.source || null;
+      cacheImagensEspecie.set(chave, imagem);
+      return imagem;
+    } catch (erro) {
+      cacheImagensEspecie.set(chave, null);
+      return null;
+    }
+  }
+
+  async function carregarImagensEspecies() {
+    const elementos = root.querySelectorAll('[data-especie-imagem]');
+    elementos.forEach(async (container) => {
+      const nome = container.getAttribute('data-especie-imagem');
+      const tipo = container.getAttribute('data-especie-tipo');
+      const imagem = await buscarImagemEspecie(nome, tipo);
+      if (!imagem) return;
+
+      const img = document.createElement('img');
+      img.src = imagem;
+      img.alt = `Foto de ${nome}`;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.onerror = () => { img.remove(); };
+      img.onload = () => {
+        const emoji = container.querySelector('.especie-emoji');
+        if (emoji) emoji.style.display = 'none';
+      };
+
+      // Anexa a foto por cima do emoji de fallback (que só volta a aparecer
+      // se a imagem falhar em carregar via onerror acima).
+      container.appendChild(img);
+    });
+  }
+
+  // Começa a carregar as fotos sem bloquear o restante da página.
+  carregarImagensEspecies();
+
   // Modal de espécie (fauna/flora)
   const modalOverlay = el('div', { class: 'especie-modal-overlay', id: 'especie-modal-overlay' }, `
     <div class="especie-modal" role="dialog" aria-modal="true">
@@ -378,13 +447,18 @@
   document.body.appendChild(modalOverlay);
 
   root.querySelectorAll('.especie-card').forEach(card => {
-    card.addEventListener('click', () => {
+    card.addEventListener('click', async () => {
       const tipo = card.dataset.tipo;
       const idx = Number(card.dataset.idx);
       const item = bioma[tipo][idx];
       const conteudo = document.getElementById('especie-modal-conteudo');
+      const imagemModal = await buscarImagemEspecie(item.nome, tipo);
+      const imagemHtml = imagemModal
+        ? `<img src="${imagemModal}" alt="Foto de ${item.nome}" style="width:100%;height:230px;object-fit:cover;border-radius:12px;margin-bottom:18px;">`
+        : '';
       if (tipo === 'fauna') {
         conteudo.innerHTML = `
+          ${imagemHtml}
           <h3>${item.nome}</h3>
           <span class="cientifico">${item.cientifico}</span>
           ${item.status ? `<span class="status-tag" style="margin-bottom:16px;display:inline-block;">${item.status}</span>` : ''}
@@ -395,6 +469,7 @@
         `;
       } else {
         conteudo.innerHTML = `
+          ${imagemHtml}
           <h3>${item.nome}</h3>
           <span class="cientifico">${item.cientifico}</span>
           <div class="campo"><div class="rotulo">Papel ecológico</div><p>${item.papel}</p></div>
@@ -408,18 +483,51 @@
   modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('aberto'); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modalOverlay.classList.remove('aberto'); });
 
-  // Rede de vida: clicar destaca a camada selecionada
+  // Rede de vida: clicar em um organismo destaca a camada dele e conecta
+  // visualmente às camadas com as quais ele se relaciona na cadeia alimentar
+  // (produtores ↔ herbívoros ↔ predadores ↔ decompositores). Como os dados
+  // não mapeiam espécie a espécie (ex: "onça come exatamente esta presa"),
+  // a conexão é feita por camada — o mesmo nível de precisão descrito no
+  // texto da seção — em vez de inventar relações específicas não verificadas.
   const redeWrap = document.getElementById('rede-vida-wrap');
+  const CAMADAS_CONECTADAS = {
+    produtores: ['herbivoros'],
+    herbivoros: ['produtores', 'predadores'],
+    predadores: ['herbivoros', 'decompositores'],
+    decompositores: ['produtores', 'herbivoros', 'predadores']
+  };
+  const TEXTO_CONEXAO = {
+    produtores: 'Este organismo produz energia a partir da luz solar e serve de alimento direto para os herbívoros do bioma.',
+    herbivoros: 'Este organismo se alimenta de plantas e, por sua vez, é presa de predadores desta cadeia.',
+    predadores: 'Este organismo caça herbívoros para se alimentar; quando morre, seus restos também são reciclados por decompositores.',
+    decompositores: 'Este organismo decompõe matéria orgânica de todos os outros níveis, devolvendo nutrientes ao solo.'
+  };
   if (redeWrap) {
+    // Área de texto explicativo, criada dinamicamente logo abaixo da rede.
+    const explicacao = el('p', { class: 'rede-vida-explicacao', id: 'rede-vida-explicacao' }, '');
+    redeWrap.after(explicacao);
+
     redeWrap.querySelectorAll('.rede-vida-item').forEach(item => {
       item.addEventListener('click', () => {
         const jaAtivo = item.classList.contains('ativo');
         redeWrap.querySelectorAll('.rede-vida-item').forEach(i => i.classList.remove('ativo', 'conectado'));
         redeWrap.classList.remove('selecionado');
-        if (!jaAtivo) {
-          item.classList.add('ativo');
-          redeWrap.classList.add('selecionado');
+
+        if (jaAtivo) {
+          explicacao.textContent = '';
+          return;
         }
+
+        item.classList.add('ativo');
+        redeWrap.classList.add('selecionado');
+
+        const camada = item.dataset.camada;
+        const camadasAlvo = CAMADAS_CONECTADAS[camada] || [];
+        redeWrap.querySelectorAll('.rede-vida-item').forEach(i => {
+          if (i !== item && camadasAlvo.includes(i.dataset.camada)) i.classList.add('conectado');
+        });
+
+        explicacao.textContent = `${item.textContent} — ${TEXTO_CONEXAO[camada] || ''}`;
       });
     });
   }

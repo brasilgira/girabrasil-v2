@@ -290,7 +290,7 @@
 .ppf-card p { color: var(--cor-texto-suave); line-height: 1.6; }
 
 /* --- Fauna / Flora --- */
-.bioma-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.bioma-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .especie-card {
   text-align: left;
   border: 1px solid var(--cor-borda);
@@ -298,17 +298,68 @@
   background: var(--cor-fundo-alt);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
-.especie-card:hover, .especie-card:focus-visible { transform: translateY(-4px); box-shadow: 0 20px 40px -24px rgba(22,40,31,0.35); }
-.especie-card .especie-emoji {
-  height: 120px;
+.especie-card:hover, .especie-card:focus-visible { transform: translateY(-4px); box-shadow: 0 24px 44px -24px rgba(22,40,31,0.4); border-color: color-mix(in srgb, var(--cor-bioma) 40%, var(--cor-borda)); }
+
+/* Área da foto — grande, proporção editorial, sempre com altura consistente
+   independente de a imagem real já ter carregado ou o card ainda estar no
+   estado de fallback (emoji). */
+.especie-imagem-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--cor-bioma) 16%, var(--cor-fundo-alt)), var(--cor-fundo-alt));
+}
+.especie-imagem-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.5s ease;
+}
+.especie-card:hover .especie-imagem-wrap img,
+.especie-card:focus-visible .especie-imagem-wrap img {
+  transform: scale(1.06);
+}
+.especie-imagem-wrap .especie-emoji {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.6rem;
-  background: linear-gradient(155deg, color-mix(in srgb, var(--cor-bioma) 16%, var(--cor-fundo-alt)), var(--cor-fundo-alt));
+  font-size: 2.8rem;
 }
+/* Sombreamento sutil no topo da foto, só o suficiente para a tag de
+   categoria/status permanecer legível sobre qualquer imagem. */
+.especie-imagem-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,20,15,0.32) 0%, rgba(10,20,15,0) 38%);
+  pointer-events: none;
+}
+.especie-imagem-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(246, 243, 234, 0.92);
+  color: var(--cor-texto);
+  backdrop-filter: blur(2px);
+}
+
 .especie-card .especie-corpo { padding: 18px 20px 22px; }
 .especie-card h3 { font-size: 1.05rem; margin-bottom: 2px; }
 .especie-card .cientifico { font-style: italic; color: var(--cor-texto-suave); font-size: 0.82rem; margin-bottom: 10px; display: block; }
@@ -374,6 +425,7 @@
 .rede-vida-wrap.selecionado .rede-vida-item:not(.ativo):not(.conectado) { opacity: 0.35; }
 .rede-vida-item.conectado { border-color: var(--cor-bioma); }
 .rede-vida-seta { text-align: center; color: var(--cor-texto-suave); font-size: 0.8rem; }
+.rede-vida-explicacao { max-width: 640px; margin: 18px auto 0; text-align: center; color: var(--cor-texto-suave); font-size: 0.9rem; min-height: 1.4em; }
 
 /* --- Ameaças --- */
 .ameacas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
