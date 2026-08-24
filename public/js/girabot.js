@@ -1,3 +1,8 @@
+// ATENÇÃO: o Gira-Bot ainda não tem IA de verdade conectada (isso é um
+// passo futuro do roteiro, que vai integrar com a Groq API no backend).
+// Por enquanto, este script só cuida da interface: mostrar a mensagem do
+// usuário na tela e avisar que o bot ainda não está disponível.
+
 const sidebar = document.getElementById('girabotSidebar');
 const overlay = document.getElementById('girabotOverlay');
 const botaoAbrirSidebar = document.getElementById('botaoAbrirSidebar');
@@ -10,305 +15,80 @@ const campoMensagem = document.getElementById('campoMensagem');
 
 let estadoVazioEscondido = false;
 
-// Histórico da conversa
-let mensagens = [];
-
-
-// ======================================================
-// SIDEBAR
-// ======================================================
+// --- Sidebar retrátil ----------------------------------------------------
 
 function abrirSidebar() {
-    sidebar.classList.add('aberta');
-    overlay.classList.add('visivel');
+  sidebar.classList.add('aberta');
+  overlay.classList.add('visivel');
 }
 
 function fecharSidebar() {
-    sidebar.classList.remove('aberta');
-    overlay.classList.remove('visivel');
+  sidebar.classList.remove('aberta');
+  overlay.classList.remove('visivel');
 }
 
 botaoAbrirSidebar.addEventListener('click', abrirSidebar);
 botaoFecharSidebar.addEventListener('click', fecharSidebar);
 overlay.addEventListener('click', fecharSidebar);
 
+// Fecha a sidebar com a tecla Esc, por acessibilidade
 document.addEventListener('keydown', (evento) => {
-    if (evento.key === 'Escape') {
-        fecharSidebar();
-    }
+  if (evento.key === 'Escape') fecharSidebar();
 });
 
+// --- Estado vazio (boas-vindas) ------------------------------------------
 
-// ======================================================
-// ESTADO INICIAL
-// ======================================================
-
+// Esconde a tela de boas-vindas com fade out suave.
+// Só executa uma vez (o CSS já cuida da transição via a classe .escondido).
 function esconderEstadoVazio() {
-    if (estadoVazioEscondido) return;
-
-    estadoVazio.classList.add('escondido');
-    estadoVazioEscondido = true;
+  if (estadoVazioEscondido) return;
+  estadoVazio.classList.add('escondido');
+  estadoVazioEscondido = true;
 }
 
+// Assim que o usuário começa a digitar, o estado vazio já começa a sumir
 campoMensagem.addEventListener('input', () => {
-    if (campoMensagem.value.length > 0) {
-        esconderEstadoVazio();
-    }
-});
-
-
-// ======================================================
-// SUGESTÕES
-// ======================================================
-
-document.querySelectorAll('.sugestao-chip').forEach((chip) => {
-
-    chip.addEventListener('click', () => {
-
-        campoMensagem.value = chip.textContent;
-
-        esconderEstadoVazio();
-
-        campoMensagem.focus();
-    });
-
-});
-
-
-// ======================================================
-// "BOLINHA" QUE REPRESENTA O GIRA-BOT (sem emoji)
-// ======================================================
-
-function criarAvatar() {
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar-bot';
-    avatar.setAttribute('aria-hidden', 'true');
-    return avatar;
-}
-
-
-// ======================================================
-// ADICIONAR MENSAGEM DO USUÁRIO (ou erro)
-// ======================================================
-
-function adicionarMensagem(texto, tipo) {
-
-    const linha = document.createElement('div');
-    linha.className = `mensagem-linha ${tipo === 'usuario' ? 'usuario' : 'bot'}`;
-
-    if (tipo !== 'usuario') {
-        linha.appendChild(criarAvatar());
-    }
-
-    const balao = document.createElement('div');
-    balao.className = `balao ${tipo}`;
-    balao.textContent = texto;
-
-    linha.appendChild(balao);
-
-    chatMensagens.appendChild(linha);
-
-    chatMensagens.scrollTop = chatMensagens.scrollHeight;
-
-    return linha;
-}
-
-
-// ======================================================
-// INDICADOR "GIRA-BOT ESTÁ PENSANDO"
-// ======================================================
-
-function mostrarPensando() {
-
-    const linha = document.createElement('div');
-    linha.className = 'mensagem-linha bot';
-    linha.appendChild(criarAvatar());
-
-    const balao = document.createElement('div');
-    balao.className = 'balao bot balao-digitando';
-    balao.innerHTML = `
-        <span class="ponto"></span>
-        <span class="ponto"></span>
-        <span class="ponto"></span>
-    `;
-
-    linha.appendChild(balao);
-
-    chatMensagens.appendChild(linha);
-
-    chatMensagens.scrollTop = chatMensagens.scrollHeight;
-
-    return linha;
-}
-
-
-// ======================================================
-// EFEITO DE DIGITAÇÃO
-// ======================================================
-
-async function escreverResposta(elemento, texto) {
-
-    // Velocidade da escrita
-    const velocidade = 18;
-
-    for (let i = 0; i < texto.length; i++) {
-
-        elemento.textContent += texto[i];
-
-        chatMensagens.scrollTop = chatMensagens.scrollHeight;
-
-        // Pequena pausa entre caracteres
-        await new Promise(resolve => {
-            setTimeout(resolve, velocidade);
-        });
-
-    }
-}
-
-
-// ======================================================
-// CRIAR BALÃO DO GIRA-BOT
-// ======================================================
-
-async function adicionarRespostaBot(texto) {
-
-    const linha = document.createElement('div');
-    linha.className = 'mensagem-linha bot';
-    linha.appendChild(criarAvatar());
-
-    const balao = document.createElement('div');
-    balao.className = 'balao bot';
-
-    const campoResposta = document.createElement('div');
-    campoResposta.className = 'resposta-texto';
-    balao.appendChild(campoResposta);
-
-    linha.appendChild(balao);
-
-    chatMensagens.appendChild(linha);
-
-    chatMensagens.scrollTop = chatMensagens.scrollHeight;
-
-    await escreverResposta(campoResposta, texto);
-
-    return linha;
-}
-
-
-// ======================================================
-// ENVIO
-// ======================================================
-
-formEnvio.addEventListener('submit', async (evento) => {
-
-    evento.preventDefault();
-
-    const texto = campoMensagem.value.trim();
-
-    if (!texto) return;
-
+  if (campoMensagem.value.length > 0) {
     esconderEstadoVazio();
+  }
+});
 
-    // ------------------------------------------
-    // MOSTRA MENSAGEM DO USUÁRIO
-    // ------------------------------------------
+// Clicar numa sugestão preenche o campo e foca nele, mas não envia sozinho
+// (o usuário decide se quer editar antes de mandar)
+document.querySelectorAll('.sugestao-chip').forEach((chip) => {
+  chip.addEventListener('click', () => {
+    campoMensagem.value = chip.textContent;
+    esconderEstadoVazio();
+    campoMensagem.focus();
+  });
+});
 
-    adicionarMensagem(texto, 'usuario');
+// --- Envio de mensagem -----------------------------------------------
 
-    // Adiciona ao histórico
-    mensagens.push({
-        role: 'user',
-        content: texto
-    });
+// Cria e insere um balão de mensagem na conversa
+function adicionarMensagem(texto, tipo) {
+  const balao = document.createElement('div');
+  balao.className = `mensagem ${tipo}`;
+  balao.textContent = texto;
+  chatMensagens.appendChild(balao);
+  chatMensagens.scrollTop = chatMensagens.scrollHeight;
+}
 
-    // Limpa campo
-    campoMensagem.value = '';
+formEnvio.addEventListener('submit', (evento) => {
+  evento.preventDefault();
 
-    // ------------------------------------------
-    // MOSTRA "PENSANDO..."
-    // ------------------------------------------
+  const texto = campoMensagem.value.trim();
+  if (!texto) return;
 
-    const indicadorPensando = mostrarPensando();
+  esconderEstadoVazio();
+  adicionarMensagem(texto, 'usuario');
+  campoMensagem.value = '';
 
-    try {
-
-        // ------------------------------------------
-        // CHAMA O BACKEND
-        // ------------------------------------------
-
-        const resposta = await fetch('/api/girabot', {
-
-            method: 'POST',
-
-            headers: {
-                'Content-Type': 'application/json'
-            },
-
-            body: JSON.stringify({
-                messages: mensagens
-            })
-
-        });
-
-
-        const dados = await resposta.json();
-
-
-        // ------------------------------------------
-        // VERIFICA ERRO
-        // ------------------------------------------
-
-        if (!resposta.ok) {
-
-            throw new Error(
-                dados.erro || 'Erro ao conversar com o Gira-Bot'
-            );
-
-        }
-
-
-        // ------------------------------------------
-        // REMOVE "PENSANDO..."
-        // ------------------------------------------
-
-        indicadorPensando.remove();
-
-
-        // ------------------------------------------
-        // ESCREVE A RESPOSTA GRADUALMENTE
-        // ------------------------------------------
-
-        await adicionarRespostaBot(dados.resposta);
-
-
-        // ------------------------------------------
-        // SALVA RESPOSTA NO HISTÓRICO
-        // ------------------------------------------
-
-        mensagens.push({
-            role: 'assistant',
-            content: dados.resposta
-        });
-
-
-    } catch (erro) {
-
-        console.error(
-            'Erro ao conversar com o Gira-Bot:',
-            erro
-        );
-
-
-        // Remove indicador
-        indicadorPensando.remove();
-
-
-        // Mensagem de erro
-        adicionarMensagem(
-            'Não foi possível conectar ao Gira-Bot no momento. Tente novamente em alguns instantes.',
-            'erro'
-        );
-
-    }
-
+  // Pequeno atraso simulando o tempo de resposta, antes de mostrar o aviso
+  setTimeout(() => {
+    adicionarMensagem(
+      '⚠️ O Gira-Bot ainda está em desenvolvimento e não pode responder no momento. Volte em breve!',
+      'erro'
+    );
+  }, 500);
 });

@@ -102,7 +102,7 @@ function renderizarRegiao(chave) {
 
     <div class="painel-botoes">
       <a href="noticias.html?regiao=${regiao.id}" class="botao botao-primario">Explorar notícias →</a>
-      <a href="girabot.html" class="botao botao-secundario">Perguntar ao GiraBot →</a>
+      <a href="girabot.html" class="botao botao-secundario">Perguntar ao Gira-Bot →</a>
     </div>
   `;
 }
