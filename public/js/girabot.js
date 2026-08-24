@@ -76,41 +76,22 @@ document.querySelectorAll('.sugestao-chip').forEach((chip) => {
 
 
 // ======================================================
-// "BOLINHA" QUE REPRESENTA O GIRA-BOT (sem emoji)
-// ======================================================
-
-function criarAvatar() {
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar-bot';
-    avatar.setAttribute('aria-hidden', 'true');
-    return avatar;
-}
-
-
-// ======================================================
-// ADICIONAR MENSAGEM DO USUÁRIO (ou erro)
+// ADICIONAR MENSAGEM DO USUÁRIO
 // ======================================================
 
 function adicionarMensagem(texto, tipo) {
 
-    const linha = document.createElement('div');
-    linha.className = `mensagem-linha ${tipo === 'usuario' ? 'usuario' : 'bot'}`;
-
-    if (tipo !== 'usuario') {
-        linha.appendChild(criarAvatar());
-    }
-
     const balao = document.createElement('div');
-    balao.className = `balao ${tipo}`;
+
+    balao.className = `mensagem ${tipo}`;
+
     balao.textContent = texto;
 
-    linha.appendChild(balao);
-
-    chatMensagens.appendChild(linha);
+    chatMensagens.appendChild(balao);
 
     chatMensagens.scrollTop = chatMensagens.scrollHeight;
 
-    return linha;
+    return balao;
 }
 
 
@@ -120,25 +101,28 @@ function adicionarMensagem(texto, tipo) {
 
 function mostrarPensando() {
 
-    const linha = document.createElement('div');
-    linha.className = 'mensagem-linha bot';
-    linha.appendChild(criarAvatar());
+    const container = document.createElement('div');
 
-    const balao = document.createElement('div');
-    balao.className = 'balao bot balao-digitando';
-    balao.innerHTML = `
-        <span class="ponto"></span>
-        <span class="ponto"></span>
-        <span class="ponto"></span>
+    container.className = 'mensagem bot pensando';
+
+    container.innerHTML = `
+        <div class="girabot-identidade">
+            <span class="girabot-icone">🌿</span>
+            <span>Gira-Bot</span>
+        </div>
+
+        <div class="pensando-conteudo">
+            <span class="ponto"></span>
+            <span class="ponto"></span>
+            <span class="ponto"></span>
+        </div>
     `;
 
-    linha.appendChild(balao);
-
-    chatMensagens.appendChild(linha);
+    chatMensagens.appendChild(container);
 
     chatMensagens.scrollTop = chatMensagens.scrollHeight;
 
-    return linha;
+    return container;
 }
 
 
@@ -172,26 +156,28 @@ async function escreverResposta(elemento, texto) {
 
 async function adicionarRespostaBot(texto) {
 
-    const linha = document.createElement('div');
-    linha.className = 'mensagem-linha bot';
-    linha.appendChild(criarAvatar());
+    const mensagem = document.createElement('div');
 
-    const balao = document.createElement('div');
-    balao.className = 'balao bot';
+    mensagem.className = 'mensagem bot';
 
-    const campoResposta = document.createElement('div');
-    campoResposta.className = 'resposta-texto';
-    balao.appendChild(campoResposta);
+    mensagem.innerHTML = `
+        <div class="girabot-identidade">
+            <span class="girabot-icone">🌿</span>
+            <span>Gira-Bot</span>
+        </div>
 
-    linha.appendChild(balao);
+        <div class="resposta-texto"></div>
+    `;
 
-    chatMensagens.appendChild(linha);
+    chatMensagens.appendChild(mensagem);
 
     chatMensagens.scrollTop = chatMensagens.scrollHeight;
 
+    const campoResposta = mensagem.querySelector('.resposta-texto');
+
     await escreverResposta(campoResposta, texto);
 
-    return linha;
+    return mensagem;
 }
 
 
@@ -305,7 +291,7 @@ formEnvio.addEventListener('submit', async (evento) => {
 
         // Mensagem de erro
         adicionarMensagem(
-            'Não foi possível conectar ao Gira-Bot no momento. Tente novamente em alguns instantes.',
+            '⚠️ Não foi possível conectar ao Gira-Bot no momento. Tente novamente em alguns instantes.',
             'erro'
         );
 
