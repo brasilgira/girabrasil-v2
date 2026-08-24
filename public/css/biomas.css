@@ -1,0 +1,553 @@
+/* ==========================================================================
+   GiraBrasil — Estilos da experiência de exploração de biomas
+   Importa base.css. Usa as mesmas variáveis de cor, tipografia e espaçamento
+   já definidas no design system do site — nenhuma cor ou fonte nova é criada.
+   ========================================================================== */
+
+:root {
+  /* Cor de destaque específica do bioma atual — definida via JS em cada
+     página, com fallback para a cor institucional caso algo falhe. */
+  --cor-bioma: var(--cor-floresta);
+}
+
+/* --- Barra de progresso de leitura --- */
+.progresso-track {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 200;
+  background: transparent;
+}
+.progresso-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--cor-bioma);
+  transition: width 80ms linear;
+}
+
+/* --- Botão voltar --- */
+.voltar-biomas {
+  max-width: var(--largura-max);
+  margin: 20px auto 0;
+  padding: 0 32px;
+}
+.voltar-biomas a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+.voltar-biomas a:hover { gap: 12px; color: var(--cor-floresta); }
+
+/* --- HERO --- */
+.bioma-hero {
+  position: relative;
+  height: 86vh;
+  min-height: 520px;
+  max-height: 800px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  color: var(--cor-texto-claro);
+}
+.bioma-hero-imagem {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.bioma-hero-imagem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: bioma-zoom-lento 24s ease-in-out infinite alternate;
+}
+@keyframes bioma-zoom-lento {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+.bioma-hero-imagem::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,20,15,0.25) 0%, rgba(10,20,15,0.55) 55%, rgba(10,20,15,0.92) 100%);
+}
+.bioma-hero-conteudo {
+  position: relative;
+  z-index: 1;
+  max-width: var(--largura-max);
+  margin: 0 auto;
+  padding: 0 32px 64px;
+  width: 100%;
+}
+.bioma-hero-conteudo .eyebrow.claro {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: bioma-fade-up 0.8s ease forwards 0.1s;
+}
+.bioma-hero-conteudo h1 {
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  margin: 14px 0 16px;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: bioma-fade-up 0.9s ease forwards 0.25s;
+}
+.bioma-hero-conteudo .bioma-subtitulo {
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  color: var(--cor-texto-suave-claro);
+  max-width: 46ch;
+  margin-bottom: 22px;
+  opacity: 0;
+  transform: translateY(14px);
+  animation: bioma-fade-up 0.9s ease forwards 0.4s;
+}
+.bioma-hero-conteudo .bioma-localizacao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave-claro);
+  opacity: 0;
+  animation: bioma-fade-up 0.9s ease forwards 0.55s;
+}
+@keyframes bioma-fade-up {
+  to { opacity: 1; transform: translateY(0); }
+}
+.bioma-scroll-indicador {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--cor-texto-suave-claro);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: bioma-bounce 2.2s ease-in-out infinite;
+}
+.bioma-scroll-indicador .linha { width: 1px; height: 26px; background: var(--cor-texto-suave-claro); opacity: 0.6; }
+@keyframes bioma-bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 8px); }
+}
+
+/* --- Seção genérica --- */
+.bioma-secao {
+  padding: 88px 32px;
+  max-width: var(--largura-max);
+  margin: 0 auto;
+}
+.bioma-secao.fundo-alt { background: var(--cor-fundo-alt); border-top: 1px solid var(--cor-borda); border-bottom: 1px solid var(--cor-borda); max-width: none; }
+.bioma-secao.fundo-alt > .bioma-secao-inner { max-width: var(--largura-max); margin: 0 auto; }
+.bioma-secao-cabecalho { max-width: 640px; margin-bottom: 44px; }
+.bioma-secao-cabecalho .eyebrow { color: var(--cor-bioma); margin-bottom: 12px; }
+.bioma-secao-cabecalho h2 { font-size: clamp(1.7rem, 3vw, 2.3rem); margin-bottom: 12px; }
+.bioma-secao-cabecalho p { color: var(--cor-texto-suave); }
+
+/* --- Dados rápidos --- */
+.bioma-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--cor-borda);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+.bioma-stat-card { background: var(--cor-fundo-alt); padding: 30px 26px; }
+.bioma-stat-card .rotulo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cor-texto-suave);
+  margin-bottom: 10px;
+}
+.bioma-stat-card .valor {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+  color: var(--cor-bioma);
+  margin-bottom: 6px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.bioma-stat-card.em-vista .valor { opacity: 1; transform: translateY(0); }
+.bioma-stat-card .detalhe { font-size: 0.82rem; color: var(--cor-texto-suave); }
+
+/* --- Mapa --- */
+.bioma-mapa-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-top: 49.3%;
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  overflow: hidden;
+}
+.bioma-mapa-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bioma-mapa-wrap .regiao-mapa-path {
+  fill: var(--cor-borda);
+  stroke: var(--cor-fundo-alt);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: fill 0.3s ease;
+}
+.bioma-mapa-wrap .regiao-mapa.destaque .regiao-mapa-path { fill: var(--cor-bioma); }
+.bioma-mapa-legenda {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+}
+.bioma-mapa-legenda .ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--cor-bioma); }
+
+/* --- Linha do tempo --- */
+.timeline-wrap { position: relative; padding-left: 28px; }
+.timeline-wrap::before {
+  content: '';
+  position: absolute;
+  left: 5px; top: 6px; bottom: 6px;
+  width: 2px;
+  background: var(--cor-borda);
+}
+.timeline-progresso {
+  position: absolute;
+  left: 5px; top: 6px;
+  width: 2px;
+  background: var(--cor-bioma);
+  height: 0%;
+  transition: height 0.2s ease-out;
+}
+.timeline-item {
+  position: relative;
+  padding: 0 0 48px 28px;
+  opacity: 0.35;
+  transition: opacity 0.5s ease;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item.em-vista { opacity: 1; }
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -28px; top: 4px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--cor-fundo-alt);
+  border: 2px solid var(--cor-borda);
+  transition: border-color 0.4s ease, background 0.4s ease;
+}
+.timeline-item.em-vista::before { border-color: var(--cor-bioma); background: var(--cor-bioma); }
+.timeline-item .periodo {
+  font-family: var(--fonte-corpo);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-bioma);
+  margin-bottom: 6px;
+}
+.timeline-item h3 { font-size: 1.2rem; margin-bottom: 8px; }
+.timeline-item p { color: var(--cor-texto-suave); max-width: 60ch; }
+
+/* --- Passado / Presente / Futuro --- */
+.ppf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.ppf-card {
+  padding: 30px 26px;
+  border-radius: var(--raio);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo-alt);
+}
+.ppf-card .rotulo {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+.ppf-card.passado .rotulo { background: var(--cor-borda); color: var(--cor-texto-suave); }
+.ppf-card.presente .rotulo { background: var(--cor-bioma); color: var(--cor-texto-claro); }
+.ppf-card.futuro .rotulo { background: transparent; color: var(--cor-bioma); border: 1px solid var(--cor-bioma); }
+.ppf-card p { color: var(--cor-texto-suave); line-height: 1.6; }
+
+/* --- Fauna / Flora --- */
+.bioma-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.especie-card {
+  text-align: left;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-fundo-alt);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.especie-card:hover, .especie-card:focus-visible { transform: translateY(-4px); box-shadow: 0 24px 44px -24px rgba(22,40,31,0.4); border-color: color-mix(in srgb, var(--cor-bioma) 40%, var(--cor-borda)); }
+
+/* Área da foto — grande, proporção editorial, sempre com altura consistente
+   independente de a imagem real já ter carregado ou o card ainda estar no
+   estado de fallback (emoji). */
+.especie-imagem-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: linear-gradient(155deg, color-mix(in srgb, var(--cor-bioma) 16%, var(--cor-fundo-alt)), var(--cor-fundo-alt));
+}
+.especie-imagem-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.5s ease;
+}
+.especie-card:hover .especie-imagem-wrap img,
+.especie-card:focus-visible .especie-imagem-wrap img {
+  transform: scale(1.06);
+}
+.especie-imagem-wrap .especie-emoji {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+}
+/* Sombreamento sutil no topo da foto, só o suficiente para a tag de
+   categoria/status permanecer legível sobre qualquer imagem. */
+.especie-imagem-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,20,15,0.32) 0%, rgba(10,20,15,0) 38%);
+  pointer-events: none;
+}
+.especie-imagem-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(246, 243, 234, 0.92);
+  color: var(--cor-texto);
+  backdrop-filter: blur(2px);
+}
+
+.especie-card .especie-corpo { padding: 18px 20px 22px; }
+.especie-card h3 { font-size: 1.05rem; margin-bottom: 2px; }
+.especie-card .cientifico { font-style: italic; color: var(--cor-texto-suave); font-size: 0.82rem; margin-bottom: 10px; display: block; }
+.especie-card p.desc { color: var(--cor-texto-suave); font-size: 0.88rem; line-height: 1.5; margin-bottom: 12px; }
+.especie-card .status-tag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto-suave);
+}
+
+/* --- Modal de detalhe da espécie --- */
+.especie-modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(10, 20, 15, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.especie-modal-overlay.aberto { opacity: 1; pointer-events: auto; }
+.especie-modal {
+  background: var(--cor-fundo);
+  border-radius: var(--raio);
+  max-width: 520px; width: 100%;
+  max-height: 84vh;
+  overflow-y: auto;
+  padding: 32px;
+  transform: translateY(14px) scale(0.98);
+  transition: transform 0.25s ease;
+}
+.especie-modal-overlay.aberto .especie-modal { transform: translateY(0) scale(1); }
+.especie-modal-fechar { float: right; font-size: 1.4rem; color: var(--cor-texto-suave); }
+.especie-modal h3 { font-size: 1.5rem; margin: 6px 0 2px; }
+.especie-modal .cientifico { font-style: italic; color: var(--cor-texto-suave); display: block; margin-bottom: 18px; }
+.especie-modal .campo { margin-bottom: 16px; }
+.especie-modal .campo .rotulo { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cor-bioma); margin-bottom: 4px; }
+.especie-modal .campo p { color: var(--cor-texto-suave); line-height: 1.6; }
+
+/* --- Rede de vida --- */
+.rede-vida-wrap { display: flex; flex-direction: column; gap: 22px; }
+.rede-vida-camada { display: flex; flex-direction: column; gap: 10px; }
+.rede-vida-camada .rotulo-camada { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cor-texto-suave); }
+.rede-vida-itens { display: flex; flex-wrap: wrap; gap: 10px; }
+.rede-vida-item {
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--cor-borda);
+  background: var(--cor-fundo-alt);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+}
+.rede-vida-item.ativo { border-color: var(--cor-bioma); background: var(--cor-bioma); color: var(--cor-texto-claro); }
+.rede-vida-wrap.selecionado .rede-vida-item:not(.ativo):not(.conectado) { opacity: 0.35; }
+.rede-vida-item.conectado { border-color: var(--cor-bioma); }
+.rede-vida-seta { text-align: center; color: var(--cor-texto-suave); font-size: 0.8rem; }
+.rede-vida-explicacao { max-width: 640px; margin: 18px auto 0; text-align: center; color: var(--cor-texto-suave); font-size: 0.9rem; min-height: 1.4em; }
+
+/* --- Ameaças --- */
+.ameacas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.ameaca-card { display: flex; gap: 16px; padding: 22px; border-radius: var(--raio); border: 1px solid var(--cor-borda); background: var(--cor-fundo-alt); }
+.ameaca-card .icone { font-size: 1.6rem; flex-shrink: 0; }
+.ameaca-card h3 { font-size: 1rem; margin-bottom: 6px; }
+.ameaca-card p { color: var(--cor-texto-suave); font-size: 0.9rem; line-height: 1.55; }
+
+/* --- Ser humano --- */
+.humano-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: start; }
+.humano-texto p { color: var(--cor-texto-suave); line-height: 1.7; }
+.humano-pontos { display: flex; flex-direction: column; gap: 12px; }
+.humano-pontos li { display: flex; gap: 10px; font-size: 0.92rem; color: var(--cor-texto-suave); }
+.humano-pontos li::before { content: '🤝'; flex-shrink: 0; }
+
+/* --- Conservação --- */
+.conservacao-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.conservacao-card { padding: 24px 20px; border-radius: var(--raio); background: var(--cor-bioma); color: var(--cor-texto-claro); }
+.conservacao-card .icone { font-size: 1.5rem; margin-bottom: 12px; display: block; }
+.conservacao-card h3 { font-size: 0.98rem; margin-bottom: 6px; }
+.conservacao-card p { font-size: 0.85rem; color: rgba(243,241,233,0.8); line-height: 1.5; }
+
+/* --- Você sabia? --- */
+.fatos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.fato-card {
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-fundo-alt);
+  padding: 20px 22px;
+  cursor: pointer;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+}
+.fato-card .fato-pergunta { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.fato-card .fato-pergunta::before { content: '💡'; }
+.fato-card .fato-resposta { display: none; color: var(--cor-texto-suave); font-size: 0.92rem; line-height: 1.55; }
+.fato-card.aberto .fato-pergunta { display: none; }
+.fato-card.aberto .fato-resposta { display: block; }
+
+/* --- Som do bioma --- */
+.som-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 26px 30px;
+  border-radius: var(--raio);
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+}
+.som-botao {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--cor-bioma);
+  color: var(--cor-texto-claro);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.som-botao:hover { transform: scale(1.06); }
+.som-onda { display: flex; align-items: center; gap: 3px; height: 22px; }
+.som-onda span { width: 3px; background: var(--cor-bioma); border-radius: 2px; height: 6px; opacity: 0.4; transition: height 0.2s ease, opacity 0.2s ease; }
+.som-card.tocando .som-onda span { animation: onda-som 1s ease-in-out infinite; opacity: 1; }
+.som-onda span:nth-child(2) { animation-delay: .1s; }
+.som-onda span:nth-child(3) { animation-delay: .2s; }
+.som-onda span:nth-child(4) { animation-delay: .3s; }
+.som-onda span:nth-child(5) { animation-delay: .4s; }
+@keyframes onda-som { 0%, 100% { height: 6px; } 50% { height: 20px; } }
+.som-texto .titulo { font-weight: 600; margin-bottom: 3px; }
+.som-texto .descricao { font-size: 0.85rem; color: var(--cor-texto-suave); }
+
+/* --- Perfil visual --- */
+.perfil-grid { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--cor-borda); }
+.perfil-linha { display: grid; grid-template-columns: 200px 1fr; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--cor-borda); align-items: baseline; }
+.perfil-linha .rotulo { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cor-texto-suave); }
+.perfil-linha .valor { color: var(--cor-texto); }
+
+/* --- Exploração / progresso --- */
+.exploracao-card {
+  text-align: center;
+  padding: 44px 32px;
+  border-radius: var(--raio);
+  background: var(--cor-bioma);
+  color: var(--cor-texto-claro);
+}
+.exploracao-card h2 { font-size: 1.5rem; margin-bottom: 18px; }
+.exploracao-barra { max-width: 340px; margin: 0 auto 12px; height: 8px; border-radius: 999px; background: rgba(243,241,233,0.18); overflow: hidden; }
+.exploracao-barra-fill { height: 100%; width: 0%; background: var(--cor-texto-claro); border-radius: 999px; transition: width 0.6s ease; }
+.exploracao-legenda { font-size: 0.85rem; color: rgba(243,241,233,0.8); }
+
+/* --- Biomas relacionados (reutiliza .card-bioma-completo do index.css) --- */
+.relacionados-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+/* --- Foco acessível --- */
+.especie-card:focus-visible, .fato-card:focus-visible, .rede-vida-item:focus-visible, .som-botao:focus-visible {
+  outline: 2px solid var(--cor-bioma);
+  outline-offset: 3px;
+}
+
+/* --- Responsivo --- */
+@media (max-width: 980px) {
+  .bioma-stats-grid { grid-template-columns: 1fr 1fr; }
+  .ppf-grid { grid-template-columns: 1fr; }
+  .bioma-cards-grid { grid-template-columns: 1fr 1fr; }
+  .ameacas-grid { grid-template-columns: 1fr; }
+  .humano-grid { grid-template-columns: 1fr; gap: 32px; }
+  .conservacao-grid { grid-template-columns: 1fr 1fr; }
+  .fatos-grid { grid-template-columns: 1fr; }
+  .relacionados-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .bioma-hero { height: 78vh; }
+  .bioma-stats-grid { grid-template-columns: 1fr; }
+  .bioma-cards-grid { grid-template-columns: 1fr; }
+  .conservacao-grid { grid-template-columns: 1fr; }
+  .perfil-linha { grid-template-columns: 1fr; gap: 4px; }
+  .timeline-wrap { padding-left: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bioma-hero-imagem img { animation: none; }
+  .bioma-scroll-indicador { animation: none; }
+  * { scroll-behavior: auto !important; }
+}

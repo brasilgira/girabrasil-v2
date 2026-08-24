@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obrigado pelo seu apoio — Gira-Brasil</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/doacao.css">
+</head>
+<body>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira-Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">Gira-Bot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="#" class="link-entrar">Entrar</a>
+      <a href="#" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<section class="doacao-sucesso">
+  <div class="sucesso-icone" aria-hidden="true">
+    <svg viewBox="0 0 60 60" width="60" height="60">
+      <circle cx="30" cy="30" r="28" fill="none" stroke="var(--cor-floresta)" stroke-width="2.5" class="sucesso-circulo"/>
+      <path d="M18 31 L26 39 L42 21" fill="none" stroke="var(--cor-floresta)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="sucesso-check"/>
+    </svg>
+  </div>
+  <div class="eyebrow">DOAÇÃO SIMULADA COM SUCESSO</div>
+  <h1>Obrigado por apoiar o Gira-Brasil.</h1>
+  <p class="sucesso-valor" id="sucesso-valor"></p>
+  <p class="sucesso-texto">Seu apoio ajuda a manter nossa plataforma ativa, ampliar nossos conteúdos e continuar levando informação sobre a natureza brasileira para mais pessoas.</p>
+
+  <div class="sucesso-botoes">
+    <a href="index.html" class="botao botao-primario">Voltar ao Gira-Brasil</a>
+    <a href="index.html#biomas" class="botao botao-secundario">Conhecer os biomas</a>
+  </div>
+
+  <p class="sucesso-nota">Esta é uma simulação de doação, parte do protótipo do Gira-Brasil. Nenhuma cobrança real foi processada.</p>
+</section>
+
+<footer class="footer-site">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <div class="logo-site">Gira-Brasil</div>
+      <p>Informação, tecnologia e educação para preservar a natureza brasileira.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Navegar</h4>
+      <ul>
+        <li><a href="index.html">Início</a></li>
+        <li><a href="noticias.html">Notícias</a></li>
+        <li><a href="regioes.html">Regiões</a></li>
+        <li><a href="jogos.html">Jogos</a></li>
+        <li><a href="girabot.html">Gira-Bot</a></li>
+        <li><a href="sobre.html">Sobre</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Projeto</h4>
+      <ul>
+        <li><a href="#">Plataforma de educação ambiental</a></li>
+        <li><a href="#">Desenvolvida por estudantes de TI</a></li>
+        <li><a href="#">Versão 2026 — em desenvolvimento</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-base">
+    <span>Gira-Brasil © 2026</span>
+    <span>Natureza • Informação • Educação • Tecnologia</span>
+  </div>
+</footer>
+
+<script>
+  // Lê o valor da doação simulada a partir da URL (?valor=10,00) e exibe na mensagem.
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const valor = params.get('valor');
+    const el = document.getElementById('sucesso-valor');
+    if (valor && el) {
+      el.textContent = `Sua contribuição de R$ ${valor} foi registrada nesta simulação.`;
+    } else if (el) {
+      el.remove();
+    }
+  })();
+</script>
+
+</body>
+</html>

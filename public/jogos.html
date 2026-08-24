@@ -3,21 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jogos — GiraBrasil</title>
+<title>Jogos — Gira-Brasil</title>
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/jogos.css">
+<script src="js/jogos.js" defer></script>
+<script src="js/jogos-modal.js" defer></script>
 </head>
-<body>
+<body class="pagina-jogos">
 
 <header class="header-site">
   <div class="header-inner">
-    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <a href="index.html" class="logo-site">Gira-Brasil</a>
     <nav class="nav-site">
       <a href="index.html">Início</a>
       <a href="noticias.html">Notícias</a>
       <a href="regioes.html">Regiões</a>
       <a href="jogos.html" class="ativo">Jogos</a>
-      <a href="girabot.html">GiraBot</a>
+      <a href="girabot.html">Gira-Bot</a>
       <a href="sobre.html">Sobre</a>
     </nav>
     <div class="header-acoes">
@@ -27,141 +29,118 @@
   </div>
 </header>
 
-<section class="jogos-hero">
-  <div class="jogos-hero-inner">
-    <div class="eyebrow claro">APRENDER JOGANDO</div>
-    <h1>Escolha sua próxima expedição.</h1>
-    <p>Quatro jogos educativos sobre florestas, biomas e biodiversidade brasileira. Cada experiência foi pensada para uma faixa de idade e um objetivo de aprendizado.</p>
-    <span class="aviso-login">Entre na sua conta para jogar e salvar seu progresso</span>
-  </div>
-</section>
-
 <section class="secao-jogos">
   <!-- Cada card abaixo é só design + estrutura. A lógica de cada jogo
        fica com os amigos do Iago, que vão plugar um arquivo .js próprio
        usando o atributo data-jogo como gancho (ex: document.querySelector('[data-jogo="quiz-da-floresta"]')).
-       Nenhum jogo funciona de verdade ainda — os links "Jogar" são placeholder (#). -->
-  <div class="grid-jogos">
+       Nenhum jogo funciona de verdade ainda — os links "Jogar" são placeholder (#).
 
-    <article class="jogo-card" data-jogo="quiz-da-floresta">
+       Layout: seletor de modo (estilo "escolha seu jogo"). Um card fica
+       expandido (.ativo) por vez; os outros ficam recolhidos, mostrando
+       só a imagem e o título. Clicar em um card recolhido o expande
+       (ver js/jogos.js). -->
+  <div class="seletor-jogos" id="seletorJogos">
+
+    <button type="button" class="jogo-card" data-jogo="quiz-da-floresta" aria-pressed="false">
       <div class="jogo-fundo">
         <img src="assets/jogos/game-quiz.jpg" alt="Ilustração de floresta com pontos de interrogação">
       </div>
+      <div class="jogo-titulo-recolhido">Quiz de Espécies</div>
       <div class="jogo-conteudo">
-        <div class="jogo-eyebrow">Perguntas rápidas sobre florestas brasileiras</div>
-        <h3>Quiz da Floresta</h3>
-        <p class="jogo-descricao">Um quiz por rodadas em que cada resposta correta acende uma nova parte da floresta. Ideal para começar a explorar os conceitos básicos de ecologia brasileira.</p>
-        <div class="jogo-meta">
-          <span>Fácil</span>
-          <span>8 a 12 anos</span>
-          <span>10 minutos</span>
-        </div>
+        <div class="jogo-eyebrow">Reconheça animais da fauna brasileira em fotos</div>
+        <h3>Quiz de Espécies</h3>
         <div class="jogo-botoes">
-          <a href="#" class="botao botao-primario">Jogar</a>
-          <a href="#" class="botao botao-secundario sobre-escuro">Detalhes</a>
+          <a href="#" class="botao botao-jogar">Jogar</a>
         </div>
       </div>
-    </article>
+    </button>
 
-    <article class="jogo-card" data-jogo="guardioes-da-amazonia">
+    <button type="button" class="jogo-card" data-jogo="guardioes-da-amazonia" aria-pressed="false">
       <div class="jogo-fundo">
         <img src="assets/jogos/game-guardioes.jpg" alt="Ilustração de personagens na floresta amazônica">
       </div>
+      <div class="jogo-titulo-recolhido">Guarda da Floresta</div>
       <div class="jogo-conteudo">
-        <div class="jogo-eyebrow">Missões de proteção na maior floresta tropical</div>
-        <h3>Guardiões da Amazônia</h3>
-        <p class="jogo-descricao">Assuma o papel de um jovem guardião e cumpra missões de fiscalização, restauração e educação comunitária ao longo de um rio amazônico.</p>
-        <div class="jogo-meta">
-          <span>Intermediário</span>
-          <span>11 a 15 anos</span>
-          <span>20 minutos</span>
-        </div>
+        <div class="jogo-eyebrow">Destrua as motosserras, poupe os animais</div>
+        <h3>Guarda da Floresta</h3>
         <div class="jogo-botoes">
-          <a href="#" class="botao botao-primario">Jogar</a>
-          <a href="#" class="botao botao-secundario sobre-escuro">Detalhes</a>
+          <a href="#" class="botao botao-jogar">Jogar</a>
         </div>
       </div>
-    </article>
+    </button>
 
-    <article class="jogo-card" data-jogo="desafio-dos-biomas">
+    <button type="button" class="jogo-card" data-jogo="desafio-dos-biomas" aria-pressed="false">
       <div class="jogo-fundo">
         <img src="assets/jogos/game-biomas.jpg" alt="Ilustração de paisagem com diferentes biomas brasileiros">
       </div>
+      <div class="jogo-titulo-recolhido">Fuga do Desmatamento</div>
       <div class="jogo-conteudo">
-        <div class="jogo-eyebrow">Reconheça paisagens, solos e climas do Brasil</div>
-        <h3>Desafio dos Biomas</h3>
-        <p class="jogo-descricao">Cada rodada apresenta uma paisagem brasileira. Identifique o bioma, aponte suas características e complete o mapa dos seis grandes biomas.</p>
-        <div class="jogo-meta">
-          <span>Intermediário</span>
-          <span>10 a 16 anos</span>
-          <span>15 minutos</span>
-        </div>
+        <div class="jogo-eyebrow">Guie a onça-pintada pelos obstáculos da floresta</div>
+        <h3>Fuga do Desmatamento</h3>
         <div class="jogo-botoes">
-          <a href="#" class="botao botao-primario">Jogar</a>
-          <a href="#" class="botao botao-secundario sobre-escuro">Detalhes</a>
+          <a href="#" class="botao botao-jogar">Jogar</a>
         </div>
       </div>
-    </article>
+    </button>
 
-    <article class="jogo-card" data-jogo="missao-biodiversidade">
+    <button type="button" class="jogo-card" data-jogo="missao-biodiversidade" aria-pressed="false">
       <div class="jogo-fundo">
         <img src="assets/jogos/game-biodiversidade.jpg" alt="Ilustração de onça-pintada e tucano na floresta">
       </div>
+      <div class="jogo-titulo-recolhido">Defender o Rio</div>
       <div class="jogo-conteudo">
-        <div class="jogo-eyebrow">Monte cadeias alimentares e salve espécies</div>
-        <h3>Missão Biodiversidade</h3>
-        <p class="jogo-descricao">Organize teias alimentares, entenda o efeito da perda de uma espécie e planeje corredores ecológicos para a fauna brasileira.</p>
-        <div class="jogo-meta">
-          <span>Desafiador</span>
-          <span>12 a 17 anos</span>
-          <span>25 minutos</span>
-        </div>
+        <div class="jogo-eyebrow">Bloqueie o lixo e o garimpo antes que cheguem ao mar</div>
+        <h3>Defender o Rio</h3>
         <div class="jogo-botoes">
-          <a href="#" class="botao botao-primario">Jogar</a>
-          <a href="#" class="botao botao-secundario sobre-escuro">Detalhes</a>
+          <a href="#" class="botao botao-jogar">Jogar</a>
         </div>
       </div>
-    </article>
+    </button>
 
   </div>
+  <p class="sr-only" aria-live="polite">Selecione um jogo</p>
 </section>
 
-<section class="faixa-sala-aula">
-  <h2>Feito para a sala de aula.</h2>
-  <p>Os jogos do Gira Brasil acompanham conteúdos de ciências e geografia e podem ser usados como atividade complementar por professores do ensino fundamental e médio.</p>
-</section>
+<!-- ═══════════════════════════════════
+     JOGOS — MODAL DE JOGO (canvas)
+     Aberto pelos botões "Jogar" de cada card acima.
+     ═══════════════════════════════════ -->
+<div class="game-overlay" id="game-overlay">
 
-<footer class="footer-site">
-  <div class="footer-inner">
-    <div class="footer-marca">
-      <div class="logo-site">Gira Brasil</div>
-      <p>Informação, tecnologia e educação para preservar a natureza brasileira.</p>
+  <!-- Menu de seleção (não é usado pela página jogos.html, que já tem
+       seu próprio seletor de cards acima — fica aqui só como parte
+       da engine importada, caso venha a ser reaproveitado). -->
+  <div class="games-menu" id="games-menu" style="display:none">
+    <div class="games-menu-header">
+      <div class="games-menu-title">🎮 Jogos da Floresta</div>
+      <button class="game-close" id="btn-close-games">✕</button>
     </div>
-    <div class="footer-col">
-      <h4>Navegar</h4>
-      <ul>
-        <li><a href="index.html">Início</a></li>
-        <li><a href="noticias.html">Notícias</a></li>
-        <li><a href="regioes.html">Regiões</a></li>
-        <li><a href="jogos.html">Jogos</a></li>
-        <li><a href="girabot.html">GiraBot</a></li>
-        <li><a href="sobre.html">Sobre</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Projeto</h4>
-      <ul>
-        <li><a href="#">Plataforma de educação ambiental</a></li>
-        <li><a href="#">Desenvolvida por estudantes</a></li>
-        <li><a href="#">Versão 2026 — em desenvolvimento</a></li>
-      </ul>
-    </div>
+    <div class="games-grid" id="gamesGrid"></div>
   </div>
-  <div class="footer-base">
-    <span>Gira Brasil © 2026</span>
-    <span>Natureza • Informação • Educação • Tecnologia</span>
+
+  <div class="game-panel" id="game-panel" style="display:none">
+    <div class="game-header">
+      <button class="btn-back" id="btn-back">← Jogos</button>
+      <div class="game-title" id="game-title">—</div>
+      <button class="game-close" id="btn-close-game">✕</button>
+    </div>
+    <div class="game-hud" id="game-hud">
+      <span class="hud-score">Pontos: <strong id="score-val">0</strong></span>
+      <span class="hud-level" id="hud-level-wrap">Nível <strong id="level-val">1</strong></span>
+      <span class="hud-lives" id="hud-lives-wrap">Vidas: <strong id="lives-val">❤️❤️❤️</strong></span>
+    </div>
+    <div class="game-canvas-wrap" id="game-canvas-wrap">
+      <canvas id="game-canvas" width="960" height="500"></canvas>
+      <div class="game-screen" id="game-screen">
+        <h2 id="game-screen-title"></h2>
+        <p id="game-screen-desc"></p>
+        <button class="btn-start-game" id="btn-start-game">Começar!</button>
+      </div>
+    </div>
+    <p class="game-tip" id="game-tip"></p>
   </div>
-</footer>
+
+</div>
 
 </body>
 </html>

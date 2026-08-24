@@ -41,18 +41,36 @@
     padding: 32px;
   }
 
-  /* Espaço reservado pro mapa em SVG que os colegas vão produzir.
-     Por enquanto é só um placeholder visual — sem geometria real aqui. */
-  .mapa-placeholder {
+  /* Mapa do Brasil (SVG das 5 regiões), preenchido via JS. */
+  .mapa-regioes-wrap {
+    position: relative;
+    width: 100%;
     aspect-ratio: 4/5;
-    border: 1.5px dashed var(--cor-borda);
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
     border-radius: var(--raio);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .mapa-regioes-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mapa-regioes-wrap .regiao-mapa-path {
+    fill: var(--cor-borda);
+    stroke: var(--cor-fundo);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    transition: fill 0.2s ease;
+    cursor: pointer;
+  }
+  .mapa-regioes-wrap .regiao-mapa:hover .regiao-mapa-path { fill: var(--cor-floresta-clara, var(--cor-floresta)); opacity: 0.75; }
+  .mapa-regioes-wrap .regiao-mapa.ativo .regiao-mapa-path { fill: var(--cor-floresta); opacity: 1; }
+  .mapa-indisponivel {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 24px;
-    margin-bottom: 24px;
     color: var(--cor-texto-suave);
     font-size: 0.85rem;
   }
