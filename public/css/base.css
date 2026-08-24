@@ -155,6 +155,10 @@ h1, h2, h3 {
   align-items: center;
   gap: 8px;
 }
+.header-site .logo-site {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
 .logo-site .folha { color: var(--cor-destaque); }
 
 .nav-site {
@@ -197,7 +201,12 @@ h1, h2, h3 {
   gap: 40px;
 }
 
-.footer-marca .logo-site { color: var(--cor-texto-claro); margin-bottom: 12px; }
+.footer-marca .logo-site {
+  color: var(--cor-texto-claro);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
 .footer-marca p { color: var(--cor-texto-suave-claro); font-size: 0.9rem; max-width: 34ch; }
 
 .footer-col h4 {
