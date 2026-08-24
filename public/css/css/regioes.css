@@ -1,0 +1,164 @@
+/* ==========================================================================
+   GiraBrasil — Estilos da página Regiões
+   Importa base.css. Aqui só o que é específico dessa página.
+   ========================================================================== */
+
+  /* Estilos específicos da página Regiões */
+
+  .pagina-titulo {
+    padding: 56px 32px 40px;
+    max-width: var(--largura-max);
+    margin: 0 auto;
+  }
+  .pagina-titulo h1 {
+    font-size: clamp(2rem, 3.6vw, 2.8rem);
+    max-width: 20ch;
+    margin-bottom: 14px;
+  }
+  .pagina-titulo p {
+    color: var(--cor-texto-suave);
+    max-width: 56ch;
+  }
+
+  .secao-regioes {
+    padding: 0 32px 96px;
+    max-width: var(--largura-max);
+    margin: 0 auto;
+  }
+
+  .grid-regioes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+
+  /* Card que envolve o mapa + os botões de seleção */
+  .mapa-card {
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    background: var(--cor-fundo-alt);
+    padding: 32px;
+  }
+
+  /* Mapa do Brasil (SVG das 5 regiões), preenchido via JS. */
+  .mapa-regioes-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/5;
+    background: var(--cor-fundo);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .mapa-regioes-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mapa-regioes-wrap .regiao-mapa-path {
+    fill: var(--cor-borda);
+    stroke: var(--cor-fundo);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    transition: fill 0.2s ease;
+    cursor: pointer;
+  }
+  .mapa-regioes-wrap .regiao-mapa:hover .regiao-mapa-path { fill: var(--cor-floresta-clara, var(--cor-floresta)); opacity: 0.75; }
+  .mapa-regioes-wrap .regiao-mapa.ativo .regiao-mapa-path { fill: var(--cor-floresta); opacity: 1; }
+  .mapa-indisponivel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    color: var(--cor-texto-suave);
+    font-size: 0.85rem;
+  }
+
+  .region-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .pill-regiao {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--cor-borda);
+    background: transparent;
+    font-family: var(--fonte-corpo);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--cor-texto);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .pill-regiao:hover { border-color: var(--cor-floresta); }
+  .pill-regiao.ativo {
+    background: var(--cor-floresta);
+    border-color: var(--cor-floresta);
+    color: var(--cor-texto-claro);
+  }
+
+  /* Painel da direita — seu conteúdo é substituído via JS (ver js/regioes.js) */
+  .painel-regiao img {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    border-radius: var(--raio);
+    margin-bottom: 20px;
+  }
+  .painel-regiao .tag { margin-bottom: 14px; }
+  .painel-regiao h2 { font-size: 2rem; margin-bottom: 10px; }
+  .painel-estados {
+    color: var(--cor-texto-suave);
+    font-size: 0.92rem;
+    margin-bottom: 18px;
+  }
+  .painel-descricao {
+    color: var(--cor-texto);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+  .painel-subtitulo {
+    font-family: var(--fonte-corpo);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--cor-texto-suave);
+    margin-bottom: 12px;
+  }
+  .lista-temas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .lista-noticias-regiao {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 32px;
+  }
+  .item-noticia-regiao {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+  .item-noticia-regiao:first-child { padding-top: 0; }
+  .item-noticia-regiao h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: var(--fonte-corpo);
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .item-noticia-regiao .meta {
+    font-size: 0.76rem;
+    color: var(--cor-texto-suave);
+  }
+
+  .painel-botoes { display: flex; gap: 14px; flex-wrap: wrap; }
+
+  @media (max-width: 860px) {
+    .grid-regioes { grid-template-columns: 1fr; }
+  }
