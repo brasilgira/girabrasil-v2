@@ -549,7 +549,7 @@
   // fato pausa o áudio que estava tocando, em vez de criar outro do zero.
     function obterAudioBioma() {
     if (!audioBioma) {
-      audioBioma = new Audio(`Sons/${bioma.slug}.mp3`);
+      audioBioma = new Audio(`${bioma.slug}.mp3`);
       audioBioma.loop = true;
       audioBioma.volume = 0.5;
     }
