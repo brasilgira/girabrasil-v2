@@ -5,35 +5,20 @@
 // Isso evita duplicar HTML/CSS/JS seis vezes: cada arquivo public/biomas/*.html
 // é só uma casca fina que aponta para um bioma; todo o conteúdo real vive aqui.
 // ==========================================================================
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
 (function () {
   const slug = document.body.dataset.bioma;
   const bioma = window.BIOMAS && window.BIOMAS[slug];
   const root = document.getElementById('bioma-root');
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   if (!bioma || !root) {
     root.innerHTML = '<div style="padding:120px 32px;text-align:center;color:var(--cor-texto-suave)">Bioma não encontrado.</div>';
     return;
   }
-<<<<<<< HEAD
-
-  document.title = `${bioma.nome} — Gira-Brasil`;
-  document.documentElement.style.setProperty('--cor-bioma', bioma.corDestaque);
-
-=======
  
   document.title = `${bioma.nome} — GiraBrasil`;
   document.documentElement.style.setProperty('--cor-bioma', bioma.corDestaque);
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- Helpers --------------------
   function el(tag, attrs = {}, html = '') {
     const node = document.createElement(tag);
@@ -44,11 +29,7 @@
     if (html) node.innerHTML = html;
     return node;
   }
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- HERO --------------------
   const hero = el('section', { class: 'bioma-hero' }, `
     <div class="bioma-hero-imagem"><img src="${bioma.heroImagem}" alt="Paisagem do bioma ${bioma.nome}"></div>
@@ -60,11 +41,7 @@
     </div>
     <div class="bioma-scroll-indicador"><span>Explorar</span><span class="linha"></span></div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- DADOS RÁPIDOS --------------------
   const statsCards = bioma.stats.map(s => `
     <div class="bioma-stat-card">
@@ -73,20 +50,12 @@
       <div class="detalhe">${s.detalhe}</div>
     </div>
   `).join('');
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   const secaoStats = el('section', { class: 'bioma-secao' }, `
     <p style="color:var(--cor-texto-suave); max-width:60ch; margin-bottom:32px;">${bioma.descricao}</p>
     <div class="bioma-stats-grid">${statsCards}</div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- MAPA --------------------
   const secaoMapa = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho" style="margin-left:auto;margin-right:auto;text-align:center;">
@@ -97,11 +66,7 @@
     <div class="bioma-mapa-wrap" id="bioma-mapa-wrap"></div>
     <div class="bioma-mapa-legenda"><span class="ponto"></span> Área de maior concentração do bioma</div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- LINHA DO TEMPO --------------------
   const timelineItens = bioma.linhaDoTempo.map(t => `
     <div class="timeline-item">
@@ -110,11 +75,7 @@
       <p>${t.texto}</p>
     </div>
   `).join('');
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   const secaoTimeline = el('section', { class: 'bioma-secao fundo-alt' }, `
     <div class="bioma-secao-inner">
       <div class="bioma-secao-cabecalho">
@@ -128,11 +89,7 @@
       </div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- PASSADO / PRESENTE / FUTURO --------------------
   const ppf = bioma.passadoPresenteFuturo;
   const secaoPPF = el('section', { class: 'bioma-secao' }, `
@@ -146,11 +103,7 @@
       <div class="ppf-card futuro"><span class="rotulo">Futuro possível</span><p>${ppf.futuro}</p></div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- FAUNA --------------------
   // Estrutura de card compartilhada entre fauna e flora: ambas ganham uma
   // área de foto grande (proporção 4:3) que é preenchida dinamicamente por
@@ -162,17 +115,10 @@
     const tagImagem = tipo === 'fauna'
       ? (item.status || '')
       : 'Nativa do bioma';
-<<<<<<< HEAD
-
-    return `
-      <button class="especie-card" data-tipo="${tipo}" data-idx="${idx}">
-        <div class="especie-imagem-wrap" data-especie-imagem="${item.nome.replace(/"/g, '&quot;')}" data-especie-tipo="${tipo}">
-=======
  
     return `
       <button class="especie-card" data-tipo="${tipo}" data-idx="${idx}">
         <div class="especie-imagem-wrap" data-especie-imagem="${item.nome.replace(/"/g, '&quot;')}" data-especie-cientifico="${item.cientifico.replace(/"/g, '&quot;')}" data-especie-tipo="${tipo}">
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
           <span class="especie-emoji">${emojiFallback}</span>
           ${tagImagem ? `<span class="especie-imagem-tag">${tagImagem}</span>` : ''}
         </div>
@@ -184,11 +130,7 @@
       </button>
     `;
   }
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   const secaoFauna = el('section', { class: 'bioma-secao fundo-alt' }, `
     <div class="bioma-secao-inner">
       <div class="bioma-secao-cabecalho">
@@ -199,11 +141,7 @@
       <div class="bioma-cards-grid">${bioma.fauna.map((f, i) => especieCard(f, 'fauna', i)).join('')}</div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- FLORA --------------------
   const secaoFlora = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho">
@@ -213,21 +151,13 @@
     </div>
     <div class="bioma-cards-grid">${bioma.flora.map((f, i) => especieCard(f, 'flora', i)).join('')}</div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- REDE DE VIDA --------------------
   const rede = bioma.redeDeVida;
   function redeItens(lista, camada) {
     return lista.map(nome => `<button class="rede-vida-item" data-camada="${camada}">${nome}</button>`).join('');
   }
-<<<<<<< HEAD
-  const secaoRede = el('section', { class: 'bioma-secao fundo-alt' }, `
-=======
  const secaoRede = el('section', { class: 'bioma-secao fundo-alt' }, `
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
     <div class="bioma-secao-inner">
       <div class="bioma-secao-cabecalho">
         <div class="eyebrow">ECOSSISTEMA</div>
@@ -245,11 +175,7 @@
       </div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- AMEAÇAS --------------------
   const secaoAmeacas = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho">
@@ -265,11 +191,7 @@
       `).join('')}
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- SER HUMANO --------------------
   const secaoHumano = el('section', { class: 'bioma-secao fundo-alt' }, `
     <div class="bioma-secao-inner">
@@ -283,11 +205,7 @@
       </div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- CONSERVAÇÃO --------------------
   const secaoConservacao = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho">
@@ -304,11 +222,7 @@
       `).join('')}
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- VOCÊ SABIA? --------------------
   const secaoFatos = el('section', { class: 'bioma-secao fundo-alt' }, `
     <div class="bioma-secao-inner">
@@ -327,11 +241,7 @@
       </div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- SOM --------------------
   const secaoSom = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho">
@@ -347,11 +257,7 @@
       </div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- PERFIL VISUAL --------------------
   const perfil = bioma.perfilVisual;
   const perfilLinhas = [
@@ -359,11 +265,7 @@
     ['Flora', perfil.flora], ['Água', perfil.agua], ['Presença humana', perfil.presencaHumana],
     ['Pressões ambientais', perfil.pressoesAmbientais]
   ].map(([r, v]) => `<div class="perfil-linha"><span class="rotulo">${r}</span><span class="valor">${v}</span></div>`).join('');
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   const secaoPerfil = el('section', { class: 'bioma-secao fundo-alt' }, `
     <div class="bioma-secao-inner">
       <div class="bioma-secao-cabecalho">
@@ -373,11 +275,7 @@
       <div class="perfil-grid">${perfilLinhas}</div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- EXPLORAÇÃO --------------------
   const secaoExploracao = el('section', { class: 'bioma-secao' }, `
     <div class="exploracao-card">
@@ -386,11 +284,7 @@
       <div class="exploracao-legenda" id="exploracao-legenda">0% do conteúdo visto</div>
     </div>
   `);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- RELACIONADOS --------------------
   const secaoRelacionados = el('section', { class: 'bioma-secao' }, `
     <div class="bioma-secao-cabecalho">
@@ -413,19 +307,11 @@
       }).join('')}
     </div>
   `);
-<<<<<<< HEAD
-
-  // -------------------- VOLTAR --------------------
-  const voltarTopo = document.getElementById('voltar-biomas-topo');
-  if (voltarTopo) voltarTopo.href = '../index.html#biomas';
-
-=======
  
   // -------------------- VOLTAR --------------------
   const voltarTopo = document.getElementById('voltar-biomas-topo');
   if (voltarTopo) voltarTopo.href = '../index.html#biomas';
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // -------------------- Monta tudo --------------------
   root.append(
     hero, secaoStats, secaoMapa, secaoTimeline, secaoPPF,
@@ -433,19 +319,11 @@
     secaoConservacao, secaoFatos, secaoSom, secaoPerfil,
     secaoExploracao, secaoRelacionados
   );
-<<<<<<< HEAD
-
-  // ======================================================================
-  // Interações
-  // ======================================================================
-
-=======
  
   // ======================================================================
   // Interações
   // ======================================================================
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // Barra de progresso de leitura
   const progressoFill = document.getElementById('progresso-fill') || (() => {
     const track = el('div', { class: 'progresso-track' }, '<div class="progresso-fill" id="progresso-fill"></div>');
@@ -459,29 +337,6 @@
   }
   document.addEventListener('scroll', atualizarProgresso, { passive: true });
   atualizarProgresso();
-<<<<<<< HEAD
-
-  // Mapa: desenha o SVG simplificado das 5 regiões e destaca a(s) do bioma.
-  // O SVG vem embutido em js/mapa-brasil-svg.js (window.MAPA_BRASIL_SVG) em vez
-  // de ser buscado com fetch(): assim o mapa funciona tanto rodando pelo
-  // servidor Express quanto ao abrir o arquivo .html diretamente no navegador
-  // (fetch() de arquivo local é bloqueado por CORS em file://, o que fazia o
-  // mapa cair sempre no aviso de "indisponível").
-  (function desenharMapaBioma() {
-    const wrap = document.getElementById('bioma-mapa-wrap');
-    if (!wrap) return;
-    if (!window.MAPA_BRASIL_SVG) {
-      wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--cor-texto-suave);font-size:0.85rem;text-align:center;padding:20px;">Mapa indisponível no momento</div>';
-      return;
-    }
-    wrap.innerHTML = window.MAPA_BRASIL_SVG;
-    const destaque = bioma.mapaDestaque || [];
-    wrap.querySelectorAll('.regiao-mapa').forEach(g => {
-      if (destaque.includes(g.getAttribute('data-regiao'))) g.classList.add('destaque');
-    });
-  })();
-
-=======
  
   // Mapa: desenha o SVG simplificado das 5 regiões e destaca a(s) do bioma
   fetch('../assets/biomas/mapa-regioes-simplificado.svg')
@@ -499,18 +354,13 @@
       if (wrap) wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--cor-texto-suave);font-size:0.85rem;text-align:center;padding:20px;">Mapa indisponível no momento</div>';
     });
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // Contadores de estatística ao entrar na viewport
   const statCards = root.querySelectorAll('.bioma-stat-card');
   const statObserver = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('em-vista'); });
   }, { threshold: 0.4 });
   statCards.forEach(c => statObserver.observe(c));
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // Linha do tempo: progresso e destaque conforme o scroll
   const timelineItems = root.querySelectorAll('.timeline-item');
   const timelineProgresso = document.getElementById('timeline-progresso');
@@ -528,39 +378,11 @@
   }
   document.addEventListener('scroll', atualizarTimeline, { passive: true });
   atualizarTimeline();
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // Carrega automaticamente uma foto real da espécie (fauna ou flora) pela
   // Wikipédia/Wikimedia. Não exige alterar o banco ou adicionar uma imagem
   // manualmente para cada espécie. Se a busca falhar, o emoji original
   // continua aparecendo como fallback — o layout do card nunca quebra.
-<<<<<<< HEAD
-  const cacheImagensEspecie = new Map();
-
-  async function buscarImagemEspecie(nome, tipo) {
-    const chave = `${tipo}:${nome}`;
-    if (cacheImagensEspecie.has(chave)) return cacheImagensEspecie.get(chave);
-
-    const sufixoBusca = tipo === 'flora' ? 'planta' : 'animal';
-    try {
-      const url = `https://pt.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(nome + ' ' + sufixoBusca)}&gsrnamespace=0&gsrlimit=1&prop=pageimages&piprop=thumbnail&pithumbsize=700&format=json&origin=*`;
-      const resposta = await fetch(url);
-      if (!resposta.ok) throw new Error('Falha na API da Wikipédia');
-      const dados = await resposta.json();
-      const paginas = dados.query && dados.query.pages ? Object.values(dados.query.pages) : [];
-      const imagem = paginas[0]?.thumbnail?.source || null;
-      cacheImagensEspecie.set(chave, imagem);
-      return imagem;
-    } catch (erro) {
-      cacheImagensEspecie.set(chave, null);
-      return null;
-    }
-  }
-
-=======
   //
   // IMPORTANTE: a busca prioriza o NOME CIENTÍFICO, não o nome popular.
   // Nomes populares colidem com outras coisas (ex.: "Ariranha" também é
@@ -620,22 +442,15 @@
     return imagem;
   }
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   async function carregarImagensEspecies() {
     const elementos = root.querySelectorAll('[data-especie-imagem]');
     elementos.forEach(async (container) => {
       const nome = container.getAttribute('data-especie-imagem');
       const tipo = container.getAttribute('data-especie-tipo');
-<<<<<<< HEAD
-      const imagem = await buscarImagemEspecie(nome, tipo);
-      if (!imagem) return;
-
-=======
       const cientifico = container.getAttribute('data-especie-cientifico');
       const imagem = await buscarImagemEspecie(nome, tipo, cientifico);
       if (!imagem) return;
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
       const img = document.createElement('img');
       img.src = imagem;
       img.alt = `Foto de ${nome}`;
@@ -646,27 +461,16 @@
         const emoji = container.querySelector('.especie-emoji');
         if (emoji) emoji.style.display = 'none';
       };
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
       // Anexa a foto por cima do emoji de fallback (que só volta a aparecer
       // se a imagem falhar em carregar via onerror acima).
       container.appendChild(img);
     });
   }
-<<<<<<< HEAD
-
-  // Começa a carregar as fotos sem bloquear o restante da página.
-  carregarImagensEspecies();
-
-=======
  
   // Começa a carregar as fotos sem bloquear o restante da página.
   carregarImagensEspecies();
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // Modal de espécie (fauna/flora)
   const modalOverlay = el('div', { class: 'especie-modal-overlay', id: 'especie-modal-overlay' }, `
     <div class="especie-modal" role="dialog" aria-modal="true">
@@ -675,22 +479,14 @@
     </div>
   `);
   document.body.appendChild(modalOverlay);
-<<<<<<< HEAD
-
-=======
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   root.querySelectorAll('.especie-card').forEach(card => {
     card.addEventListener('click', async () => {
       const tipo = card.dataset.tipo;
       const idx = Number(card.dataset.idx);
       const item = bioma[tipo][idx];
       const conteudo = document.getElementById('especie-modal-conteudo');
-<<<<<<< HEAD
-      const imagemModal = await buscarImagemEspecie(item.nome, tipo);
-=======
       const imagemModal = await buscarImagemEspecie(item.nome, tipo, item.cientifico);
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
       const imagemHtml = imagemModal
         ? `<img src="${imagemModal}" alt="Foto de ${item.nome}" style="width:100%;height:230px;object-fit:cover;border-radius:12px;margin-bottom:18px;">`
         : '';
@@ -720,65 +516,15 @@
   modalOverlay.querySelector('.especie-modal-fechar').addEventListener('click', () => modalOverlay.classList.remove('aberto'));
   modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.classList.remove('aberto'); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') modalOverlay.classList.remove('aberto'); });
-<<<<<<< HEAD
-
-  // Rede de vida: clicar em um organismo destaca a camada dele e conecta
-  // visualmente às camadas com as quais ele se relaciona na cadeia alimentar
-  // (produtores ↔ herbívoros ↔ predadores ↔ decompositores). Como os dados
-  // não mapeiam espécie a espécie (ex: "onça come exatamente esta presa"),
-  // a conexão é feita por camada — o mesmo nível de precisão descrito no
-  // texto da seção — em vez de inventar relações específicas não verificadas.
-  const redeWrap = document.getElementById('rede-vida-wrap');
-  const CAMADAS_CONECTADAS = {
-    produtores: ['herbivoros'],
-    herbivoros: ['produtores', 'predadores'],
-    predadores: ['herbivoros', 'decompositores'],
-    decompositores: ['produtores', 'herbivoros', 'predadores']
-  };
-  const TEXTO_CONEXAO = {
-    produtores: 'Este organismo produz energia a partir da luz solar e serve de alimento direto para os herbívoros do bioma.',
-    herbivoros: 'Este organismo se alimenta de plantas e, por sua vez, é presa de predadores desta cadeia.',
-    predadores: 'Este organismo caça herbívoros para se alimentar; quando morre, seus restos também são reciclados por decompositores.',
-    decompositores: 'Este organismo decompõe matéria orgânica de todos os outros níveis, devolvendo nutrientes ao solo.'
-  };
-  if (redeWrap) {
-    // Área de texto explicativo, criada dinamicamente logo abaixo da rede.
-    const explicacao = el('p', { class: 'rede-vida-explicacao', id: 'rede-vida-explicacao' }, '');
-    redeWrap.after(explicacao);
-
-=======
  
   // Rede de vida: clicar destaca a camada selecionada
   const redeWrap = document.getElementById('rede-vida-wrap');
   if (redeWrap) {
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
     redeWrap.querySelectorAll('.rede-vida-item').forEach(item => {
       item.addEventListener('click', () => {
         const jaAtivo = item.classList.contains('ativo');
         redeWrap.querySelectorAll('.rede-vida-item').forEach(i => i.classList.remove('ativo', 'conectado'));
         redeWrap.classList.remove('selecionado');
-<<<<<<< HEAD
-
-        if (jaAtivo) {
-          explicacao.textContent = '';
-          return;
-        }
-
-        item.classList.add('ativo');
-        redeWrap.classList.add('selecionado');
-
-        const camada = item.dataset.camada;
-        const camadasAlvo = CAMADAS_CONECTADAS[camada] || [];
-        redeWrap.querySelectorAll('.rede-vida-item').forEach(i => {
-          if (i !== item && camadasAlvo.includes(i.dataset.camada)) i.classList.add('conectado');
-        });
-
-        explicacao.textContent = `${item.textContent} — ${TEXTO_CONEXAO[camada] || ''}`;
-      });
-    });
-  }
-
-=======
         if (!jaAtivo) {
           item.classList.add('ativo');
           redeWrap.classList.add('selecionado');
@@ -787,25 +533,12 @@
     });
   }
  
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
   // Você sabia?: clique expande/retrai
   root.querySelectorAll('.fato-card').forEach(card => {
     card.addEventListener('click', () => card.classList.toggle('aberto'));
   });
 
   // Som ambiente (nunca autoplay — só ativa com clique explícito do usuário)
-<<<<<<< HEAD
-  const somCard = document.getElementById('som-card');
-  const somBotao = document.getElementById('som-botao');
-  if (somBotao) {
-    somBotao.addEventListener('click', () => {
-      const tocando = somCard.classList.toggle('tocando');
-      somBotao.setAttribute('aria-pressed', String(tocando));
-      somBotao.textContent = tocando ? '❚❚' : '▶';
-      // Fonte de áudio fica fácil de configurar aqui quando houver um asset real:
-      // const audio = new Audio('../assets/biomas/sons/' + bioma.slug + '.mp3');
-      // tocando ? audio.play() : audio.pause();
-=======
     // Som ambiente (nunca autoplay — só ativa com clique explícito do usuário)
   const somCard = document.getElementById('som-card');
   const somBotao = document.getElementById('som-botao');
@@ -840,7 +573,6 @@
       } else {
         audio.pause();
       }
->>>>>>> 3f8e1edbbd309699acdcd5295a70a731d199e8ce
     });
   }
 
