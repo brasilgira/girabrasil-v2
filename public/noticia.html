@@ -9,6 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/noticia.css">
+<link rel="stylesheet" href="css/gate.css">
+
+<!-- Sistema de "conta" (simulado, sem backend ainda) + aviso de conta
+     necessária. Precisam vir carregados ANTES do script React abaixo,
+     porque o componente usa as funções globais deles (usuarioEstaLogado,
+     abrirAvisoConta). -->
+<script src="js/auth.js"></script>
+<script src="js/gate.js"></script>
 
 <!-- ATENÇÃO: esta é a única página do site que usa React — é a "ilha"
      combinada no planejamento do projeto. Carregada via CDN (sem build/Vite),
@@ -35,8 +43,8 @@
       <a href="sobre.html">Sobre</a>
     </nav>
     <div class="header-acoes">
-      <a href="#" class="link-entrar">Entrar</a>
-      <a href="#" class="botao botao-primario">Criar conta</a>
+      <a href="login.html" class="link-entrar">Entrar</a>
+      <a href="cadastro.html" class="botao botao-primario">Criar conta</a>
     </div>
   </div>
 </header>
@@ -195,6 +203,10 @@ function Comentarios({ comentarios, onCurtirComentario, onEnviar }) {
   const [texto, setTexto] = useState('');
 
   function enviar() {
+    if (!usuarioEstaLogado()) {
+      abrirAvisoConta('Crie uma conta pra comentar nesta notícia.');
+      return;
+    }
     const limpo = texto.trim();
     if (!limpo) return;
     onEnviar(limpo);
@@ -299,7 +311,19 @@ function App() {
   }, []);
 
   function alternarCurtida() {
+    if (!usuarioEstaLogado()) {
+      abrirAvisoConta('Crie uma conta pra curtir esta notícia.');
+      return;
+    }
     setCurtido((atual) => !atual);
+  }
+
+  function alternarSalvar() {
+    if (!usuarioEstaLogado()) {
+      abrirAvisoConta('Crie uma conta pra salvar reportagens e ler depois.');
+      return;
+    }
+    setSalvo((atual) => !atual);
   }
 
   function irParaComentarios() {
@@ -366,7 +390,7 @@ function App() {
           curtido={curtido}
           salvo={salvo}
           onCurtir={alternarCurtida}
-          onSalvar={() => setSalvo((s) => !s)}
+          onSalvar={alternarSalvar}
           onCompartilhar={() => setModalAberto(true)}
           onIrComentarios={irParaComentarios}
           onFonteMenor={() => setFontScale((s) => Math.max(s - 0.1, 0.85))}
@@ -454,7 +478,7 @@ function App() {
           <button className={`pill-btn ${curtido ? 'active' : ''}`} onClick={alternarCurtida}>
             {curtido ? '♥ Curtido' : '♡ Gostei'}
           </button>
-          <button className={`pill-btn ${salvo ? 'active' : ''}`} onClick={() => setSalvo((s) => !s)}>
+          <button className={`pill-btn ${salvo ? 'active' : ''}`} onClick={alternarSalvar}>
             {salvo ? '🔖 Salvo' : '🔖 Salvar notícia'}
           </button>
           <button className="pill-btn" onClick={() => setModalAberto(true)}>↗ Compartilhar</button>
@@ -506,7 +530,7 @@ function App() {
         curtido={curtido}
         salvo={salvo}
         onCurtir={alternarCurtida}
-        onSalvar={() => setSalvo((s) => !s)}
+        onSalvar={alternarSalvar}
         onCompartilhar={() => setModalAberto(true)}
         onIrComentarios={irParaComentarios}
       />

@@ -1,0 +1,152 @@
+/* ==========================================================================
+   GiraBrasil — Estilos das telas de Entrar / Criar conta
+   Layout dividido: imagem de bioma à esquerda, formulário à direita.
+   Importa base.css — usa as mesmas variáveis de cor/tipografia do site.
+   ========================================================================== */
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 74px); /* 74px ≈ altura do header-site fixo */
+}
+
+/* --- Lado da imagem --- */
+.auth-imagem {
+  position: relative;
+  overflow: hidden;
+  background: var(--cor-floresta);
+  display: flex;
+}
+.auth-imagem img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+}
+.auth-imagem::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(10,20,15,0.95) 0%, rgba(10,20,15,0.35) 100%);
+}
+.auth-imagem-conteudo {
+  position: relative;
+  z-index: 1;
+  align-self: flex-end;
+  padding: 48px;
+  color: var(--cor-texto-claro);
+}
+.auth-imagem-conteudo .marca {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  display: block;
+}
+.auth-imagem-conteudo h2 {
+  font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+  max-width: 20ch;
+  margin-bottom: 14px;
+}
+.auth-imagem-conteudo p {
+  font-size: 0.9rem;
+  color: var(--cor-texto-suave-claro);
+  max-width: 40ch;
+}
+
+/* --- Lado do formulário --- */
+.auth-form-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+}
+.auth-form-inner {
+  width: 100%;
+  max-width: 400px;
+}
+.auth-form-inner h1 {
+  font-size: 2.1rem;
+  margin: 10px 0 12px;
+}
+.auth-form-inner > p.auth-descricao {
+  font-size: 0.9rem;
+  color: var(--cor-texto-suave);
+  margin-bottom: 34px;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 20px; }
+.auth-campo label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+  margin-bottom: 8px;
+}
+.auth-campo input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--raio-pequeno);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo-alt);
+  font-family: var(--fonte-corpo);
+  font-size: 0.92rem;
+  color: var(--cor-texto);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.auth-campo input:focus { border-color: var(--cor-floresta); }
+
+.auth-campos-duplos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.auth-opcoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.86rem;
+}
+.auth-lembrar { display: flex; align-items: center; gap: 8px; color: var(--cor-texto-suave); }
+.auth-link {
+  font-weight: 600;
+  color: var(--cor-destaque);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.auth-erro {
+  font-size: 0.86rem;
+  color: var(--cor-alerta);
+}
+
+.auth-form button[type="submit"] {
+  width: 100%;
+  justify-content: center;
+  padding: 13px 24px;
+}
+
+.auth-rodape-link {
+  margin-top: 24px;
+  font-size: 0.88rem;
+  color: var(--cor-texto-suave);
+}
+
+.auth-aviso-prototipo {
+  margin-top: 32px;
+  padding: 14px 16px;
+  border: 1px dashed var(--cor-borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--cor-fundo-alt);
+  font-size: 0.78rem;
+  color: var(--cor-texto-suave);
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .auth-grid { grid-template-columns: 1fr; }
+  .auth-imagem { min-height: 260px; }
+  .auth-campos-duplos { grid-template-columns: 1fr; }
+}

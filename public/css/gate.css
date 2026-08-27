@@ -1,0 +1,85 @@
+/* ==========================================================================
+   GiraBrasil — Aviso "é preciso ter conta" (soft-gate)
+   Modal genérico, chamável de qualquer página que precise pedir conta
+   antes de liberar uma ação (jogar, conversar com o GiraBot,
+   curtir/salvar/comentar numa notícia).
+   ========================================================================== */
+
+.aviso-conta-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(10, 20, 15, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.aviso-conta-overlay.aberto {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.aviso-conta-modal {
+  position: relative;
+  background: var(--cor-fundo);
+  border-radius: var(--raio);
+  max-width: 380px;
+  width: 100%;
+  padding: 32px;
+  text-align: center;
+  transform: translateY(14px) scale(0.98);
+  transition: transform 0.22s ease;
+}
+.aviso-conta-overlay.aberto .aviso-conta-modal {
+  transform: translateY(0) scale(1);
+}
+
+.aviso-conta-fechar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 1.3rem;
+  color: var(--cor-texto-suave);
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+}
+.aviso-conta-fechar:hover { color: var(--cor-texto); }
+
+.aviso-conta-icone {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 18px;
+}
+
+.aviso-conta-modal h3 {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.aviso-conta-mensagem {
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin-bottom: 26px;
+}
+
+.aviso-conta-botoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.aviso-conta-botoes .botao { justify-content: center; }

@@ -99,6 +99,11 @@ function digitarTexto(elemento, textoCompleto) {
 formEnvio.addEventListener('submit', async (evento) => {
   evento.preventDefault();
 
+  if (!usuarioEstaLogado()) {
+    abrirAvisoConta('Crie uma conta pra conversar com o Gira-Bot e salvar seu histórico.');
+    return;
+  }
+
   const texto = campoMensagem.value.trim();
   if (!texto) return;
 

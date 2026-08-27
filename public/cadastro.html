@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar conta — GiraBrasil</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">GiraBot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="login.html" class="link-entrar">Entrar</a>
+      <a href="cadastro.html" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<div class="auth-grid">
+
+  <div class="auth-imagem">
+    <img src="assets/biomas/bioma-pantanal.jpg" alt="Amanhecer no Pantanal com aves na planície alagada">
+    <div class="auth-imagem-conteudo">
+      <span class="marca">🌿</span>
+      <h2>Jogos, notícias e um guia ambiental em um só lugar.</h2>
+      <p>Com a conta criada você joga, salva reportagens e conversa com o GiraBot sobre biomas, fauna e flora.</p>
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-form-inner">
+      <div class="eyebrow">NOVO EXPLORADOR</div>
+      <h1>Criar conta</h1>
+      <p class="auth-descricao">Leva menos de um minuto e libera todas as experiências interativas.</p>
+
+      <form class="auth-form" id="formCadastro">
+        <div class="auth-campo">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" placeholder="Seu nome" required>
+        </div>
+        <div class="auth-campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" placeholder="seu@email.com" required>
+        </div>
+        <div class="auth-campos-duplos">
+          <div class="auth-campo">
+            <label for="senha">Senha</label>
+            <input type="password" id="senha" placeholder="••••••••" required>
+          </div>
+          <div class="auth-campo">
+            <label for="confirmar">Confirmar senha</label>
+            <input type="password" id="confirmar" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <p class="auth-erro" id="authErro" style="display:none;"></p>
+
+        <button type="submit" class="botao botao-primario">Criar conta</button>
+      </form>
+
+      <p class="auth-rodape-link">Já tem uma conta? <a href="login.html" class="auth-link">Entre.</a></p>
+
+      <p class="auth-aviso-prototipo">
+        Protótipo: o cadastro é demonstrativo e fica salvo apenas neste navegador.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/auth.js"></script>
+<script>
+  redirecionarSeJaLogado();
+
+  document.getElementById('formCadastro').addEventListener('submit', (evento) => {
+    evento.preventDefault();
+
+    const nome = document.getElementById('nome').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    const confirmar = document.getElementById('confirmar').value;
+    const erro = document.getElementById('authErro');
+
+    if (senha !== confirmar) {
+      erro.textContent = 'As senhas não coincidem.';
+      erro.style.display = 'block';
+      return;
+    }
+    erro.style.display = 'none';
+
+    // Simulação: não existe backend de cadastro ainda, então só guardamos
+    // o "usuário" no localStorage pra validar o fluxo de conta no site.
+    definirUsuarioLogado({ email, nome });
+
+    window.location.href = obterRedirectDaUrl() || 'index.html';
+  });
+</script>
+
+</body>
+</html>
