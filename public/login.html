@@ -77,20 +77,27 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
 <script>
   // Se já tiver "logado" (localStorage), não faz sentido ver essa tela de novo
   redirecionarSeJaLogado();
 
-  document.getElementById('formLogin').addEventListener('submit', (evento) => {
+  document.getElementById('formLogin').addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    const erro = document.getElementById('authErro');
+    erro.style.display = 'none';
 
-    // Simulação: qualquer e-mail/senha "loga" — não há validação real de
-    // credenciais ainda, porque não existe backend de autenticação.
-    definirUsuarioLogado({ email, nome: email.split('@')[0] });
-
-    window.location.href = obterRedirectDaUrl() || 'index.html';
+    try {
+      await logarUsuario({ email, senha });
+      window.location.href = obterRedirectDaUrl() || 'index.html';
+    } catch (e) {
+      erro.textContent = e.message || 'Não foi possível entrar. Verifique seus dados.';
+      erro.style.display = 'block';
+    }
   });
 </script>
 

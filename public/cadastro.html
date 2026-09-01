@@ -79,11 +79,13 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
 <script>
   redirecionarSeJaLogado();
 
-  document.getElementById('formCadastro').addEventListener('submit', (evento) => {
+  document.getElementById('formCadastro').addEventListener('submit', async (evento) => {
     evento.preventDefault();
 
     const nome = document.getElementById('nome').value.trim();
@@ -99,11 +101,13 @@
     }
     erro.style.display = 'none';
 
-    // Simulação: não existe backend de cadastro ainda, então só guardamos
-    // o "usuário" no localStorage pra validar o fluxo de conta no site.
-    definirUsuarioLogado({ email, nome });
-
-    window.location.href = obterRedirectDaUrl() || 'index.html';
+    try {
+      await cadastrarUsuario({ nome, email, senha });
+      window.location.href = obterRedirectDaUrl() || 'index.html';
+    } catch (e) {
+      erro.textContent = e.message || 'Não foi possível criar a conta.';
+      erro.style.display = 'block';
+    }
   });
 </script>
 
