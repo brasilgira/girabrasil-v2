@@ -236,6 +236,42 @@ h1, h2, h3 {
   color: var(--cor-texto-suave-claro);
 }
 
+/* --- Mini-perfil no header (usuário logado) --- */
+.perfil-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+.perfil-usuario:hover { background: rgba(0, 0, 0, 0.06); }
+
+.perfil-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--cor-floresta);
+  color: var(--cor-texto-claro);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.perfil-nome {
+  font-size: 0.92rem;
+  font-weight: 600;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* --- Responsividade base --- */
 @media (max-width: 860px) {
   .nav-site { display: none; } /* menu mobile pode ser implementado depois, com JS */
