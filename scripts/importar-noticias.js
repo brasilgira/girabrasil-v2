@@ -148,23 +148,50 @@ function montarLinhasRegionais(regiaoNoticias, mapaRegiaoIdPorChave) {
 
 async function importarLinha(cliente, linha) {
   await cliente.query(
-    `INSERT INTO noticias (
-       slug_origem, titulo, resumo, conteudo, imagem_url, categoria, bioma,
-       link_fonte, regiao_id, corpo_json, metadados, criado_em, ativo
-     )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, COALESCE($12, now()), true)
-     ON CONFLICT (slug_origem) DO UPDATE SET
-       titulo = EXCLUDED.titulo,
-       resumo = EXCLUDED.resumo,
-       conteudo = EXCLUDED.conteudo,
-       imagem_url = EXCLUDED.imagem_url,
-       categoria = EXCLUDED.categoria,
-       bioma = EXCLUDED.bioma,
-       link_fonte = EXCLUDED.link_fonte,
-       regiao_id = EXCLUDED.regiao_id,
-       corpo_json = EXCLUDED.corpo_json,
-       metadados = EXCLUDED.metadados,
-       atualizado_em = now()`,
+    `
+      INSERT INTO noticias (
+        slug_origem,
+        titulo,
+        resumo,
+        conteudo,
+        imagem_url,
+        categoria,
+        bioma,
+        link_fonte,
+        regiao_id,
+        corpo_json,
+        metadados,
+        criado_em,
+        ativo
+      )
+      VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        COALESCE($12, now()),
+        true
+      )
+      ON CONFLICT (slug_origem) DO UPDATE SET
+        titulo = EXCLUDED.titulo,
+        resumo = EXCLUDED.resumo,
+        conteudo = EXCLUDED.conteudo,
+        imagem_url = EXCLUDED.imagem_url,
+        categoria = EXCLUDED.categoria,
+        bioma = EXCLUDED.bioma,
+        link_fonte = EXCLUDED.link_fonte,
+        regiao_id = EXCLUDED.regiao_id,
+        corpo_json = EXCLUDED.corpo_json,
+        metadados = EXCLUDED.metadados,
+        atualizado_em = now()
+    `,
     [
       linha.slugOrigem,
       linha.titulo,
