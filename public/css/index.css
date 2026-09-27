@@ -281,6 +281,41 @@
     border-bottom-right-radius: 4px;
     max-width: 75%;
   }
+  /* Configuração do container do menu */
+.nav-site {
+  position: relative; 
+  /* Se ainda não tiver display: flex no seu base.css, mantenha do jeito que está */
+}
+
+/* Garante que o texto dos links fique por cima da barra verde */
+.nav-site {
+  position: relative; 
+  /* Mantenha o que você já tem aqui (provavelmente um display: flex, gap, etc) */
+}
+
+.nav-site a {
+  position: relative;
+  z-index: 2; /* Aumentamos para garantir que o texto fique sempre acima */
+}
+
+.nav-site a.ativo {
+  background-color: transparent !important; /* Esconde o verde antigo */
+}
+
+.indicador-verde {
+  position: absolute;
+  z-index: 1;
+  background: var(--cor-floresta, #16281f);
+  border-radius: 50px;
+  pointer-events: none;
+  opacity: 0;
+  /* Removemos a transition daqui! */
+}
+
+/* Criamos uma classe nova que o JS vai injetar depois de carregar */
+.indicador-verde.animando {
+  transition: all 0.2s ease-out; 
+}
 
   @media (max-width: 980px) {
     .grid-bioma-destaque { grid-template-columns: 1fr 1fr; }

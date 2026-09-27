@@ -14,9 +14,10 @@
 <script src="js/auth.js"></script>
 <script src="js/gate.js"></script>
 
-<!-- Fonte única dos dados das notícias -->
+<!-- FASE 2: os dados agora vêm da API (/api/noticias/:id), não mais deste
+     arquivo — js/noticias-data.js continua existindo no projeto, só não
+     é mais lido por esta página. -->
 
-<script src="js/noticias-data.js"></script>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
@@ -81,36 +82,39 @@
 const { useState, useEffect } = React;
 
 // ============================================================================
-// Descobre qual notícia abrir a partir do ?id= na URL (ex: noticia.html?id=3)
-// e busca ela dentro de window.NOTICIAS (js/noticias-data.js).
-// Se não vier id, ou vier um id que não existe, cai na primeira notícia do
-// array em vez de quebrar a página.
+// Descobre qual notícia abrir a partir do ?id= na URL (ex: noticia.html?id=3).
+// FASE 2: em vez de procurar dentro de window.NOTICIAS (síncrono), a busca
+// agora é feita via fetch('/api/noticias/:id') dentro do componente App.
 // ============================================================================
 function obterNoticiaIdDaUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get('id');
 }
 
-const TODAS_NOTICIAS = window.NOTICIAS || [];
-const idDaUrl = parseInt(obterNoticiaIdDaUrl(), 10);
-const artigo = TODAS_NOTICIAS.find((n) => n.id === idDaUrl) || TODAS_NOTICIAS[0];
+// A API devolve corpo_json/metadados separados; achata tudo num único
+// objeto no mesmo formato que o resto deste arquivo já espera (artigo.corpo,
+// artigo.autor, artigo.dataPublicacao...), pra não precisar reescrever
+// renderBloco() nem o JSX lá embaixo.
+function adaptarNoticiaDaApi(n) {
+  const metadados = n.metadados || {};
+  return {
+    ...n,
+    imagem: n.imagem_url,
+    corpo: n.corpo_json || [],
+    autor: metadados.autor || 'Gira-Brasil',
+    dataPublicacao: metadados.dataPublicacao || formatarDataSimples(n.criado_em),
+    dataAtualizacao: metadados.dataAtualizacao || formatarDataSimples(n.atualizado_em || n.criado_em),
+    tempoLeitura: metadados.tempoLeitura || '',
+    legendaHero: metadados.legendaHero || '',
+    meta: formatarDataSimples(n.criado_em),
+  };
+}
 
-// Sumário lateral: gerado automaticamente a partir dos blocos do tipo
-// "titulo"/"subtitulo" dentro do corpo da notícia — não precisa mais manter
-// essa lista separada e sincronizada à mão.
-const sumario = (artigo?.corpo || [])
-  .filter((bloco) => bloco.tipo === 'titulo' || bloco.tipo === 'subtitulo')
-  .map((bloco) => ({ id: bloco.id, titulo: bloco.texto }));
-
-// "Leia também" e "relacionadas": escolhidas automaticamente entre as
-// outras notícias do array, priorizando a mesma categoria da que está
-// sendo lida.
-const outrasNoticias = TODAS_NOTICIAS.filter((n) => n.id !== artigo?.id);
-const mesmaCategoria = outrasNoticias.filter((n) => n.categoria === artigo?.categoria);
-const outrasCategorias = outrasNoticias.filter((n) => n.categoria !== artigo?.categoria);
-const noticiasOrdenadas = [...mesmaCategoria, ...outrasCategorias];
-const leiaTambem = noticiasOrdenadas.slice(0, 2);
-const relacionadas = noticiasOrdenadas.slice(0, 3);
+function formatarDataSimples(isoString) {
+  const data = new Date(isoString);
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleDateString('pt-BR');
+}
 
 // Comentários e curtidas: dados de verdade, vindos da API (/api/comentarios).
 // Nada de usuário fictício aqui — a lista começa vazia e é preenchida pelo
@@ -341,7 +345,67 @@ function App() {
   const [carregandoComentarios, setCarregandoComentarios] = useState(true);
   const [erroComentarios, setErroComentarios] = useState(false);
   const [enviandoComentario, setEnviandoComentario] = useState(false);
+
+  // FASE 2: artigo + notícias relacionadas agora vêm da API, não mais de
+  // window.NOTICIAS lido de forma síncrona antes do React renderizar.
+  const [artigo, setArtigo] = useState(null);
+  const [carregandoArtigo, setCarregandoArtigo] = useState(true);
+  const [erroArtigo, setErroArtigo] = useState(false);
+  const [outrasNoticiasGerais, setOutrasNoticiasGerais] = useState([]);
+
+  const idDaUrl = obterNoticiaIdDaUrl();
   const noticiaId = artigo?.id;
+
+  // Busca a notícia pelo ?id= da URL, e também a lista das outras 12
+  // notícias gerais (pra montar "Leia também"/"relacionadas" do mesmo
+  // jeito que já funcionava antes, só que agora com dado vindo da API).
+  useEffect(() => {
+    if (!idDaUrl) {
+      setCarregandoArtigo(false);
+      setErroArtigo(true);
+      return;
+    }
+
+    setCarregandoArtigo(true);
+    setErroArtigo(false);
+
+    Promise.all([
+      fetch(`/api/noticias/${idDaUrl}`).then((resposta) => {
+        if (!resposta.ok) throw new Error(`API respondeu ${resposta.status} ao buscar a notícia`);
+        return resposta.json();
+      }),
+      fetch('/api/noticias?geral=true').then((resposta) => {
+        if (!resposta.ok) throw new Error(`API respondeu ${resposta.status} ao buscar notícias gerais`);
+        return resposta.json();
+      }),
+    ])
+      .then(([noticiaApi, listaGeralApi]) => {
+        setArtigo(adaptarNoticiaDaApi(noticiaApi));
+        setOutrasNoticiasGerais(listaGeralApi.map(adaptarNoticiaDaApi));
+      })
+      .catch((erro) => {
+        // Erro visível no console de propósito — nada de esconder falha
+        // da API atrás de um fallback silencioso.
+        console.error('Erro ao carregar a notícia:', erro);
+        setErroArtigo(true);
+      })
+      .finally(() => setCarregandoArtigo(false));
+  }, [idDaUrl]);
+
+  // Sumário lateral: gerado automaticamente a partir dos blocos do tipo
+  // "titulo"/"subtitulo" dentro do corpo da notícia.
+  const sumario = (artigo?.corpo || [])
+    .filter((bloco) => bloco.tipo === 'titulo' || bloco.tipo === 'subtitulo')
+    .map((bloco) => ({ id: bloco.id, titulo: bloco.texto }));
+
+  // "Leia também" e "relacionadas": escolhidas entre as outras notícias
+  // gerais, priorizando a mesma categoria da que está sendo lida.
+  const outrasNoticias = outrasNoticiasGerais.filter((n) => n.id !== artigo?.id);
+  const mesmaCategoria = outrasNoticias.filter((n) => n.categoria === artigo?.categoria);
+  const outrasCategorias = outrasNoticias.filter((n) => n.categoria !== artigo?.categoria);
+  const noticiasOrdenadas = [...mesmaCategoria, ...outrasCategorias];
+  const leiaTambem = noticiasOrdenadas.slice(0, 2);
+  const relacionadas = noticiasOrdenadas.slice(0, 3);
 
   // Busca os comentários reais dessa notícia assim que a página carrega.
   // Manda o usuário logado (se houver) na query pra API já dizer quais
@@ -376,7 +440,7 @@ function App() {
   // Título da aba do navegador acompanha a notícia aberta
   useEffect(() => {
     if (artigo) document.title = `${artigo.titulo} — Gira-Brasil`;
-  }, []);
+  }, [artigo]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--reading-scale', fontScale);
@@ -527,9 +591,18 @@ function App() {
       .finally(() => setEnviandoComentario(false));
   }
 
-  // Se por algum motivo não existir nenhuma notícia no array, evita quebrar
-  // a página com uma tela em branco.
-  if (!artigo) {
+  // Enquanto a notícia ainda não chegou (ou não existe / a API falhou),
+  // mostra um estado simples em vez de tela em branco ou erro de JSX
+  // tentando ler propriedades de "artigo" antes de ele existir.
+  if (carregandoArtigo) {
+    return (
+      <div className="breadcrumb" style={{ padding: '60px 32px' }}>
+        Carregando notícia...
+      </div>
+    );
+  }
+
+  if (erroArtigo || !artigo) {
     return (
       <div className="breadcrumb" style={{ padding: '60px 32px' }}>
         Notícia não encontrada. <a href="noticias.html">Voltar para notícias</a>

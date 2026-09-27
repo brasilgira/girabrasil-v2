@@ -14,14 +14,15 @@
 <header class="header-site">
   <div class="header-inner">
     <a href="index.html" class="logo-site">Gira Brasil</a>
-    <nav class="nav-site">
-      <a href="index.html">Início</a>
-      <a href="noticias.html">Notícias</a>
-      <a href="regioes.html">Regiões</a>
-      <a href="jogos.html">Jogos</a>
-      <a href="girabot.html">GiraBot</a>
-      <a href="sobre.html" class="ativo">Sobre</a>
-    </nav>
+   <nav class="nav-site">
+  <div class="indicador-verde" id="indicador"></div>
+  <a href="index.html">Início</a>
+  <a href="noticias.html">Notícias</a>
+  <a href="regioes.html">Regiões</a>
+  <a href="jogos.html">Jogos</a>
+  <a href="girabot.html">Gira-Bot</a>
+  <a href="sobre.html" class="ativo">Sobre</a> <!-- Ativo movido para cá -->
+</nav>
     <div class="header-acoes">
       <a href="login.html" class="link-entrar">Entrar</a>      <a href="cadastro.html" class="botao botao-primario">Criar conta</a>
     </div>
@@ -133,6 +134,54 @@
     <span>Gira Brasil © 2026</span>
     <span>Natureza • Informação • Educação • Tecnologia</span>
   </div>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const linksMenu = document.querySelectorAll('.nav-site a');
+    const indicador = document.getElementById('indicador');
+    
+    if (!indicador) return; 
+
+    function moverIndicador(elemento) {
+      if (!elemento) return;
+      indicador.style.width = `${elemento.offsetWidth}px`;
+      indicador.style.height = `${elemento.offsetHeight}px`;
+      indicador.style.left = `${elemento.offsetLeft}px`;
+      indicador.style.top = `${elemento.offsetTop}px`;
+      indicador.style.opacity = '1';
+    }
+
+    // 1. A página carrega e a barra vai para o lugar INSTANTANEAMENTE (sem classe de animação)
+    const itemAtivo = document.querySelector('.nav-site a.ativo');
+    if(itemAtivo) {
+      moverIndicador(itemAtivo);
+      
+      // 2. Só depois de posicionar, ativamos a classe que faz ela correr nos cliques
+      setTimeout(() => {
+        indicador.classList.add('animando');
+      }, 50);
+    }
+
+    // 3. Ação do clique (agora vai correr para os dois lados perfeitamente)
+    linksMenu.forEach(link => {
+      link.addEventListener('click', function(e) {
+        if (this.classList.contains('ativo')) return;
+        
+        e.preventDefault(); 
+        
+        linksMenu.forEach(l => l.classList.remove('ativo'));
+        this.classList.add('ativo');
+        
+        moverIndicador(this);
+        
+        const destino = this.getAttribute('href');
+        
+        setTimeout(() => {
+          window.location.href = destino;
+        }, 200); 
+      });
+    });
+  });
+</script>
 </footer>
 
 </body>

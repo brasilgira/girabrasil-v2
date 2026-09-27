@@ -7,13 +7,6 @@
 <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/regioes.css">
 <link rel="stylesheet" href="../css/noticias.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../js/auth.js"></script>
-
-<!-- React (mesmo padrão de noticias.html/noticia.html) -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
 </head>
 <body data-regiao="sudeste">
 
@@ -39,9 +32,8 @@
   <a href="../regioes.html">← Voltar para Regiões</a>
 </div>
 
-<!-- Todo o conteúdo da página é montado aqui pelo React, em
-     js/noticias-regiao-react.js, a partir de window.REGIOES
-     (window.REGIOES.sudeste) e window.REGIAO_NOTICIAS. -->
+<!-- Todo o conteúdo da página é montado aqui por js/noticias-regiao.js,
+     a partir de window.REGIOES (window.REGIOES.sudeste). -->
 <main id="noticias-regiao-root"></main>
 
 <footer class="footer-site">
@@ -78,8 +70,8 @@
 
 <script src="../js/mapa-brasil-svg.js"></script>
 <script src="../js/regioes-data.js"></script>
-<script src="../js/regiao-noticias-data.js"></script>
-<script type="text/babel" src="../js/noticias-regiao-react.js"></script>
-
+<script src="../js/noticias-regiao.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/auth.js"></script>
 </body>
 </html>

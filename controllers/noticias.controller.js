@@ -5,12 +5,30 @@ const noticiasModel = require('../models/noticias.model');
 async function listarNoticias(req, res) {
   try {
     // O filtro vem via query string, ex: /api/noticias?regiao=3
-    const { regiao } = req.query;
-    const noticias = await noticiasModel.listarTodas(regiao);
+    // ou /api/noticias?geral=true (as 12 notícias gerais, sem região)
+    const { regiao, geral } = req.query;
+    const noticias = await noticiasModel.listarTodas(regiao, geral === 'true');
     res.json(noticias);
   } catch (erro) {
     console.error('Erro ao buscar notícias:', erro);
     res.status(500).json({ erro: 'Erro ao buscar notícias' });
+  }
+}
+
+async function buscarNoticiaPorSlug(req, res) {
+  try {
+    const { slug } = req.params;
+    const { usuarioId } = req.query;
+    const noticia = await noticiasModel.buscarPorSlug(slug, usuarioId);
+
+    if (!noticia) {
+      return res.status(404).json({ erro: 'Notícia não encontrada' });
+    }
+
+    res.json(noticia);
+  } catch (erro) {
+    console.error('Erro ao buscar notícia por slug:', erro);
+    res.status(500).json({ erro: 'Erro ao buscar notícia' });
   }
 }
 
@@ -59,4 +77,4 @@ async function salvar(req, res) {
   }
 }
 
-module.exports = { listarNoticias, buscarNoticia, curtir, salvar };
+module.exports = { listarNoticias, buscarNoticia, buscarNoticiaPorSlug, curtir, salvar };

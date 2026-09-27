@@ -2,10 +2,16 @@ const pool = require('../config/db');
 
 // Busca todas as notícias ativas, com JOIN na região (autor é opcional
 // agora — uma notícia de admin pode não ter um "usuario_id" formal).
-async function listarTodas(regiaoId) {
+//
+// `regiaoId` filtra pra notícias de UMA região específica (as 60
+// regionais). `apenasGerais` filtra pras 12 notícias gerais (regiao_id
+// nulo) — os dois filtros são mutuamente exclusivos na prática, mas
+// nada impede o model de aceitar os dois parâmetros.
+async function listarTodas(regiaoId, apenasGerais) {
   let query = `
     SELECT n.id, n.titulo, n.resumo, n.conteudo, n.imagem_url, n.categoria,
-           n.link_fonte, n.criado_em, n.atualizado_em,
+           n.bioma, n.link_fonte, n.slug_origem, n.corpo_json, n.metadados,
+           n.criado_em, n.atualizado_em,
            r.id AS regiao_id, r.nome AS regiao_nome
     FROM noticias n
     LEFT JOIN regiao r ON r.id = n.regiao_id
@@ -16,6 +22,10 @@ async function listarTodas(regiaoId) {
   if (regiaoId) {
     valores.push(regiaoId);
     query += ` AND n.regiao_id = $${valores.length}`;
+  }
+
+  if (apenasGerais) {
+    query += ` AND n.regiao_id IS NULL`;
   }
 
   query += ' ORDER BY n.criado_em DESC';
@@ -29,7 +39,8 @@ async function listarTodas(regiaoId) {
 async function buscarPorId(id, usuarioId) {
   const resultado = await pool.query(
     `SELECT n.id, n.titulo, n.resumo, n.conteudo, n.imagem_url, n.categoria,
-            n.link_fonte, n.criado_em, n.atualizado_em,
+            n.bioma, n.link_fonte, n.slug_origem, n.corpo_json, n.metadados,
+            n.criado_em, n.atualizado_em,
             r.id AS regiao_id, r.nome AS regiao_nome,
             COUNT(DISTINCT nc.id)::int AS curtidas,
             COALESCE(BOOL_OR(nc.usuario_id = $2), false) AS curtido_por_mim,
@@ -41,6 +52,29 @@ async function buscarPorId(id, usuarioId) {
      WHERE n.id = $1 AND n.ativo = true
      GROUP BY n.id, r.id`,
     [id, usuarioId || null]
+  );
+  return resultado.rows[0];
+}
+
+// Igual a buscarPorId, mas pelo slug_origem (ex: 'geral-1',
+// 'regiao-norte-03') em vez do id numérico — útil como identificador
+// estável, já que o id numérico é gerado pelo banco.
+async function buscarPorSlug(slugOrigem, usuarioId) {
+  const resultado = await pool.query(
+    `SELECT n.id, n.titulo, n.resumo, n.conteudo, n.imagem_url, n.categoria,
+            n.bioma, n.link_fonte, n.slug_origem, n.corpo_json, n.metadados,
+            n.criado_em, n.atualizado_em,
+            r.id AS regiao_id, r.nome AS regiao_nome,
+            COUNT(DISTINCT nc.id)::int AS curtidas,
+            COALESCE(BOOL_OR(nc.usuario_id = $2), false) AS curtido_por_mim,
+            COALESCE(BOOL_OR(ns.usuario_id = $2), false) AS salvo_por_mim
+     FROM noticias n
+     LEFT JOIN regiao r ON r.id = n.regiao_id
+     LEFT JOIN noticia_curtida nc ON nc.noticia_id = n.id
+     LEFT JOIN noticia_salva ns ON ns.noticia_id = n.id AND ns.usuario_id = $2
+     WHERE n.slug_origem = $1 AND n.ativo = true
+     GROUP BY n.id, r.id`,
+    [slugOrigem, usuarioId || null]
   );
   return resultado.rows[0];
 }
@@ -102,4 +136,4 @@ async function alternarSalvar(noticiaId, usuarioId) {
   return { noticiaId: Number(noticiaId), salvoPorMim: !jaSalvou };
 }
 
-module.exports = { listarTodas, buscarPorId, criar, alternarCurtida, alternarSalvar };
+module.exports = { listarTodas, buscarPorId, buscarPorSlug, criar, alternarCurtida, alternarSalvar };

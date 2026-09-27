@@ -8,8 +8,9 @@
 <link rel="stylesheet" href="css/noticias.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/auth.js"></script>
-<!-- Fonte única dos dados das notícias -->
-<script src="js/noticias-data.js"></script>
+<!-- FASE 2: os dados agora vêm da API (/api/noticias), não mais deste
+     arquivo — js/noticias-data.js continua existindo no projeto, só não
+     é mais lido por esta página. -->
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -75,7 +76,7 @@
 </footer>
 
 <script type="text/babel">
-const { useState, useMemo } = React;
+const { useState, useMemo, useEffect } = React;
 
 // Tira acento e deixa minúsculo, pra buscar "amazonia" e achar "Amazônia"
 function normalizar(texto) {
@@ -83,6 +84,14 @@ function normalizar(texto) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+}
+
+// A API devolve um timestamp (criado_em); os cards só precisam de uma
+// data curta tipo "27/04/2026", então formatamos aqui.
+function formatarDataSimples(isoString) {
+  const data = new Date(isoString);
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleDateString('pt-BR');
 }
 
 // Cartão individual — recebe os dados de UMA notícia e desenha o card.
@@ -167,9 +176,43 @@ function FiltrosNoticias({ busca, setBusca, temaAtivo, setTemaAtivo, temas, biom
 }
 
 function GridNoticias() {
-  // window.NOTICIAS vem de js/noticias-data.js (carregado no <head>).
-  // Se por algum motivo o arquivo não carregar, evita quebrar a página.
-  const todasNoticias = window.NOTICIAS || [];
+  // FASE 2: a fonte de dados agora é a API (/api/noticias?geral=true),
+  // não mais window.NOTICIAS. Os arquivos noticias-data.js/regiao-
+  // noticias-data.js continuam no projeto como fallback/referência, mas
+  // não são mais lidos aqui.
+  const [todasNoticias, setTodasNoticias] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erroCarregamento, setErroCarregamento] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/noticias?geral=true')
+      .then((resposta) => {
+        if (!resposta.ok) throw new Error(`API respondeu ${resposta.status}`);
+        return resposta.json();
+      })
+      .then((linhas) => {
+        // Adapta o formato da API (imagem_url, criado_em...) pro mesmo
+        // formato que o CardNoticia já espera (imagem, meta...), sem
+        // precisar mexer no componente do card.
+        const adaptadas = linhas.map((n) => ({
+          id: n.id,
+          titulo: n.titulo,
+          resumo: n.resumo,
+          imagem: n.imagem_url,
+          categoria: n.categoria,
+          bioma: n.bioma,
+          meta: formatarDataSimples(n.criado_em),
+        }));
+        setTodasNoticias(adaptadas);
+      })
+      .catch((erro) => {
+        // Erro visível no console de propósito — nada de esconder falha
+        // da API atrás de um fallback silencioso.
+        console.error('Erro ao buscar notícias da API:', erro);
+        setErroCarregamento(true);
+      })
+      .finally(() => setCarregando(false));
+  }, []);
 
   // Se a página foi aberta a partir de uma região (ex: noticias.html?bioma=Cerrado,
   // link que sai de regioes.html / public/regioes/*.html), já abre com esse
@@ -212,6 +255,22 @@ function GridNoticias() {
     setBusca('');
     setTemaAtivo('Todos');
     setBiomaAtivo('Todos');
+  }
+
+  if (carregando) {
+    return (
+      <section className="secao-noticias-grid">
+        <p>Carregando notícias...</p>
+      </section>
+    );
+  }
+
+  if (erroCarregamento) {
+    return (
+      <section className="secao-noticias-grid">
+        <p>Não foi possível carregar as notícias agora. Tente recarregar a página.</p>
+      </section>
+    );
   }
 
   if (todasNoticias.length === 0) {
