@@ -25,12 +25,18 @@ async function buscarPerfil(req, res) {
 }
 
 // PUT /api/perfil/:id — edição do próprio perfil (nome/avatar/bio).
-// OBS: não tem verificação de "é você mesmo?" ainda — dá pra reforçar
-// isso depois exigindo o token do Supabase, igual o verificarAdmin faz.
+// Protegida por verificarUsuario (token do Supabase); aqui só falta
+// confirmar que o :id da URL é o mesmo id de quem está autenticado —
+// sem isso, um usuário logado conseguiria editar o perfil de outra pessoa
+// só trocando o id na URL.
 async function atualizarPerfil(req, res) {
   try {
     const { id } = req.params;
     const { nome, avatarUrl, bio } = req.body;
+
+    if (req.usuarioLogado.id !== id) {
+      return res.status(403).json({ erro: 'Você só pode editar o seu próprio perfil.' });
+    }
 
     const perfilAtualizado = await perfilModel.atualizar(id, { nome, avatarUrl, bio });
     if (!perfilAtualizado) {

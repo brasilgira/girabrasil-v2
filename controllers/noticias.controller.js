@@ -49,11 +49,13 @@ async function buscarNoticia(req, res) {
   }
 }
 
+// A partir daqui o usuário vem SEMPRE de req.usuarioLogado (populado pelo
+// middleware verificarUsuario a partir do token do Supabase) — nunca do
+// corpo da requisição. Um usuarioId no body, se vier, é ignorado.
 async function curtir(req, res) {
   try {
     const { id } = req.params;
-    const { usuarioId } = req.body;
-    if (!usuarioId) return res.status(400).json({ erro: 'usuarioId é obrigatório' });
+    const usuarioId = req.usuarioLogado.id;
 
     const resultado = await noticiasModel.alternarCurtida(id, usuarioId);
     res.json(resultado);
@@ -66,8 +68,7 @@ async function curtir(req, res) {
 async function salvar(req, res) {
   try {
     const { id } = req.params;
-    const { usuarioId } = req.body;
-    if (!usuarioId) return res.status(400).json({ erro: 'usuarioId é obrigatório' });
+    const usuarioId = req.usuarioLogado.id;
 
     const resultado = await noticiasModel.alternarSalvar(id, usuarioId);
     res.json(resultado);

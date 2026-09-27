@@ -127,3 +127,24 @@
   .perfil-wrap { padding: 40px 18px 72px; }
   .perfil-card { padding: 28px 22px; }
 }
+
+/* --- FASE 3: atividades do usuário (salvos, curtidas, comentários) --- */
+.perfil-atividades { margin-top: 32px; display: flex; flex-direction: column; gap: 20px; }
+.perfil-secao {
+  background: var(--cor-fundo-alt);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 24px 28px;
+}
+.perfil-secao h2 { font-size: 1.05rem; margin: 0 0 12px; }
+.perfil-secao-contador { color: var(--cor-texto-suave); font-weight: 400; font-size: 0.9rem; }
+.perfil-lista { list-style: none; margin: 0; padding: 0; }
+.perfil-item { padding: 12px 0; border-top: 1px solid var(--cor-borda); display: flex; flex-direction: column; gap: 4px; }
+.perfil-item:first-child { border-top: none; }
+.perfil-item-titulo { font-weight: 600; color: var(--cor-texto); text-decoration: none; }
+.perfil-item-titulo:hover { text-decoration: underline; }
+.perfil-item-texto { margin: 0; font-size: 0.92rem; overflow-wrap: anywhere; }
+.perfil-item-meta { color: var(--cor-texto-suave); font-size: 0.82rem; }
+.perfil-item-meta a { color: inherit; text-decoration: underline; }
+.perfil-vazio { color: var(--cor-texto-suave); font-size: 0.9rem; padding: 4px 0; }
+@media (max-width: 600px) { .perfil-secao { padding: 20px 22px; } }

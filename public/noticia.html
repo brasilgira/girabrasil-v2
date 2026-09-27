@@ -202,11 +202,11 @@ function renderBloco(bloco, i) {
   }
 }
 
-function RailAcoes({ curtido, salvo, onCurtir, onSalvar, onCompartilhar, onIrComentarios, onFonteMenor, onFonteMaior }) {
+function RailAcoes({ curtido, salvo, curtidas, onCurtir, onSalvar, onCompartilhar, onIrComentarios, onFonteMenor, onFonteMaior }) {
   return (
     <aside className="rail" aria-label="Ações do artigo">
       <button className={`rail-btn ${curtido ? 'active' : ''}`} onClick={onCurtir} aria-pressed={curtido} aria-label="Curtir notícia">
-        {curtido ? '♥' : '♡'}<span className="count">Curtir</span>
+        {curtido ? '♥' : '♡'}<span className="count">{curtidas > 0 ? `${curtidas} curtida${curtidas === 1 ? '' : 's'}` : 'Curtir'}</span>
       </button>
       <button className="rail-btn" onClick={onIrComentarios} aria-label="Ir para comentários">
         💬<span className="count">Comentar</span>
@@ -266,7 +266,7 @@ function ModalCompartilhar({ aberto, onFechar }) {
   );
 }
 
-function Comentarios({ comentarios, carregando, erro, enviando, onCurtirComentario, onEnviar }) {
+function Comentarios({ comentarios, carregando, erro, enviando, usuarioAtualId, onCurtirComentario, onEnviar, onExcluir }) {
   const [texto, setTexto] = useState('');
 
   function enviar() {
@@ -325,6 +325,9 @@ function Comentarios({ comentarios, carregando, erro, enviando, onCurtirComentar
                   </button>
                   {/* "Responder" é só visual por enquanto — sem threading implementado ainda */}
                   <button>Responder</button>
+                  {usuarioAtualId && c.usuario_id === usuarioAtualId && (
+                    <button className="comment-delete" onClick={() => onExcluir(c.id)}>Excluir</button>
+                  )}
                 </div>
               </div>
             </div>
@@ -338,6 +341,7 @@ function Comentarios({ comentarios, carregando, erro, enviando, onCurtirComentar
 function App() {
   const [curtido, setCurtido] = useState(false);
   const [salvo, setSalvo] = useState(false);
+  const [curtidas, setCurtidas] = useState(0);
   const [modalAberto, setModalAberto] = useState(false);
   const [fontScale, setFontScale] = useState(1);
   const [tocAtivo, setTocAtivo] = useState('');
@@ -369,8 +373,17 @@ function App() {
     setCarregandoArtigo(true);
     setErroArtigo(false);
 
+    // Manda o usuário logado (se houver) na query pra API já devolver se
+    // ELE curtiu/salvou esta notícia (curtido_por_mim/salvo_por_mim) —
+    // sem isso o botão sempre nasceria "desmarcado" mesmo pra quem já
+    // tinha curtido antes.
+    const usuarioSessaoArtigo = obterUsuarioSessao();
+    const urlArtigo = usuarioSessaoArtigo?.id
+      ? `/api/noticias/${idDaUrl}?usuarioId=${encodeURIComponent(usuarioSessaoArtigo.id)}`
+      : `/api/noticias/${idDaUrl}`;
+
     Promise.all([
-      fetch(`/api/noticias/${idDaUrl}`).then((resposta) => {
+      fetch(urlArtigo).then((resposta) => {
         if (!resposta.ok) throw new Error(`API respondeu ${resposta.status} ao buscar a notícia`);
         return resposta.json();
       }),
@@ -442,6 +455,16 @@ function App() {
     if (artigo) document.title = `${artigo.titulo} — Gira-Brasil`;
   }, [artigo]);
 
+  // Estado real de curtida/salvo/contagem vem da API (artigo.curtido_por_mim,
+  // artigo.salvo_por_mim, artigo.curtidas) — sincroniza assim que a notícia
+  // carrega, em vez de nascer sempre "desmarcado".
+  useEffect(() => {
+    if (!artigo) return;
+    setCurtido(!!artigo.curtido_por_mim);
+    setSalvo(!!artigo.salvo_por_mim);
+    setCurtidas(artigo.curtidas || 0);
+  }, [artigo?.id]);
+
   useEffect(() => {
     document.documentElement.style.setProperty('--reading-scale', fontScale);
   }, [fontScale]);
@@ -497,7 +520,28 @@ function App() {
       abrirAvisoConta('Crie uma conta pra curtir esta notícia.');
       return;
     }
+    if (!noticiaId) return;
+
+    // Atualização otimista (muda a carinha na hora); desfaz se a API falhar.
+    const curtidoAntes = curtido;
+    const curtidasAntes = curtidas;
     setCurtido((atual) => !atual);
+    setCurtidas((atual) => (curtidoAntes ? atual - 1 : atual + 1));
+
+    fetchAutenticado(`/api/noticias/${noticiaId}/curtir`, { method: 'POST' })
+      .then((resposta) => {
+        if (!resposta.ok) throw new Error('Erro ao curtir notícia');
+        return resposta.json();
+      })
+      .then((resultado) => {
+        setCurtido(resultado.curtidoPorMim);
+        setCurtidas(resultado.curtidas);
+      })
+      .catch((erro) => {
+        console.error('Erro ao curtir notícia:', erro);
+        setCurtido(curtidoAntes);
+        setCurtidas(curtidasAntes);
+      });
   }
 
   function alternarSalvar() {
@@ -505,7 +549,23 @@ function App() {
       abrirAvisoConta('Crie uma conta pra salvar reportagens e ler depois.');
       return;
     }
+    if (!noticiaId) return;
+
+    const salvoAntes = salvo;
     setSalvo((atual) => !atual);
+
+    fetchAutenticado(`/api/noticias/${noticiaId}/salvar`, { method: 'POST' })
+      .then((resposta) => {
+        if (!resposta.ok) throw new Error('Erro ao salvar notícia');
+        return resposta.json();
+      })
+      .then((resultado) => {
+        setSalvo(resultado.salvoPorMim);
+      })
+      .catch((erro) => {
+        console.error('Erro ao salvar notícia:', erro);
+        setSalvo(salvoAntes);
+      });
   }
 
   function irParaComentarios() {
@@ -529,11 +589,7 @@ function App() {
       )
     );
 
-    fetch(`/api/comentarios/${id}/curtir`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuarioId: usuario.id }),
-    })
+    fetchAutenticado(`/api/comentarios/${id}/curtir`, { method: 'POST' })
       .then((resposta) => {
         if (!resposta.ok) throw new Error('Erro ao curtir comentário');
         return resposta.json();
@@ -569,15 +625,13 @@ function App() {
 
     setEnviandoComentario(true);
 
-    fetch('/api/comentarios', {
+    // usuarioId/usuarioNome não são mais mandados aqui — a API agora
+    // identifica o autor pelo token (Authorization), não confia mais no
+    // que o corpo da requisição diz.
+    fetchAutenticado('/api/comentarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        conteudo: texto,
-        usuarioId: usuario.id,
-        usuarioNome: usuario.nome || usuario.email,
-        noticiaId,
-      }),
+      body: JSON.stringify({ conteudo: texto, noticiaId }),
     })
       .then(async (resposta) => {
         const dados = await resposta.json();
@@ -589,6 +643,30 @@ function App() {
         alert('Não foi possível publicar seu comentário. Tente novamente.');
       })
       .finally(() => setEnviandoComentario(false));
+  }
+
+  // Exclui um comentário próprio (soft delete no backend). Remoção
+  // otimista da lista; se a API falhar, o comentário volta a aparecer.
+  function excluirComentario(id) {
+    const comentarioAnterior = comentarios.find((c) => c.id === id);
+    if (!comentarioAnterior) return;
+
+    if (!confirm('Excluir este comentário?')) return;
+
+    setComentarios((lista) => lista.filter((c) => c.id !== id));
+
+    fetchAutenticado(`/api/comentarios/${id}`, { method: 'DELETE' })
+      .then((resposta) => {
+        if (!resposta.ok) throw new Error('Erro ao excluir comentário');
+      })
+      .catch((erro) => {
+        console.error('Erro ao excluir comentário:', erro);
+        alert('Não foi possível excluir o comentário. Tente novamente.');
+        // devolve o comentário pro lugar de origem, ordenado por data
+        setComentarios((lista) =>
+          [...lista, comentarioAnterior].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em))
+        );
+      });
   }
 
   // Enquanto a notícia ainda não chegou (ou não existe / a API falhou),
@@ -646,6 +724,7 @@ function App() {
         <RailAcoes
           curtido={curtido}
           salvo={salvo}
+          curtidas={curtidas}
           onCurtir={alternarCurtida}
           onSalvar={alternarSalvar}
           onCompartilhar={() => setModalAberto(true)}
@@ -688,7 +767,7 @@ function App() {
         <p>Você gostou desta notícia?</p>
         <div className="engage-actions">
           <button className={`pill-btn ${curtido ? 'active' : ''}`} onClick={alternarCurtida}>
-            {curtido ? '♥ Curtido' : '♡ Gostei'}
+            {curtido ? `♥ Curtido${curtidas > 0 ? ` (${curtidas})` : ''}` : '♡ Gostei'}
           </button>
           <button className={`pill-btn ${salvo ? 'active' : ''}`} onClick={alternarSalvar}>
             {salvo ? '🔖 Salvo' : '🔖 Salvar notícia'}
@@ -720,8 +799,10 @@ function App() {
         carregando={carregandoComentarios}
         erro={erroComentarios}
         enviando={enviandoComentario}
+        usuarioAtualId={obterUsuarioSessao()?.id || null}
         onCurtirComentario={curtirComentario}
         onEnviar={enviarComentario}
+        onExcluir={excluirComentario}
       />
 
       <section className="newsletter">

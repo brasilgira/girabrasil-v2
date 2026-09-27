@@ -55,6 +55,22 @@
     </div>
 
   </div>
+
+  <!-- FASE 3: atividades reais do usuário, vindas de /api/perfil/:id -->
+  <div class="perfil-atividades" id="perfilAtividades">
+    <section class="perfil-secao">
+      <h2>Notícias salvas <span class="perfil-secao-contador" id="contadorSalvas"></span></h2>
+      <ul class="perfil-lista" id="listaSalvas"><li class="perfil-vazio">Carregando...</li></ul>
+    </section>
+    <section class="perfil-secao">
+      <h2>Notícias curtidas <span class="perfil-secao-contador" id="contadorCurtidas"></span></h2>
+      <ul class="perfil-lista" id="listaCurtidas"><li class="perfil-vazio">Carregando...</li></ul>
+    </section>
+    <section class="perfil-secao">
+      <h2>Meus comentários <span class="perfil-secao-contador" id="contadorComentarios"></span></h2>
+      <ul class="perfil-lista" id="listaComentarios"><li class="perfil-vazio">Carregando...</li></ul>
+    </section>
+  </div>
 </div>
 
 <footer class="footer-site">
@@ -131,13 +147,106 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('perfilBadgeAdmin').style.display = 'inline-flex';
   }
 
+   // Carrega as atividades ANTES de qualquer coisa que possa falhar
+  carregarAtividades(usuario.id);
+
   document.getElementById('btnSairConta').addEventListener('click', () => {
     sairDaConta();
     window.location.href = 'index.html';
   });
 
-  document.getElementById('btnExcluirConta').addEventListener('click', excluirConta);
+  // excluirConta ainda não existe no projeto (bug antigo) — o typeof evita
+  // que o erro derrube o resto do script
+  document.getElementById('btnExcluirConta').addEventListener('click', () => {
+    if (typeof excluirConta === 'function') excluirConta();
+    else alert('Exclusão de conta ainda não está disponível.');
+  });
 });
+
+// ---- FASE 3: atividades do usuário (salvos, curtidas, comentários) ------
+// Tudo montado com createElement/textContent (nunca innerHTML com texto
+// vindo do banco), pra um comentário com HTML não virar XSS.
+function criarItemNoticia(n, dataCampo, rotulo) {
+  const li = document.createElement('li');
+  li.className = 'perfil-item';
+
+  const link = document.createElement('a');
+  link.href = `noticia.html?id=${encodeURIComponent(n.id)}`;
+  link.className = 'perfil-item-titulo';
+  link.textContent = n.titulo;
+  li.appendChild(link);
+
+  const meta = document.createElement('span');
+  meta.className = 'perfil-item-meta';
+  const data = new Date(n[dataCampo]);
+  meta.textContent = [n.categoria, Number.isNaN(data.getTime()) ? '' : `${rotulo} em ${data.toLocaleDateString('pt-BR')}`]
+    .filter(Boolean).join(' • ');
+  li.appendChild(meta);
+  return li;
+}
+
+function criarItemComentario(c) {
+  const li = document.createElement('li');
+  li.className = 'perfil-item';
+
+  const texto = document.createElement('p');
+  texto.className = 'perfil-item-texto';
+  texto.textContent = c.conteudo;
+  li.appendChild(texto);
+
+  const meta = document.createElement('span');
+  meta.className = 'perfil-item-meta';
+  const data = new Date(c.criado_em);
+  meta.appendChild(document.createTextNode('em '));
+  const link = document.createElement('a');
+  link.href = `noticia.html?id=${encodeURIComponent(c.noticia_id)}#comentarios`;
+  link.textContent = c.noticia_titulo;
+  meta.appendChild(link);
+  if (!Number.isNaN(data.getTime())) {
+    meta.appendChild(document.createTextNode(` • ${data.toLocaleDateString('pt-BR')}`));
+  }
+  li.appendChild(meta);
+  return li;
+}
+
+function preencherLista(idLista, idContador, itens, criarItem, textoVazio) {
+  const ul = document.getElementById(idLista);
+  ul.innerHTML = '';
+  document.getElementById(idContador).textContent = itens.length ? `(${itens.length})` : '';
+
+  if (!itens.length) {
+    const vazio = document.createElement('li');
+    vazio.className = 'perfil-vazio';
+    vazio.textContent = textoVazio;
+    ul.appendChild(vazio);
+    return;
+  }
+  itens.forEach((item) => ul.appendChild(criarItem(item)));
+}
+
+async function carregarAtividades(usuarioId) {
+  try {
+    const resposta = await fetch(`/api/perfil/${encodeURIComponent(usuarioId)}`);
+    if (!resposta.ok) throw new Error(`API respondeu ${resposta.status}`);
+    const perfil = await resposta.json();
+
+    preencherLista('listaSalvas', 'contadorSalvas', perfil.noticiasSalvas || [],
+      (n) => criarItemNoticia(n, 'salvo_em', 'salva'), 'Você ainda não salvou nenhuma notícia.');
+    preencherLista('listaCurtidas', 'contadorCurtidas', perfil.noticiasCurtidas || [],
+      (n) => criarItemNoticia(n, 'curtido_em', 'curtida'), 'Você ainda não curtiu nenhuma notícia.');
+    preencherLista('listaComentarios', 'contadorComentarios', perfil.comentarios || [],
+      criarItemComentario, 'Você ainda não comentou em nenhuma notícia.');
+  } catch (erro) {
+    console.error('Erro ao carregar atividades do perfil:', erro);
+    ['listaSalvas', 'listaCurtidas', 'listaComentarios'].forEach((id) => {
+      document.getElementById(id).innerHTML = '';
+      const li = document.createElement('li');
+      li.className = 'perfil-vazio';
+      li.textContent = 'Não foi possível carregar esta seção agora.';
+      document.getElementById(id).appendChild(li);
+    });
+  }
+}
 </script>
 
 </body>

@@ -70,4 +70,19 @@ async function alternarCurtida(comentarioId, usuarioId) {
   };
 }
 
-module.exports = { listarPorNoticia, criar, alternarCurtida };
+// Exclui (soft delete) um comentário, mas SÓ se ele pertencer ao usuário
+// informado — a condição "AND usuario_id = $2" é o que garante isso no
+// próprio banco, além da checagem que o controller já faz. Retorna a
+// linha afetada (ou undefined se não existia ou não era do usuário).
+async function excluirProprio(comentarioId, usuarioId) {
+  const resultado = await pool.query(
+    `UPDATE comentario
+     SET ativo = false
+     WHERE id = $1 AND usuario_id = $2 AND ativo = true
+     RETURNING id`,
+    [comentarioId, usuarioId]
+  );
+  return resultado.rows[0];
+}
+
+module.exports = { listarPorNoticia, criar, alternarCurtida, excluirProprio };

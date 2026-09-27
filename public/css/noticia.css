@@ -168,6 +168,8 @@ border-style: none;
     background: none;}
 .comment-actions button:hover{color:var(--forest-700);}
 .comment-actions button.liked{color:var(--forest-700);}
+.comment-actions button.comment-delete{color:#b3403a;}
+.comment-actions button.comment-delete:hover{color:#8f322d;}
 
 /* ---------- NEWSLETTER ---------- */
 .newsletter{max-width:var(--maxw-page);margin:100px auto 0;padding:0 32px;}

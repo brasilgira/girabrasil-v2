@@ -39,6 +39,39 @@ function sairDaConta() {
   supabaseClient.auth.signOut();
 }
 
+// ---- Token de acesso (pra chamadas autenticadas na nossa API) ------------
+// FASE 3: as rotas que alteram dado em nome de um usuário (curtir, salvar,
+// comentar, excluir comentário, editar perfil) agora exigem um token do
+// Supabase válido no cabeçalho Authorization — não basta mais mandar o id
+// no corpo da requisição. Esta função pega esse token da sessão atual do
+// Supabase (guardada pelo próprio supabase-js, não é o mesmo localStorage
+// de girabrasil_usuario).
+async function obterTokenAcesso() {
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    return data?.session?.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+// Helper pra chamar a nossa API já com o Authorization: Bearer <token>
+// preenchido. Se não houver sessão válida, lança erro (quem chamar deve
+// tratar isso pedindo login, igual já é feito com abrirAvisoConta).
+async function fetchAutenticado(url, opcoes = {}) {
+  const token = await obterTokenAcesso();
+  if (!token) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  const cabecalhos = {
+    ...(opcoes.headers || {}),
+    Authorization: `Bearer ${token}`,
+  };
+
+  return fetch(url, { ...opcoes, headers: cabecalhos });
+}
+
 function obterRedirectDaUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get('redirect');
@@ -150,10 +183,9 @@ function renderizarHeaderAuth() {
   `;
 
   document.getElementById('perfilUsuario').addEventListener('click', () => {
-    if (confirm('Sair da conta?')) {
-      sairDaConta();
-      window.location.reload();
-    }
+    // Páginas dentro de /biomas/ e /regioes/ precisam voltar uma pasta
+    const emSubpasta = /\/(biomas|regioes)\//.test(window.location.pathname);
+    window.location.href = (emSubpasta ? '../' : '') + 'perfil.html';
   });
 
   renderizarLinkAdmin(usuario);
