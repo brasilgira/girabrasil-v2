@@ -18,17 +18,32 @@ async function listarNoticias() {
   return resultado.rows;
 }
 
-async function criarNoticia({ titulo, resumo, conteudo, imagemUrl, categoria, linkFonte, regiaoId, usuarioId }) {
+async function criarNoticia({ titulo, resumo, conteudo, imagemUrl, categoria, bioma, linkFonte, regiaoId, corpoJson, criadoEm, usuarioId }) {
   const resultado = await pool.query(
-    `INSERT INTO noticias (titulo, resumo, conteudo, imagem_url, categoria, link_fonte, regiao_id, usuario_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO noticias (titulo, resumo, conteudo, imagem_url, categoria, bioma, link_fonte, regiao_id, corpo_json, usuario_id, criado_em)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, COALESCE($11, now()))
      RETURNING *`,
-    [titulo, resumo, conteudo, imagemUrl, categoria, linkFonte, regiaoId || null, usuarioId || null]
+    [
+      titulo,
+      resumo,
+      conteudo,
+      imagemUrl,
+      categoria,
+      bioma,
+      linkFonte,
+      regiaoId || null,
+      corpoJson ? JSON.stringify(corpoJson) : null,
+      usuarioId || null,
+      criadoEm || null,
+    ]
   );
   return resultado.rows[0];
 }
 
-async function editarNoticia(id, { titulo, resumo, conteudo, imagemUrl, categoria, linkFonte, regiaoId }) {
+async function editarNoticia(id, { titulo, resumo, conteudo, imagemUrl, categoria, bioma, linkFonte, regiaoId, corpoJson, criadoEm }) {
+  // OBS: corpo_json NÃO usa COALESCE — o admin precisa conseguir limpar o
+  // conteúdo estruturado de propósito (mandando null), então o valor que
+  // vier do formulário sempre substitui o que já estava salvo.
   const resultado = await pool.query(
     `UPDATE noticias SET
        titulo = $1,
@@ -36,12 +51,27 @@ async function editarNoticia(id, { titulo, resumo, conteudo, imagemUrl, categori
        conteudo = $3,
        imagem_url = COALESCE($4, imagem_url),
        categoria = COALESCE($5, categoria),
-       link_fonte = COALESCE($6, link_fonte),
-       regiao_id = COALESCE($7, regiao_id),
+       bioma = COALESCE($6, bioma),
+       link_fonte = COALESCE($7, link_fonte),
+       regiao_id = COALESCE($8, regiao_id),
+       corpo_json = $9,
+       criado_em = COALESCE($10, criado_em),
        atualizado_em = now()
-     WHERE id = $8
+     WHERE id = $11
      RETURNING *`,
-    [titulo, resumo, conteudo, imagemUrl, categoria, linkFonte, regiaoId, id]
+    [
+      titulo,
+      resumo,
+      conteudo,
+      imagemUrl,
+      categoria,
+      bioma,
+      linkFonte,
+      regiaoId,
+      corpoJson ? JSON.stringify(corpoJson) : null,
+      criadoEm || null,
+      id,
+    ]
   );
   return resultado.rows[0] || null;
 }
@@ -87,6 +117,42 @@ async function apagarComentario(id) {
   return resultado.rows[0] || null;
 }
 
+// ---------- Usuários ----------
+// Só o que a Fase 4 pede: consulta, sem e-mail e sem desativação (não há
+// coluna `ativo` em `perfil`, e não vamos criar uma nesta fase).
+async function listarUsuarios() {
+  const resultado = await pool.query(
+    `SELECT id, nome, avatar_url, criado_em FROM perfil ORDER BY criado_em DESC`
+  );
+  return resultado.rows;
+}
+
+// ---------- Métricas ----------
+
+async function obterTotais() {
+  const resultado = await pool.query(
+    `SELECT
+       (SELECT count(*)::int FROM perfil) AS usuarios,
+       (SELECT count(*)::int FROM noticias WHERE ativo = true) AS noticias,
+       (SELECT count(*)::int FROM comentario WHERE ativo = true) AS comentarios`
+  );
+  return resultado.rows[0];
+}
+
+// Cadastros por mês (perfil.criado_em), últimos 12 meses — meses sem
+// nenhum cadastro não aparecem na consulta, então o controller preenche
+// os buracos com 0 antes de devolver pro front.
+async function obterCadastrosPorMes() {
+  const resultado = await pool.query(
+    `SELECT to_char(date_trunc('month', criado_em), 'YYYY-MM') AS mes, count(*)::int AS total
+     FROM perfil
+     WHERE criado_em >= date_trunc('month', now()) - interval '11 months'
+     GROUP BY 1
+     ORDER BY 1`
+  );
+  return resultado.rows;
+}
+
 module.exports = {
   listarNoticias,
   criarNoticia,
@@ -95,4 +161,7 @@ module.exports = {
   listarComentarios,
   editarComentario,
   apagarComentario,
+  listarUsuarios,
+  obterTotais,
+  obterCadastrosPorMes,
 };
