@@ -717,7 +717,7 @@ function pedirConfirmacaoExclusao({ tipo, id, descricao }) {
 
   const modal = document.querySelector('[data-modal="confirmar-exclusao"]');
   modal.querySelector("[data-texto-exclusao]").textContent =
-    `Tem certeza que quer apagar ${descricao}? Essa ação usa soft delete — o item some da listagem, mas continua no banco.`;
+    `Tem certeza que quer apagar ${descricao}? Essa ação usa soft delete — o item continua aqui na lista, marcado como desativado, mas some da parte pública do site.`;
 
   abrirModal("confirmar-exclusao");
 }

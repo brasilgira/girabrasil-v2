@@ -93,7 +93,7 @@ async function listarComentarios() {
   const resultado = await pool.query(
     `SELECT c.*, c.usuario_nome AS autor_nome, n.titulo AS noticia_titulo
      FROM comentario c
-     JOIN noticias n ON n.id = c.noticia_id
+     LEFT JOIN noticias n ON n.id = c.noticia_id
      ORDER BY c.criado_em DESC`
   );
   return resultado.rows;
