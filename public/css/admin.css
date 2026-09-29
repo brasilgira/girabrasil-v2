@@ -480,6 +480,10 @@ a { color: inherit; }
   gap: 20px;
 }
 
+.admin-duas-colunas > #usuarios {
+  grid-column: 1 / -1;
+}
+
 .bloco-tabela {
   min-width: 0;
   overflow: hidden;
@@ -790,6 +794,59 @@ a { color: inherit; }
   font-size: .72rem;
   line-height: 1.45;
 }
+
+.aviso-indisponivel[hidden] { display: none; }
+
+/* FASE 4: campos novos do formulário de notícia (região/bioma reais,
+   conteúdo estruturado) — só o necessário pra acomodar os dados novos. */
+.campo-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+@media (max-width: 560px) {
+  .campo-linha { grid-template-columns: 1fr; }
+}
+
+.campo-ajuda {
+  font-weight: 400;
+  color: var(--admin-suave);
+  font-size: .68rem;
+  line-height: 1.4;
+}
+
+.campo-avancado {
+  border: 1px solid var(--admin-borda);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.campo-avancado summary {
+  cursor: pointer;
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--admin-texto);
+}
+
+.campo-avancado[open] summary { margin-bottom: 10px; }
+
+.campo-avancado textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .74rem;
+}
+
+.erro-formulario {
+  margin: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--admin-perigo);
+  border-radius: 6px;
+  background: var(--admin-perigo-fundo);
+  color: #88443a;
+  font-size: .72rem;
+}
+
+.erro-formulario[hidden] { display: none; }
 
 /* --------------------------------------------------------------------------
    TOAST

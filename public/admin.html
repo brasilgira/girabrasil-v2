@@ -66,6 +66,14 @@
           <span>Comentários</span>
         </button>
 
+        <button class="admin-menu__item" data-secao="usuarios" type="button">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Usuários</span>
+        </button>
+
         <div class="admin-menu__rodape">
           <a href="index.html" class="admin-menu__voltar">← Voltar ao site</a>
         </div>
@@ -199,6 +207,28 @@
             </div>
           </section>
 
+          <section id="usuarios" class="admin-bloco bloco-tabela" aria-label="Usuários cadastrados">
+            <div class="admin-bloco__cabecalho">
+              <div>
+                <div class="admin-secao-kicker">COMUNIDADE</div>
+                <h2>Usuários cadastrados</h2>
+              </div>
+              <span class="admin-contador" data-contador="usuarios"></span>
+            </div>
+
+            <div class="tabela-wrapper">
+              <table class="tabela-admin">
+                <thead>
+                  <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Cadastrado em</th>
+                  </tr>
+                </thead>
+                <tbody data-tabela="usuarios"></tbody>
+              </table>
+            </div>
+          </section>
+
         </div>
       </main>
     </div>
@@ -234,36 +264,101 @@
     </div>
   </footer>
 
-  <!-- ===================== MODAL: Nova notícia ===================== -->
+  <!-- ===================== MODAL: Nova / Editar notícia ===================== -->
   <div class="modal-fundo" data-modal="nova-noticia" hidden>
     <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-noticia">
       <div class="modal-caixa__cabecalho">
         <div>
           <div class="admin-secao-kicker">CONTEÚDO</div>
-          <h2 id="titulo-modal-noticia">Cadastrar nova notícia</h2>
+          <h2 id="titulo-modal-noticia" data-titulo-modal-noticia>Cadastrar nova notícia</h2>
         </div>
         <button class="modal-fechar" type="button" data-fechar-modal aria-label="Fechar">×</button>
       </div>
 
       <form class="formulario-admin" data-form="nova-noticia">
-        <label class="campo"><span>Título</span><input type="text" name="titulo" placeholder="Digite o título da notícia" required /></label>
-        <label class="campo"><span>Região</span>
-          <select name="regiao" required>
-            <option value="" disabled selected>Selecione a região</option>
-            <option value="amazonia">Amazônia</option>
-            <option value="caatinga">Caatinga</option>
-            <option value="cerrado">Cerrado</option>
-            <option value="mata-atlantica">Mata Atlântica</option>
-            <option value="pampa">Pampa</option>
-            <option value="pantanal">Pantanal</option>
-          </select>
+        <input type="hidden" name="id" />
+
+        <label class="campo"><span>Título</span>
+          <input type="text" name="titulo" placeholder="Digite o título da notícia" required />
         </label>
-        <label class="campo"><span>URL da imagem de capa</span><input type="url" name="imagem" placeholder="https://exemplo.com/imagem.jpg" /></label>
-        <label class="campo"><span>Conteúdo</span><textarea name="conteudo" rows="6" placeholder="Digite o conteúdo da notícia" required></textarea></label>
-        <p class="aviso-indisponivel" data-aviso="nova-noticia">Ainda não conectado ao banco — essa notícia não vai ser salva de verdade por enquanto.</p>
+
+        <label class="campo"><span>Resumo</span>
+          <textarea name="resumo" rows="2" placeholder="Resumo curto (aparece nos cards e no topo da notícia)"></textarea>
+        </label>
+
+        <div class="campo-linha">
+          <label class="campo"><span>Categoria</span>
+            <input type="text" name="categoria" list="lista-categorias" placeholder="Ex.: Desmatamento" />
+            <datalist id="lista-categorias">
+              <option value="Biodiversidade"></option>
+              <option value="Crise Climática"></option>
+              <option value="Desmatamento"></option>
+              <option value="Economia Verde"></option>
+              <option value="Educação"></option>
+              <option value="Energia Limpa"></option>
+              <option value="Espécies Ameaçadas"></option>
+              <option value="Petróleo e Meio Ambiente"></option>
+            </datalist>
+          </label>
+
+          <label class="campo"><span>Bioma</span>
+            <select name="bioma">
+              <option value="">— Nenhum —</option>
+              <option value="Amazônia">Amazônia</option>
+              <option value="Caatinga">Caatinga</option>
+              <option value="Cerrado">Cerrado</option>
+              <option value="Mata Atlântica">Mata Atlântica</option>
+              <option value="Pampa">Pampa</option>
+              <option value="Pantanal">Pantanal</option>
+              <option value="Nacional">Nacional</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="campo-linha">
+          <label class="campo"><span>Região</span>
+            <select name="regiao" data-select-regiao>
+              <option value="">— Notícia geral (sem região) —</option>
+            </select>
+          </label>
+
+          <label class="campo"><span>Data de publicação</span>
+            <input type="date" name="dataPublicacao" />
+            <span class="campo-ajuda">Deixe em branco para usar a data de hoje (ou manter a atual, ao editar).</span>
+          </label>
+        </div>
+
+        <label class="campo"><span>URL da imagem de capa</span>
+          <input type="url" name="imagem" placeholder="https://exemplo.com/imagem.jpg" />
+        </label>
+
+        <label class="campo"><span>Link da fonte</span>
+          <input type="url" name="fonte" placeholder="https://exemplo.com/materia-original" />
+        </label>
+
+        <label class="campo">
+          <span>Conteúdo (parágrafos)</span>
+          <textarea name="conteudoSimples" rows="5" placeholder="Um parágrafo por linha. Usado quando não há conteúdo estruturado avançado abaixo."></textarea>
+          <span class="campo-ajuda">Vira o corpo do artigo (um bloco de parágrafo por linha), a menos que o campo avançado abaixo esteja preenchido.</span>
+        </label>
+
+        <details class="campo-avancado">
+          <summary>Conteúdo estruturado avançado (JSON)</summary>
+          <label class="campo">
+            <textarea name="corpoJson" rows="8" placeholder='[{"tipo":"paragrafo","texto":"..."}]' data-campo-corpo-json></textarea>
+            <span class="campo-ajuda">
+              Formato usado pela página da notícia. Se preenchido, tem prioridade sobre o campo de parágrafos acima.
+              Tipos aceitos: paragrafo, titulo, subtitulo, lista, estatisticas, citacao, regiao.
+            </span>
+          </label>
+          <p class="erro-formulario" data-erro-corpo-json hidden></p>
+        </details>
+
+        <p class="aviso-indisponivel" data-aviso="nova-noticia" hidden></p>
+
         <div class="formulario-admin__acoes">
           <button class="botao botao--fantasma" type="button" data-fechar-modal>Cancelar</button>
-          <button class="botao botao--primario" type="submit">Publicar notícia</button>
+          <button class="botao botao--primario" type="submit" data-botao-salvar-noticia>Publicar notícia</button>
         </div>
       </form>
     </div>
@@ -281,7 +376,7 @@
       </div>
       <form class="formulario-admin" data-form="editar-comentario">
         <label class="campo"><span>Comentário</span><textarea name="comentario" rows="5" required></textarea></label>
-        <p class="aviso-indisponivel" data-aviso="editar-comentario">Ainda não conectado ao banco — a edição não vai ser salva de verdade por enquanto.</p>
+        <p class="aviso-indisponivel" data-aviso="editar-comentario" hidden></p>
         <div class="formulario-admin__acoes">
           <button class="botao botao--fantasma" type="button" data-fechar-modal>Cancelar</button>
           <button class="botao botao--primario" type="submit">Salvar alteração</button>
@@ -310,6 +405,8 @@
 
   <div class="toast" data-toast hidden role="status"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
 </body>
 </html>

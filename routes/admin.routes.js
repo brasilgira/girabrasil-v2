@@ -15,4 +15,7 @@ router.get("/comentarios", verificarAdmin, adminController.listarComentarios);
 router.put("/comentarios/:id", verificarAdmin, adminController.editarComentario);
 router.delete("/comentarios/:id", verificarAdmin, adminController.apagarComentario);
 
+router.get("/usuarios", verificarAdmin, adminController.listarUsuarios);
+router.get("/metricas", verificarAdmin, adminController.obterMetricas);
+
 module.exports = router;
