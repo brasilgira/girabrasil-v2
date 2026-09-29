@@ -526,11 +526,15 @@ function buildQueue() {
       'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço/Clique</strong> e agache com <strong>↓</strong>.');
 
     const GH=H; const GROUND=GH-50;
+    const OBSTACLE_SINK = 12;
     const ONCA_RENDER_WIDTH = 80;
     const ONCA_RENDER_HEIGHT = 50;
-    const FIRE_ASPECT_RATIO = 16 / 9;
-    const FIRE_RENDER_WIDTH = ONCA_RENDER_HEIGHT * FIRE_ASPECT_RATIO;
-    const FIRE_RENDER_HEIGHT = ONCA_RENDER_HEIGHT;
+const FIRE_VISIBLE_HEIGHT = 80;   // altura que o fogo aparece na tela (aumente para ficar maior)
+const FIRE_SRC_VISIBLE_H = 980;   // altura útil do fogo dentro do PNG
+const FIRE_SRC_BOTTOM = 1012;     // linha do PNG onde a chama termina
+const FIRE_SCALE = FIRE_VISIBLE_HEIGHT / FIRE_SRC_VISIBLE_H;
+const FIRE_RENDER_WIDTH = 1920 * FIRE_SCALE;
+const FIRE_RENDER_HEIGHT = 1080 * FIRE_SCALE;
     let score=0,lives=3,level=1,running=false,dist=0;
     let onca={x:90,y:GROUND,vy:0,onGround:true,ducking:false,w:48,h:32};
     let obstacles=[],powerups=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
@@ -593,6 +597,8 @@ imgJump5.src = 'assets/games/onca6.png';
 
 //FOGO
 const fireImg1 = new Image();
+
+
 fireImg1.src = 'assets/games/1F.png';
 
 const fireImg2 = new Image();
@@ -610,6 +616,9 @@ fireImg5.src = 'assets/games/5F.png';
 const fireImg6 = new Image();
 fireImg6.src = 'assets/games/6F.png';
 
+// ÁRVORE
+const treeImg = new Image();
+treeImg.src = 'assets/games/arvore.png';
 
 //CHÃO
 const groundImg = new Image();
@@ -1046,27 +1055,6 @@ function drawOnca() {
 
 
 
-    /* ── ÁRVORE PIXEL ART (inspirada na referência: copa redonda, tronco largo) ── */
-    /* Copa: 14×10, Tronco: 4×5 — escala variável */
-    const TREE_CANOPY = [
-      [_,_,_,BK,'#1a5c35','#22c55e','#16a34a','#22c55e','#1a5c35',BK,_,_,_,_],
-      [_,_,BK,'#22c55e','#4ade80','#86efac','#4ade80','#86efac','#22c55e','#16a34a',BK,_,_,_],
-      [_,BK,'#16a34a','#4ade80','#86efac','#bbf7d0','#86efac','#4ade80','#86efac','#22c55e','#16a34a',BK,_,_],
-      [BK,'#22c55e','#4ade80','#86efac','#bbf7d0','#86efac','#bbf7d0','#86efac','#4ade80','#22c55e','#4ade80','#16a34a',BK,_],
-      [BK,'#16a34a','#86efac','#bbf7d0','#86efac','#4ade80','#86efac','#bbf7d0','#86efac','#4ade80','#22c55e','#16a34a',BK,_],
-      [_,BK,'#22c55e','#4ade80','#86efac','#4ade80','#22c55e','#4ade80','#86efac','#22c55e','#16a34a',BK,_,_],
-      [_,_,BK,'#16a34a','#22c55e','#4ade80','#22c55e','#4ade80','#22c55e','#16a34a',BK,_,_,_],
-      [_,_,_,BK,'#16a34a','#22c55e','#16a34a','#22c55e','#16a34a',BK,_,_,_,_],
-      [_,_,_,_,BK,'#166534','#16a34a','#166534',BK,_,_,_,_,_],
-      [_,_,_,_,_,BK,BK,BK,_,_,_,_,_,_],
-    ];
-    const TREE_TRUNK = [
-      [_,'#92400e','#a16207','#92400e',_],
-      ['#78350f','#b45309','#d97706','#a16207','#78350f'],
-      ['#78350f','#a16207','#d97706','#b45309','#78350f'],
-      ['#92400e','#b45309','#a16207','#92400e','#78350f'],
-      ['#78350f','#92400e','#92400e','#78350f','#78350f'],
-    ];
 
     /* Árvores de fundo (menores, mais escuras) */
     const TREE_CANOPY_BG = [
@@ -1084,28 +1072,7 @@ function drawOnca() {
       ['#2d1508','#3d1f0d','#2d1508','#2d1508'],
     ];
 
-    /* Pré-renderiza árvores de fundo em offscreen canvas */
-    function makeTreeCanvas(canopy, trunk, ps) {
-      const cw = canopy[0].length * ps;
-      const ch = (canopy.length + trunk.length) * ps;
-      const oc = document.createElement('canvas');
-      oc.width = cw; oc.height = ch;
-      const octx = oc.getContext('2d');
-      canopy.forEach((row, ry) => row.forEach((col, rx) => {
-        if (!col) return;
-        octx.fillStyle = col;
-        octx.fillRect(rx * ps, ry * ps, ps, ps);
-      }));
-      const trunkOffX = Math.floor((canopy[0].length - trunk[0].length) / 2);
-      trunk.forEach((row, ry) => row.forEach((col, rx) => {
-        if (!col) return;
-        octx.fillStyle = col;
-        octx.fillRect((trunkOffX + rx) * ps, (canopy.length + ry) * ps, ps, ps);
-      }));
-      return oc;
-    }
 
-    const treeFgCanvas = makeTreeCanvas(TREE_CANOPY, TREE_TRUNK, P);
     const treeBgImg = new Image();
 treeBgImg.src = 'assets/games/arvore1fundo.png';
 
@@ -1118,13 +1085,12 @@ const BG_TREE_WIDTH = BG_TREE_HEIGHT * (1224 / 1285);
       {x:475, scale:0.75},{x:615, scale:0.85},
     ];
 
-    const OBS_TYPES=[
-      {w:treeFgCanvas.width*0.7,h:treeFgCanvas.height*0.7,type:'tree'},
-      {w:treeFgCanvas.width*0.85,h:treeFgCanvas.height*0.85,type:'tree'},
-      {type:'fire'},
-      {w:52,h:28,c:'#607d8b',label:'🚜',type:'machine'},
-    ];
-
+const OBS_TYPES=[
+  {type:'tree'},
+  {type:'tree'},
+  {type:'fire'},
+  {w:52,h:28,c:'#607d8b',label:'🚜',type:'machine'},
+];
 
     function jump(){
   if(running && onca.onGround){
@@ -1159,34 +1125,15 @@ function drawFire(ob) {
   else if (frame === 4) img = fireImg5;
   else img = fireImg6;
 
-  /*
-   * Usa a proporção original da imagem.
-   *
-   * Se a imagem tiver 1920x1080:
-   *
-   * 1920 / 1080 = 1.777...
-   *
-   * Isso evita deformar o fogo.
+   /*
+   * Desenha a imagem inteira (1920x1080) reduzida pela escala do fogo.
+   * A base da chama (linha 1012 do PNG) fica exatamente no chão.
    */
-  const aspectRatio = (
-    img.naturalWidth &&
-    img.naturalHeight
-  )
-    ? img.naturalWidth / img.naturalHeight
-    : FIRE_ASPECT_RATIO;
+  const w = FIRE_RENDER_WIDTH;
+  const h = FIRE_RENDER_HEIGHT;
 
-  /*
-   * O fogo terá a mesma altura visual da onça.
-   */
-  const h = ONCA_RENDER_HEIGHT;
-
-  /*
-   * A largura será calculada automaticamente.
-   */
-  const w = h * aspectRatio;
-
-  const y = ob.oy;
-
+  const y =
+    GROUND + OBSTACLE_SINK - FIRE_SRC_BOTTOM * FIRE_SCALE;
   /*
    * Atualiza as dimensões do obstáculo.
    */
@@ -1222,37 +1169,250 @@ function drawFire(ob) {
   }
 }
 
+function drawTree(ob) {
+  if (
+    !treeImg.complete ||
+    treeImg.naturalWidth <= 0
+  ) {
+    return;
+  }
+
+  /*
+   * Procura o último pixel não transparente
+   * na parte inferior da árvore.
+   */
+  if (
+    !ob.treeBottomOffsetCalculated
+  ) {
+
+    const tempCanvas =
+      document.createElement('canvas');
+
+    tempCanvas.width =
+      treeImg.naturalWidth;
+
+    tempCanvas.height =
+      treeImg.naturalHeight;
+
+    const tempCtx =
+      tempCanvas.getContext('2d');
+
+    tempCtx.drawImage(
+      treeImg,
+      0,
+      0
+    );
+
+    const imageData =
+      tempCtx.getImageData(
+        0,
+        0,
+        treeImg.naturalWidth,
+        treeImg.naturalHeight
+      );
+
+    let bottomPixel =
+      treeImg.naturalHeight - 1;
+
+    /*
+     * Procura de baixo para cima
+     * o primeiro pixel visível.
+     */
+    for (
+      let y = treeImg.naturalHeight - 1;
+      y >= 0;
+      y--
+    ) {
+
+      let found = false;
+
+      for (
+        let x = 0;
+        x < treeImg.naturalWidth;
+        x++
+      ) {
+
+        const alpha =
+          imageData.data[
+            (y * treeImg.naturalWidth + x) * 4 + 3
+          ];
+
+        if (alpha > 0) {
+          bottomPixel = y;
+          found = true;
+          break;
+        }
+      }
+
+      if (found) break;
+    }
+
+    /*
+     * Guarda a distância entre o final da imagem
+     * e o último pixel realmente visível.
+     */
+    ob.treeBottomOffset =
+      treeImg.naturalHeight - 1 - bottomPixel;
+
+    ob.treeBottomOffsetCalculated = true;
+  }
+
+  /*
+   * Ajusta a posição vertical.
+   *
+   * Assim o último pixel visível da árvore
+   * fica exatamente sobre o GROUND.
+   */
+const transparentBottom =
+  ob.treeBottomOffset *
+  (ob.h / treeImg.naturalHeight);
+
+const drawY =
+  ob.oy + transparentBottom + OBSTACLE_SINK;
+  /*
+   * Sprite usado pela colisão.
+   *
+   * IMPORTANTE:
+   * usamos a mesma posição em que a imagem
+   * realmente está sendo desenhada.
+   */
+  ob.sprite = {
+    img: treeImg,
+    x: ob.x,
+    y: ob.oy,
+    w: ob.w,
+    h: ob.h
+  };
+
+  /*
+   * Desenha a árvore.
+   */
+  ctx.drawImage(
+    treeImg,
+    ob.x,
+    drawY,
+    ob.w,
+    ob.h
+  );
+
+  /*
+   * Corrige a posição do sprite de colisão
+   * para acompanhar exatamente o desenho.
+   */
+  ob.sprite.y = drawY;
+}
+
 function drawObstacle(ob) {
   if (ob.type === 'tree') {
-    const scale = ob.treeScale || 1;
-    const dw = treeFgCanvas.width * scale;
-    const dh = treeFgCanvas.height * scale;
-    ctx.drawImage(treeFgCanvas, ob.x, GROUND - dh, dw, dh);
+
+    drawTree(ob);
 
   } else if (ob.type === 'fire') {
+
     drawFire(ob);
 
   } else {
+
     ctx.font = `${ob.w}px serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(ob.label, ob.x + ob.w / 2, ob.oy + ob.h);
+
+    ctx.fillText(
+      ob.label,
+      ob.x + ob.w / 2,
+      ob.oy + ob.h
+    );
   }
+}
+
+function getTreeBottomOffset() {
+  if (
+    !treeImg.complete ||
+    !treeImg.naturalWidth
+  ) {
+    return 0;
+  }
+
+  const canvas =
+    document.createElement('canvas');
+
+  canvas.width =
+    treeImg.naturalWidth;
+
+  canvas.height =
+    treeImg.naturalHeight;
+
+  const c =
+    canvas.getContext('2d');
+
+  c.drawImage(
+    treeImg,
+    0,
+    0
+  );
+
+  const data =
+    c.getImageData(
+      0,
+      0,
+      treeImg.naturalWidth,
+      treeImg.naturalHeight
+    ).data;
+
+  for (
+    let y = treeImg.naturalHeight - 1;
+    y >= 0;
+    y--
+  ) {
+
+    for (
+      let x = 0;
+      x < treeImg.naturalWidth;
+      x++
+    ) {
+
+      const alpha =
+        data[
+          (y * treeImg.naturalWidth + x) * 4 + 3
+        ];
+
+      if (alpha >= 128) {
+
+        return (
+          treeImg.naturalHeight - 1 - y
+        );
+      }
+    }
+  }
+
+  return 0;
 }
 
     function spawnObs(){
       const t = OBS_TYPES[~~(Math.random() * OBS_TYPES.length)];
-      if (t.type === 'tree') {
-        const sc = 0.7 + Math.random() * 0.5;
-        const dw = treeFgCanvas.width * sc;
-        const dh = treeFgCanvas.height * sc;
-        obstacles.push({x:W+20, oy:GROUND-dh, w:dw*0.55, h:dh*0.8, type:'tree', treeScale:sc});
+if (t.type === 'tree') {
 
-      }
+  const sc = 0.06;
+
+  const dw =
+    treeImg.naturalWidth * sc;
+
+  const dh =
+    treeImg.naturalHeight * sc;
+
+  obstacles.push({
+    x: W + 20,
+    oy: GROUND - dh,
+    w: dw,
+    h: dh,
+    type: 'tree'
+  });
+
+}
       else if (t.type === 'fire') {
         obstacles.push({
           x: W + 20,
-          oy: GROUND - FIRE_RENDER_HEIGHT,
+          oy: GROUND,
           w: FIRE_RENDER_WIDTH,
           h: FIRE_RENDER_HEIGHT,
           type: 'fire'
@@ -1408,44 +1568,52 @@ obstacles.forEach(ob => {
   /*
    * O fogo usa colisão por pixels visíveis.
    */
-  if (ob.type === 'fire') {
-    collided = pixelPerfectCollision(
-      onca.sprite,
-      ob.sprite
-    );
-  }
+ /*
+ * Fogo e árvore usam colisão por pixels.
+ *
+ * Somente pixels com alpha > 0
+ * são considerados na colisão.
+ */
+if (
+  ob.type === 'fire' ||
+  ob.type === 'tree'
+) {
 
-  /*
-   * Árvores e máquinas continuam usando a colisão
-   * retangular anterior.
-   */
-  else {
-    const oh = onca.ducking
-      ? 14
-      : onca.h;
+  collided = pixelPerfectCollision(
+    onca.sprite,
+    ob.sprite
+  );
 
-    const ox1 =
-      onca.x - onca.w * 0.3;
+}
 
-    const ox2 =
-      onca.x + onca.w * 0.3;
+/*
+ * Máquina continua usando
+ * a colisão retangular.
+ */
+else {
 
-    const oy2 =
-      onca.y - oh;
+  const oh = onca.ducking
+    ? 14
+    : onca.h;
 
-    const obRight =
-      ob.x + (
-        ob.w ||
-        treeFgCanvas.width * 0.55
-      );
+  const ox1 =
+    onca.x - onca.w * 0.3;
 
-    collided =
-      obRight > ox1 &&
-      ob.x < ox2 &&
-      ob.oy < oy2 + oh &&
-      ob.oy + ob.h > oy2;
-  }
+  const ox2 =
+    onca.x + onca.w * 0.3;
 
+  const oy2 =
+    onca.y - oh;
+
+  const obRight =
+    ob.x + ob.w;
+
+  collided =
+    obRight > ox1 &&
+    ob.x < ox2 &&
+    ob.oy < oy2 + oh &&
+    ob.oy + ob.h > oy2;
+}
   /*
    * Se a colisão aconteceu, perde uma vida.
    */
