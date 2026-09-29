@@ -328,53 +328,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const linksMenu = document.querySelectorAll('.nav-site a');
-    const indicador = document.getElementById('indicador');
-    
-    if (!indicador) return; 
-
-    function moverIndicador(elemento) {
-      if (!elemento) return;
-      indicador.style.width = `${elemento.offsetWidth}px`;
-      indicador.style.height = `${elemento.offsetHeight}px`;
-      indicador.style.left = `${elemento.offsetLeft}px`;
-      indicador.style.top = `${elemento.offsetTop}px`;
-      indicador.style.opacity = '1';
-    }
-
-    // 1. A página carrega e a barra vai para o lugar INSTANTANEAMENTE (sem classe de animação)
-    const itemAtivo = document.querySelector('.nav-site a.ativo');
-    if(itemAtivo) {
-      moverIndicador(itemAtivo);
-      
-      // 2. Só depois de posicionar, ativamos a classe que faz ela correr nos cliques
-      setTimeout(() => {
-        indicador.classList.add('animando');
-      }, 50);
-    }
-
-    // 3. Ação do clique (agora vai correr para os dois lados perfeitamente)
-    linksMenu.forEach(link => {
-      link.addEventListener('click', function(e) {
-        if (this.classList.contains('ativo')) return;
-        
-        e.preventDefault(); 
-        
-        linksMenu.forEach(l => l.classList.remove('ativo'));
-        this.classList.add('ativo');
-        
-        moverIndicador(this);
-        
-        const destino = this.getAttribute('href');
-        
-        setTimeout(() => {
-          window.location.href = destino;
-        }, 200); 
-      });
-    });
-  });
-</script>
+<script src="js/nav-indicador.js"></script>
 </body>
 </html>
