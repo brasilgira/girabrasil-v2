@@ -520,15 +520,17 @@ function buildQueue() {
   ════════════════════════════════════ */
   function initFuga() {
     titleEl.textContent = '🐆 Fuga do Desmatamento';
-    tipEl.textContent   = 'Espaço ou clique para pular · Agache com ↓ · Colete folhas para acelerar';
+    tipEl.textContent   = 'Espaço (ou toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
     updateHUD(0,1,3,true,true);
     showScreen('Fuga do Desmatamento',
-      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço/Clique</strong> e agache com <strong>↓</strong>.');
+      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço/Clique</strong>.');
 
     const GH=H; const GROUND=GH-50;
     const OBSTACLE_SINK = 12;
-    const ONCA_RENDER_WIDTH = 80;
-    const ONCA_RENDER_HEIGHT = 50;
+        const ZOOM = 1.5;          // 1 = sem zoom · 1.3 = leve · 1.5 = médio · 2 = bem perto
+    const VIEW_W = W / ZOOM;   // largura do mundo que aparece na tela
+    const ONCA_RENDER_WIDTH = 104;
+    const ONCA_RENDER_HEIGHT = 65;
 const FIRE_VISIBLE_HEIGHT = 80;   // altura que o fogo aparece na tela (aumente para ficar maior)
 const FIRE_SRC_VISIBLE_H = 980;   // altura útil do fogo dentro do PNG
 const FIRE_SRC_BOTTOM = 1012;     // linha do PNG onde a chama termina
@@ -536,12 +538,12 @@ const FIRE_SCALE = FIRE_VISIBLE_HEIGHT / FIRE_SRC_VISIBLE_H;
 const FIRE_RENDER_WIDTH = 1920 * FIRE_SCALE;
 const FIRE_RENDER_HEIGHT = 1080 * FIRE_SCALE;
     let score=0,lives=3,level=1,running=false,dist=0;
-    let onca={x:90,y:GROUND,vy:0,onGround:true,ducking:false,w:48,h:32};
+    let onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
     let obstacles=[],powerups=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
     let groundX = 0; 
-    const JUMP_V=-11.5, GRAVITY=0.55;
+    const JUMP_V=-11.5, GRAVITY=0.45;
     let jumpTime = 0;
-    let jumpDuration = 30;
+    let jumpDuration = 2 * Math.abs(JUMP_V) / GRAVITY;
     const delta = makeDelta();
 
     /* ── PIXEL ART SPRITES ── */
@@ -623,6 +625,10 @@ treeImg.src = 'assets/games/arvore.png';
 //CHÃO
 const groundImg = new Image();
 groundImg.src = 'assets/games/chao.png';
+
+//FUNDO
+const fundoImg = new Image();
+fundoImg.src = 'assets/games/fundofloresta.jpg';
 
 /*
  * Guarda as máscaras de transparência já calculadas.
@@ -811,25 +817,24 @@ function pixelPerfectCollision(spriteA, spriteB) {
    * não precisamos verificar pixels.
    */
   const left = Math.max(
-    Math.floor(spriteA.x),
+    Math.floor(spriteA.hitX1 ?? spriteA.x),
     Math.floor(spriteB.x)
   );
 
   const right = Math.min(
-    Math.ceil(spriteA.x + spriteA.w),
+    Math.ceil(spriteA.hitX2 ?? (spriteA.x + spriteA.w)),
     Math.ceil(spriteB.x + spriteB.w)
   );
 
   const top = Math.max(
-    Math.floor(spriteA.y),
+    Math.floor(spriteA.hitY1 ?? spriteA.y),
     Math.floor(spriteB.y)
   );
 
   const bottom = Math.min(
-    Math.ceil(spriteA.y + spriteA.h),
+    Math.ceil(spriteA.hitY2 ?? (spriteA.y + spriteA.h)),
     Math.ceil(spriteB.y + spriteB.h)
   );
-
   /*
    * Não existe área em comum.
    */
@@ -1012,7 +1017,12 @@ function updateOncaSprite() {
     x: px,
     y: py,
     w,
-    h
+    h,
+    /* área da onça que realmente conta para o dano (o resto é só desenho) */
+    hitX1: px + w * 0.2,
+    hitX2: px + w * 0.8,
+    hitY1: py + h * 0.1,
+    hitY2: py + h * 0.9
   };
 
   /*
@@ -1099,16 +1109,28 @@ const OBS_TYPES=[
     jumpTime = 0; // 👈 importante
   }
 }
-    function duck(on){if(running)onca.ducking=on;}
+
+    const JUMP_CUT = -4;   // mais perto de 0 = toque mais curto · mais negativo = toque mais alto
+    function releaseJump(){
+      if(!onca.onGround && onca.vy < JUMP_CUT) onca.vy = JUMP_CUT;
+    }
+
+    let holdingJump = false;
 
     const keyH=e=>{
-      if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}
-      if(e.code==='ArrowDown'){e.preventDefault();duck(true);}
+      if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();holdingJump=true;jump();}
     };
-    const keyU=e=>{if(e.code==='ArrowDown')duck(false);};
+    const keyU=e=>{
+      if(e.code==='Space'||e.code==='ArrowUp'){holdingJump=false;releaseJump();}
+    };
     document.addEventListener('keydown',keyH);
     document.addEventListener('keyup',keyU);
-    canvas.onclick=()=>jump();
+
+    /* só o toque (celular) pula; clique de mouse não faz nada */
+    canvas.style.touchAction='none';
+    canvas.onpointerdown=e=>{ if(e.pointerType!=='touch')return; holdingJump=true; jump(); };
+    canvas.onpointerup=e=>{ if(e.pointerType!=='touch')return; holdingJump=false; releaseJump(); };
+    canvas.onpointercancel=()=>{ holdingJump=false; releaseJump(); };
 
 function drawFire(ob) {
   let img;
@@ -1401,7 +1423,7 @@ if (t.type === 'tree') {
     treeImg.naturalHeight * sc;
 
   obstacles.push({
-    x: W + 20,
+    x: VIEW_W + 20,
     oy: GROUND - dh,
     w: dw,
     h: dh,
@@ -1411,7 +1433,7 @@ if (t.type === 'tree') {
 }
       else if (t.type === 'fire') {
         obstacles.push({
-          x: W + 20,
+          x: VIEW_W + 20,
           oy: GROUND,
           w: FIRE_RENDER_WIDTH,
           h: FIRE_RENDER_HEIGHT,
@@ -1421,7 +1443,7 @@ if (t.type === 'tree') {
 } else {
   const isLow = t.type==='low'||t.type==='machine';
   obstacles.push({
-    x:W+20,
+    x:VIEW_W+20,
     y:isLow?GROUND-t.h/2:GROUND-t.h,
     ...t,
     oy:isLow?GROUND-t.h/2:GROUND-t.h
@@ -1430,7 +1452,7 @@ if (t.type === 'tree') {
 
 
 
-      if(Math.random()<0.25)powerups.push({x:W+60+Math.random()*80,y:GROUND-70,emoji:'🍃',alive:true});
+      if(Math.random()<0.25)powerups.push({x:VIEW_W+60+Math.random()*80,y:GROUND-70,emoji:'🍃',alive:true});
     }
 
     function loop(ts){
@@ -1441,12 +1463,21 @@ if (t.type === 'tree') {
       speed=3.2+level*0.4; if(dist>level*1200)level++;
       updateHUD(score,level,lives);
       clrCanvas();
-      
+            ctx.save();
+      ctx.translate(0, H * (1 - ZOOM));
+      ctx.scale(ZOOM, ZOOM);
 
-      /* céu */
-      const sky=ctx.createLinearGradient(0,0,0,GH);
-      sky.addColorStop(0,'#04100a'); sky.addColorStop(1,'#0d2e16');
-      ctx.fillStyle=sky; ctx.fillRect(0,0,W,GH);
+      /* fundo */
+      if (fundoImg.complete && fundoImg.naturalWidth > 0) {
+        const fsc = Math.max(W / fundoImg.naturalWidth, GH / fundoImg.naturalHeight);
+        const fw = fundoImg.naturalWidth * fsc;
+        const fh = fundoImg.naturalHeight * fsc;
+        ctx.drawImage(fundoImg, (W - fw) / 2, (GH - fh) / 2, fw, fh);
+      } else {
+        const sky=ctx.createLinearGradient(0,0,0,GH);
+        sky.addColorStop(0,'#04100a'); sky.addColorStop(1,'#0d2e16');
+        ctx.fillStyle=sky; ctx.fillRect(0,0,W,GH);
+      }
 
       /* árvores pixel art de fundo (paralaxe) */
       bgX -= speed * 0.3 * dt;
@@ -1506,6 +1537,8 @@ ctx.drawImage(
         if(Math.abs(p.x-onca.x)<30&&Math.abs(p.y-(GROUND-30))<30){p.alive=false;score+=25;popup(p.x,p.y,'#fbbf24','+25🍃');}
         if(p.x<-20)p.alive=false;
       });
+
+if (holdingJump) jump();
 
 /*
  * Atualiza primeiro a física da onça.
@@ -1592,9 +1625,7 @@ if (
  */
 else {
 
-  const oh = onca.ducking
-    ? 14
-    : onca.h;
+  const oh = onca.h;
 
   const ox1 =
     onca.x - onca.w * 0.3;
@@ -1659,7 +1690,7 @@ powerups = powerups.filter(
  * preparado em updateOncaSprite().
  */
 drawOnca();
-
+ctx.restore();
       /* spawn obs */
       obsTick+=dt; if(obsTick>=obsInterval){obsTick=0;obsInterval=Math.max(55,110-level*8);spawnObs();}
 
@@ -1676,11 +1707,11 @@ drawOnca();
         `Distância percorrida: <strong>${~~(dist/6)} m</strong><br>${won?'A onça escapou para a reserva!':'Tente de novo!'}`,
         'Correr de novo');
     }
-    function start(){score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
-      obstacles=[];powerups=[];onca={x:90,y:GROUND,vy:0,onGround:true,ducking:false,w:48,h:32};
+    function start(){holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
+      obstacles=[];powerups=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
       running=true;hideScreen();updateHUD(0,1,3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
-    activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onclick=null;}};
+    activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onpointerdown=null;canvas.onpointerup=null;canvas.onpointercancel=null;canvas.style.touchAction='';}};
   }
 
   /* ════════════════════════════════════
