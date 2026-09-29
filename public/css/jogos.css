@@ -124,6 +124,12 @@ body.pagina-jogos .header-site {
   height: 100%;
   object-fit: cover;
 }
+
+/* Deslocar a imagem do card "Fuga do Desmatamento" para a esquerda */
+.jogo-card[data-jogo="desafio-dos-biomas"] .jogo-fundo img {
+  object-position: 75% center; /* padrão é 50% 50% */
+}
+
 .jogo-card .jogo-fundo::after {
   content: '';
   position: absolute;
@@ -492,4 +498,26 @@ body.pagina-jogos .header-site {
 @media (max-width:600px) {
   .games-menu, .game-panel { border-radius: var(--raio-pequeno); }
   .especies-opcoes { grid-template-columns: 1fr; }
+}
+
+/* Cards mantêm sempre o mesmo formato. Em telas mais altas (F11) crescem
+   até o limite de --altura-max-card e ficam centralizados na vertical. */
+@media (min-width: 861px) {
+  .secao-jogos {
+    max-width: none;
+    padding-block: 28px;           /* igual em cima e embaixo, pra centralizar de verdade */
+  }
+  .seletor-jogos {
+    --proporcao-card: 329 / 549;   /* formato dos cards (largura / altura) */
+    --altura-max-card: 590px;      /* <<< MEXA AQUI pra controlar o tamanho máximo */
+    justify-content: center;       /* centraliza na horizontal */
+    align-items: center;           /* centraliza na vertical (header → fim da página) */
+  }
+  .jogo-card {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    height: 100%;
+    max-height: min(var(--altura-max-card), calc((100vw - 146px) / 4 * 549 / 329));
+    aspect-ratio: var(--proporcao-card);
+  }
 }
