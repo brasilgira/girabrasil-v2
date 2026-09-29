@@ -134,7 +134,15 @@ body.pagina-jogos .header-site {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(22,40,31,0.05) 0%, rgba(22,40,31,0.94) 88%);
+  /* Degradê de baixo pra cima: verde forte na base, some totalmente em --altura-degrade.
+     Acima disso a imagem fica sem véu nenhum. */
+  --altura-degrade: 55%;   /* <<< MEXA AQUI: quanto do card (a partir de baixo) o verde ocupa */
+  background: linear-gradient(
+    0deg,
+    rgba(22,40,31,0.94) 0%,
+    rgba(22,40,31,0.85) 15%,
+    rgba(22,40,31,0) var(--altura-degrade)
+  );
   transition: opacity 0.4s ease;
 }
 .jogo-card:not(.ativo) .jogo-fundo::after {
@@ -142,6 +150,29 @@ body.pagina-jogos .header-site {
 }
 .jogo-card:not(.ativo):hover .jogo-fundo img { transform: scale(1.04); }
 .jogo-card .jogo-fundo img { transition: transform 0.6s ease; }
+
+/* Destaque do card selecionado: a imagem ganha brilho, contraste e cor,
+   e os recolhidos ficam levemente apagados. O degradê não é alterado. */
+.jogo-card .jogo-fundo img {
+  --brilho-ativo: 1.18;      /* <<< MEXA AQUI: brilho do card selecionado (1 = normal) */
+  --contraste-ativo: 1.12;   /* contraste do card selecionado */
+  --cor-ativo: 1.15;         /* saturação do card selecionado */
+  --brilho-recolhido: 0.90;  /* brilho dos cards não selecionados (1 = normal) */
+
+  filter: brightness(var(--brilho-recolhido)) saturate(0.9);
+  transition: transform 0.6s ease, filter 0.5s ease;
+}
+.jogo-card.ativo .jogo-fundo img {
+  filter: brightness(var(--brilho-ativo)) contrast(var(--contraste-ativo)) saturate(var(--cor-ativo));
+}
+
+/* Card da onça: efeito de destaque bem mais suave que nos outros cards */
+.jogo-card[data-jogo="desafio-dos-biomas"] .jogo-fundo img {
+  --brilho-ativo: 1.05;      /* geral: 1.18 */
+  --contraste-ativo: 1.03;   /* geral: 1.12 */
+  --cor-ativo: 1.05;         /* geral: 1.15 */
+  --brilho-recolhido: 0.92;  /* geral: 0.85 (menos apagado quando não selecionado) */
+}
 
 /* Título visível só quando o card está recolhido (fatia estreita) — sempre centralizado */
 .jogo-titulo-recolhido {
