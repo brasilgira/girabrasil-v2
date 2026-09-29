@@ -9,160 +9,173 @@
   <link rel="stylesheet" href="css/perfil.css">
 </head>
 <body>
-  <div class="app-shell perfil-app">
+  <div class="perfil-app">
 
-    <aside class="sidebar" id="sidebar">
-      <div class="profile-mini">
-        <div class="avatar-large" data-avatar>?</div>
-        <h2 data-nome-usuario>—</h2>
-        <p data-email-usuario></p>
-        <span class="admin-badge" data-admin-badge hidden>Administrador</span>
+    <!-- HEADER cobrindo a largura inteira, ACIMA da sidebar+conteúdo -->
+    <header class="header-site">
+      <div class="header-inner">
+        <a href="index.html" class="logo-site">Gira-Brasil</a>
+
+        <nav class="nav-site" aria-label="Navegação principal">
+          <a href="index.html">Início</a>
+          <a href="noticias.html">Notícias</a>
+          <a href="regioes.html">Regiões</a>
+          <a href="jogos.html">Jogos</a>
+          <a href="girabot.html">Gira-Bot</a>
+          <a href="sobre.html">Sobre</a>
+        </nav>
+
+        <div class="header-acoes">
+          <a href="login.html">Entrar</a>
+          <a href="cadastro.html">Criar conta</a>
+        </div>
+
+        <button class="menu-mobile-toggle" id="menuMobileToggle" type="button"
+                aria-label="Abrir menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
       </div>
+    </header>
 
-      <nav class="side-nav" aria-label="Menu do perfil">
-        <a href="perfil.html" class="active">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-          Meu perfil
-        </a>
-        <a href="noticias.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
-          Notícias
-        </a>
-        <a href="regioes.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
-          Mapa e regiões
-        </a>
-        <a href="jogos.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg>
-          Jogos
-        </a>
-        <a href="#" data-em-breve="Configurações">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
-          Configurações
-        </a>
-      </nav>
+    <div class="app-shell">
 
-      <button class="logout" id="logoutBtn" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
-        Sair da conta
-      </button>
-    </aside>
-
-    <main class="main">
-
-      <header class="header-site">
-        <div class="header-inner">
-          <a href="index.html" class="logo-site">Gira-Brasil</a>
-
-          <nav class="nav-site" aria-label="Navegação principal">
-            <a href="index.html">Início</a>
-            <a href="noticias.html">Notícias</a>
-            <a href="regioes.html">Regiões</a>
-            <a href="jogos.html">Jogos</a>
-            <a href="girabot.html">Gira-Bot</a>
-            <a href="sobre.html">Sobre</a>
-          </nav>
-
-          <div class="header-acoes">
-            <a href="login.html">Entrar</a>
-            <a href="cadastro.html">Criar conta</a>
-          </div>
-
-          <button class="menu-mobile-toggle" id="menuMobileToggle" type="button"
-                  aria-label="Abrir menu" aria-expanded="false">
-            <span></span><span></span><span></span>
+      <aside class="sidebar" id="sidebar">
+        <div class="profile-mini">
+          <button class="avatar-large" type="button" data-abrir-avatar aria-haspopup="dialog">
+            <span data-avatar>?</span>
+            <span class="avatar-editar-dica">Trocar foto</span>
           </button>
-        </div>
-      </header>
-
-      <section class="content">
-        <div class="welcome-card">
-          <div>
-            <h1>Bem-vindo de volta, <span data-nome-boasvindas>—</span></h1>
-            <p>Aqui estão suas informações e atividades no Gira-Brasil.</p>
-          </div>
+          <h2 data-nome-usuario>—</h2>
+          <p data-email-usuario></p>
+          <span class="admin-badge" data-admin-badge hidden>Administrador</span>
         </div>
 
-        <section class="stats-grid">
-          <article class="stat-card">
-            <div class="stat-icon calendar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-            </div>
-            <div><small>Membro desde</small><strong data-membro-desde>—</strong><span data-tempo-conta></span></div>
-          </article>
+        <nav class="side-nav" aria-label="Menu do perfil">
+          <a href="perfil.html" class="active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+            Meu perfil
+          </a>
+          <a href="#" data-em-breve="Configurações">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+            Configurações
+          </a>
+        </nav>
 
-          <article class="stat-card stat-card--nivel" data-abrir-nivel type="button" role="button" tabindex="0" aria-haspopup="dialog">
-            <div class="stat-icon star">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 15 9l7 1-5.2 5 1.4 7-6.2-3.4L5.8 22l1.4-7L2 10l7-1 3-6.5Z"/></svg>
-            </div>
+        <button class="logout" id="logoutBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+          Sair da conta
+        </button>
+      </aside>
+
+      <main class="main">
+        <section class="content">
+          <div class="welcome-card">
             <div>
-              <small>Nível</small>
-              <strong data-nivel-nome>—</strong>
-              <span class="progress"><i data-nivel-barra></i></span>
+              <h1>Bem-vindo de volta, <span data-nome-boasvindas>—</span></h1>
+              <p>Aqui estão suas informações e atividades no Gira-Brasil.</p>
             </div>
-          </article>
+          </div>
 
-          <article class="stat-card">
-            <div class="stat-icon contrib">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c-4.4-2.6-8-6.2-8-10.4C4 7 6.4 5 9 5c1.4 0 2.7.7 3 1.9C12.3 5.7 13.6 5 15 5c2.6 0 5 2 5 5.6 0 4.2-3.6 7.8-8 10.4Z"/></svg>
-            </div>
-            <div><small>Contribuição</small><strong data-total-acoes>—</strong><span>na comunidade</span></div>
-          </article>
-        </section>
+          <section class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-icon calendar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+              </div>
+              <div><small>Membro desde</small><strong data-membro-desde>—</strong><span data-tempo-conta></span></div>
+            </article>
 
-        <section class="activity-grid">
-          <article class="panel">
+            <article class="stat-card stat-card--nivel" data-abrir-nivel type="button" role="button" tabindex="0" aria-haspopup="dialog">
+              <div class="stat-icon star">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 15 9l7 1-5.2 5 1.4 7-6.2-3.4L5.8 22l1.4-7L2 10l7-1 3-6.5Z"/></svg>
+              </div>
+              <div>
+                <small>Nível</small>
+                <strong data-nivel-nome>—</strong>
+                <span class="progress"><i data-nivel-barra></i></span>
+              </div>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-icon contrib">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21c-4.4-2.6-8-6.2-8-10.4C4 7 6.4 5 9 5c1.4 0 2.7.7 3 1.9C12.3 5.7 13.6 5 15 5c2.6 0 5 2 5 5.6 0 4.2-3.6 7.8-8 10.4Z"/></svg>
+              </div>
+              <div><small>Contribuição</small><strong data-total-acoes>—</strong><span>na comunidade</span></div>
+            </article>
+          </section>
+
+          <!-- ATIVIDADE: abas (curtidas / comentários / salvas) — dados reais -->
+          <section class="panel atividade-panel">
             <div class="panel-heading">
               <h2>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.4-9.5-8.7C.8 8.7 2.4 5 6 5c2 0 3.6 1.2 4.5 2.7C11.4 6.2 13 5 15 5c3.6 0 5.2 3.7 3.5 7.3C16 16.6 12 21 12 21Z"/></svg>
-                Notícias que você curtiu
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h7l-1 8 11-14h-7l0-6Z"/></svg>
+                Sua atividade
               </h2>
-              <a href="noticias.html">Ver todas</a>
             </div>
 
-            <div class="news-list" data-lista-curtidas>
-              <p class="carregando">Carregando…</p>
+            <div class="tabs" role="tablist" aria-label="Tipo de atividade">
+              <button type="button" class="tab is-ativa" role="tab" aria-selected="true" data-aba="curtidas">
+                Curtidas <span class="tab-contador" data-contador-curtidas>0</span>
+              </button>
+              <button type="button" class="tab" role="tab" aria-selected="false" data-aba="comentarios">
+                Comentários <span class="tab-contador" data-contador-comentarios>0</span>
+              </button>
+              <button type="button" class="tab" role="tab" aria-selected="false" data-aba="salvas">
+                Salvas <span class="tab-contador" data-contador-salvas>0</span>
+              </button>
             </div>
-          </article>
 
-          <article class="panel">
+            <div class="tab-painel" data-painel="curtidas" role="tabpanel">
+              <div class="activity-list" data-lista-curtidas><p class="carregando">Carregando…</p></div>
+            </div>
+            <div class="tab-painel" data-painel="comentarios" role="tabpanel" hidden>
+              <div class="activity-list" data-lista-comentarios><p class="carregando">Carregando…</p></div>
+            </div>
+            <div class="tab-painel" data-painel="salvas" role="tabpanel" hidden>
+              <div class="activity-list" data-lista-salvas><p class="carregando">Carregando…</p></div>
+            </div>
+          </section>
+
+          <!-- JOGOS: molde de desempenho, sem inventar pontuação (banco ainda não existe) -->
+          <section class="panel jogos-panel">
             <div class="panel-heading">
               <h2>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="11" rx="4"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg>
-                Jogos do Gira-Brasil
+                Desempenho nos jogos
               </h2>
-              <a href="jogos.html">Ver jogos</a>
+              <a href="jogos.html">Jogar agora</a>
             </div>
+
+            <p class="jogos-aviso">O histórico de partidas ainda não é salvo — assim que existir, esta área mostra sua pontuação e posição de verdade.</p>
 
             <div class="games-list" data-lista-jogos></div>
-            <a href="jogos.html" class="panel-button">Jogar agora</a>
-          </article>
-        </section>
+          </section>
 
-        <section class="panel bio-panel">
-          <div class="panel-heading">
-            <h2>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-              Sobre você
-            </h2>
-            <button type="button" class="link-botao" data-editar-bio>Editar</button>
+          <div class="quote-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="quote-leaf"><path d="M12 21c-4.4-2.6-8-6.2-8-10.4C4 7 6.4 5 9 5c1.4 0 2.7.7 3 1.9C12.3 5.7 13.6 5 15 5c2.6 0 5 2 5 5.6 0 4.2-3.6 7.8-8 10.4Z"/></svg>
+            <div><strong data-frase-dia>—</strong><small data-frase-autor></small></div>
           </div>
-          <p data-bio-texto class="bio-texto">Carregando…</p>
-          <form class="bio-form" data-form-bio hidden>
-            <textarea name="bio" rows="3" maxlength="280" placeholder="Conte um pouco sobre você e o que te trouxe até o Gira-Brasil."></textarea>
-            <div class="bio-form__acoes">
-              <button type="button" class="botao-fantasma" data-cancelar-bio>Cancelar</button>
-              <button type="submit" class="botao-primario">Salvar</button>
-            </div>
-          </form>
-        </section>
 
-        <div class="quote-card">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="quote-leaf"><path d="M12 21c-4.4-2.6-8-6.2-8-10.4C4 7 6.4 5 9 5c1.4 0 2.7.7 3 1.9C12.3 5.7 13.6 5 15 5c2.6 0 5 2 5 5.6 0 4.2-3.6 7.8-8 10.4Z"/></svg>
-          <div><strong>“A natureza não é um lugar para visitar. É o nosso lar.”</strong><small>— Gary Snyder</small></div>
-        </div>
-      </section>
-    </main>
+          <!-- BIO -->
+          <section class="panel bio-panel">
+            <div class="panel-heading">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Sobre você
+              </h2>
+              <button type="button" class="link-botao" data-editar-bio>Editar</button>
+            </div>
+            <p data-bio-texto class="bio-texto">Carregando…</p>
+            <form class="bio-form" data-form-bio hidden>
+              <textarea name="bio" rows="3" maxlength="280" placeholder="Conte um pouco sobre você e o que te trouxe até o Gira-Brasil."></textarea>
+              <div class="bio-form__acoes">
+                <button type="button" class="botao-fantasma" data-cancelar-bio>Cancelar</button>
+                <button type="submit" class="botao-primario">Salvar</button>
+              </div>
+            </form>
+          </section>
+        </section>
+      </main>
+    </div>
   </div>
 
   <footer class="footer-site">
@@ -209,7 +222,7 @@
         <button class="modal-fechar" type="button" data-fechar-modal-nivel aria-label="Fechar">×</button>
       </div>
 
-      <p class="modal-texto">
+      <p class="modal-texto" data-modal-texto-intro>
         O nível representa há quanto tempo você faz parte do Gira-Brasil. Ele sobe sozinho
         com o tempo de conta — não é preciso fazer nada além de continuar por aqui.
       </p>
@@ -222,6 +235,22 @@
       </div>
 
       <ol class="modal-escada" data-modal-escada></ol>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: Escolher avatar ===================== -->
+  <div class="modal-fundo" data-modal-avatar hidden>
+    <div class="modal-caixa modal-caixa--avatar" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-avatar">
+      <div class="modal-caixa__cabecalho">
+        <div>
+          <div class="modal-kicker">SUA IDENTIDADE</div>
+          <h2 id="titulo-modal-avatar">Escolha sua foto</h2>
+        </div>
+        <button class="modal-fechar" type="button" data-fechar-modal-avatar aria-label="Fechar">×</button>
+      </div>
+      <p class="modal-texto">Espécies da fauna brasileira em alta qualidade. Sua escolha fica salva no seu perfil.</p>
+
+      <div class="avatar-grid" data-avatar-grid></div>
     </div>
   </div>
 

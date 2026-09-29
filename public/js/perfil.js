@@ -11,9 +11,37 @@ function showToast(mensagem) {
   window.__toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
 }
 
-// ---- Sistema de nível (calculado a partir de perfil.criado_em) -----------
-// Progressão baseada só no tempo real de conta. Sem tabela nova: tudo
-// calculado no front a partir da data que a API já devolve.
+// ---- Avatares reais (fotos já existentes no projeto, nada inventado) -----
+const AVATARES_DISPONIVEIS = [
+  { nome: 'Onça-pintada', url: 'assets/games/species/onca.jpg' },
+  { nome: 'Lobo-guará', url: 'assets/games/species/lobo.webp' },
+  { nome: 'Arara-azul', url: 'assets/games/species/arara.jpg' },
+  { nome: 'Mico-leão-dourado', url: 'assets/games/species/mico.webp' },
+  { nome: 'Tamanduá-bandeira', url: 'assets/games/species/tamandua.jpg' },
+  { nome: 'Boto', url: 'assets/games/species/boto.webp' },
+  { nome: 'Capivara', url: 'assets/games/species/capivara.webp' },
+  { nome: 'Tucano', url: 'assets/games/species/Tucano.jpg' },
+  { nome: 'Jaguatirica', url: 'assets/games/species/jaguatirica.jpg' },
+  { nome: 'Anta', url: 'assets/games/species/anta.jpg' },
+];
+
+// ---- Frases do dia (reais, com autoria verificada; mesma para todo mundo
+// no mesmo dia — escolhida de forma determinística, sem precisar de banco) --
+const FRASES_DO_DIA = [
+  { texto: 'No começo eu pensava que estava lutando para salvar seringueiras. Depois pensei que estava lutando para salvar a floresta amazônica. Agora percebo que estou lutando pela humanidade.', autor: 'Chico Mendes' },
+  { texto: 'A humanidade perdeu o sentido da Terra.', autor: 'Ailton Krenak' },
+  { texto: 'Ninguém educa ninguém, ninguém se educa a si mesmo, os homens se educam entre si, mediatizados pelo mundo.', autor: 'Paulo Freire' },
+  { texto: 'Um país se faz com homens e livros.', autor: 'Monteiro Lobato' },
+  { texto: 'Quem tem fome tem pressa.', autor: 'Herbert de Souza (Betinho)' },
+];
+
+function fraseDoDia() {
+  const hoje = new Date();
+  const diaDoAno = Math.floor((hoje - new Date(hoje.getFullYear(), 0, 0)) / 86400000);
+  return FRASES_DO_DIA[diaDoAno % FRASES_DO_DIA.length];
+}
+
+// ---- Sistema de nível (calculado a partir da data real de criação da conta) -
 const NIVEIS = [
   { nome: 'Novo Explorador', meses: 0 },
   { nome: 'Explorador', meses: 1 },
@@ -22,10 +50,17 @@ const NIVEIS = [
   { nome: 'Guardião do Brasil', meses: 12 },
 ];
 
-function calcularNivel(dataCriacaoIso) {
+function calcularNivel(dataCriacaoIso, isAdmin) {
+  // Admin real (confirmado pelo backend via Supabase Auth) sempre aparece
+  // no nível máximo — não depende de nome nem de texto fixo no front.
+  if (isAdmin) {
+    const ultimo = NIVEIS.length - 1;
+    return { indiceAtual: ultimo, atual: NIVEIS[ultimo], proximo: null, progresso: 100, diasTotais: null, mesesDecorridos: null };
+  }
+
   const criado = new Date(dataCriacaoIso);
   const agora = new Date();
-  const diasTotais = Math.max(0, Math.floor((agora - criado) / (1000 * 60 * 60 * 24)));
+  const diasTotais = Number.isNaN(criado.getTime()) ? 0 : Math.max(0, Math.floor((agora - criado) / (1000 * 60 * 60 * 24)));
   const mesesDecorridos = diasTotais / 30;
 
   let indiceAtual = 0;
@@ -44,10 +79,11 @@ function calcularNivel(dataCriacaoIso) {
     mesesFaltando = Math.max(0, Math.ceil(proximo.meses - mesesDecorridos));
   }
 
-  return { indiceAtual, atual, proximo, progresso, diasTotais, mesesDecorridos };
+  return { indiceAtual, atual, proximo, progresso, diasTotais, mesesDecorridos, mesesFaltando };
 }
 
 function formatarTempoDeConta(dias) {
+  if (dias === null) return 'Acesso administrativo.';
   if (dias < 1) return 'Você entrou hoje no Gira-Brasil.';
   if (dias < 30) return `Você está há ${dias} dia${dias === 1 ? '' : 's'} no Gira-Brasil.`;
   const meses = Math.floor(dias / 30);
@@ -59,21 +95,29 @@ function formatarTempoDeConta(dias) {
   return `Você está há ${parteAnos}${parteMeses} no Gira-Brasil.`;
 }
 
-function renderizarNivel(perfil) {
-  const info = calcularNivel(perfil.criado_em);
+function formatarDataPorExtenso(iso) {
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return '—';
+  return data.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+function renderizarNivel(perfil, isAdmin) {
+  const info = calcularNivel(perfil.criadoEmConta || perfil.criado_em, isAdmin);
 
   document.querySelector('[data-nivel-nome]').textContent = info.atual.nome;
   document.querySelector('[data-nivel-barra]').style.width = `${info.progresso}%`;
-  document.querySelector('[data-tempo-conta]').textContent = formatarTempoDeConta(info.diasTotais);
+  document.querySelector('[data-tempo-conta]').textContent = isAdmin ? 'Acesso administrativo' : formatarTempoDeConta(info.diasTotais);
 
-  // Modal
   document.querySelector('[data-modal-nivel-nome]').textContent = info.atual.nome;
-  document.querySelector('[data-modal-nivel-tempo]').textContent = formatarTempoDeConta(info.diasTotais);
+  document.querySelector('[data-modal-nivel-tempo]').textContent = isAdmin ? 'Conta administrativa do Gira-Brasil.' : formatarTempoDeConta(info.diasTotais);
   document.querySelector('[data-modal-nivel-barra]').style.width = `${info.progresso}%`;
 
   const elProximo = document.querySelector('[data-modal-proximo]');
-  if (info.proximo) {
-    elProximo.textContent = `Próximo nível (${info.proximo.nome}) em aproximadamente ${info.proximo.meses - info.atual.meses <= 1 ? 'algumas semanas' : `${Math.max(1, Math.ceil(info.proximo.meses - info.mesesDecorridos))} ${Math.ceil(info.proximo.meses - info.mesesDecorridos) === 1 ? 'mês' : 'meses'}`}.`;
+  if (isAdmin) {
+    elProximo.textContent = 'Contas administrativas ficam no nível máximo.';
+  } else if (info.proximo) {
+    const faltam = Math.max(1, info.mesesFaltando || 1);
+    elProximo.textContent = `Próximo nível (${info.proximo.nome}) em aproximadamente ${faltam} ${faltam === 1 ? 'mês' : 'meses'}.`;
   } else {
     elProximo.textContent = 'Você alcançou o nível máximo — obrigado por fazer parte da comunidade há tanto tempo!';
   }
@@ -87,7 +131,6 @@ function renderizarNivel(perfil) {
 
     const marcador = document.createElement('span');
     marcador.className = 'marcador';
-
     const texto = document.createElement('span');
     texto.textContent = indice === 0 ? nivel.nome : `${nivel.nome} — a partir de ${nivel.meses} ${nivel.meses === 1 ? 'mês' : 'meses'} de conta`;
 
@@ -96,17 +139,18 @@ function renderizarNivel(perfil) {
   });
 }
 
-function configurarModalNivel() {
-  const modal = document.querySelector('[data-modal-nivel]');
-  const abrir = document.querySelector('[data-abrir-nivel]');
+function configurarModal(seletorModal, seletorAbrir, seletorFechar) {
+  const modal = document.querySelector(seletorModal);
+  const abrir = document.querySelector(seletorAbrir);
+  if (!modal) return;
 
   function abrirModal() {
     modal.hidden = false;
-    modal.querySelector('[data-fechar-modal-nivel]').focus();
+    modal.querySelector(seletorFechar)?.focus();
   }
   function fecharModal() {
     modal.hidden = true;
-    abrir.focus();
+    abrir?.focus();
   }
 
   abrir?.addEventListener('click', abrirModal);
@@ -116,17 +160,19 @@ function configurarModalNivel() {
       abrirModal();
     }
   });
-  modal.querySelector('[data-fechar-modal-nivel]').addEventListener('click', fecharModal);
+  modal.querySelector(seletorFechar)?.addEventListener('click', fecharModal);
   modal.addEventListener('click', (evento) => {
     if (evento.target === modal) fecharModal();
   });
   document.addEventListener('keydown', (evento) => {
     if (evento.key === 'Escape' && !modal.hidden) fecharModal();
   });
+
+  return { abrirModal, fecharModal };
 }
 
-// ---- Cabeçalho / sidebar com dados reais ----------------------------------
-function preencherIdentidade(usuario, perfil) {
+// ---- Identidade (nome, avatar, admin real, data real) ---------------------
+function preencherIdentidade(usuario, perfil, isAdmin) {
   const nome = perfil.nome || usuario.nome || (usuario.email ? usuario.email.split('@')[0] : 'Visitante');
   const iniciais = nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
 
@@ -134,25 +180,77 @@ function preencherIdentidade(usuario, perfil) {
   document.querySelector('[data-nome-boasvindas]').textContent = nome;
   document.querySelector('[data-email-usuario]').textContent = usuario.email || '';
 
+  atualizarAvatarNaTela(perfil.avatar_url, nome, iniciais);
+
+  // Selo "Administrador" só aparece com confirmação vinda do backend
+  // (que por sua vez consultou o Supabase Auth de verdade) — nunca pelo
+  // nome do usuário nem por um valor que o próprio front possa inventar.
+  document.querySelector('[data-admin-badge]').hidden = !isAdmin;
+
+  document.querySelector('[data-membro-desde]').textContent = formatarDataPorExtenso(perfil.criadoEmConta || perfil.criado_em);
+}
+
+function atualizarAvatarNaTela(avatarUrl, nome, iniciais) {
   const avatarEl = document.querySelector('[data-avatar]');
-  if (perfil.avatar_url) {
+  if (avatarUrl) {
     avatarEl.innerHTML = '';
     const img = document.createElement('img');
-    img.src = perfil.avatar_url;
+    img.src = avatarUrl;
     img.alt = `Foto de ${nome}`;
     avatarEl.appendChild(img);
   } else {
     avatarEl.textContent = iniciais || '?';
   }
+}
 
-  if (usuario.is_admin) {
-    document.querySelector('[data-admin-badge]').hidden = false;
+// ---- Seletor de avatar ------------------------------------------------
+function configurarSeletorAvatar(perfil, usuario) {
+  const grid = document.querySelector('[data-avatar-grid]');
+  grid.innerHTML = '';
+
+  AVATARES_DISPONIVEIS.forEach((opcao) => {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'avatar-opcao';
+    if (perfil.avatar_url === opcao.url) botao.classList.add('selecionado');
+
+    const img = document.createElement('img');
+    img.src = opcao.url;
+    img.alt = opcao.nome;
+    img.loading = 'lazy';
+
+    const rotulo = document.createElement('span');
+    rotulo.className = 'avatar-opcao__nome';
+    rotulo.textContent = opcao.nome;
+
+    botao.append(img, rotulo);
+    botao.addEventListener('click', () => selecionarAvatar(opcao, perfil, usuario, grid));
+    grid.appendChild(botao);
+  });
+}
+
+async function selecionarAvatar(opcao, perfil, usuario, grid) {
+  try {
+    const resposta = await fetchAutenticado(`/api/perfil/${encodeURIComponent(usuario.id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avatarUrl: opcao.url }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) throw new Error(dados.erro || 'Erro ao salvar avatar');
+
+    perfil.avatar_url = dados.avatar_url;
+    grid.querySelectorAll('.avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
+    [...grid.children].find((el) => el.querySelector('img').src.endsWith(opcao.url))?.classList.add('selecionado');
+
+    const nome = document.querySelector('[data-nome-usuario]').textContent;
+    atualizarAvatarNaTela(perfil.avatar_url, nome, nome[0]);
+    showToast(`Foto de perfil atualizada: ${opcao.nome}.`);
+    document.querySelector('[data-modal-avatar]').hidden = true;
+  } catch (erro) {
+    console.error('Erro ao trocar avatar:', erro);
+    showToast('Não foi possível salvar sua nova foto agora.');
   }
-
-  const dataCriacao = new Date(perfil.criado_em);
-  document.querySelector('[data-membro-desde]').textContent = Number.isNaN(dataCriacao.getTime())
-    ? '—'
-    : dataCriacao.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
 // ---- Estatísticas -----------------------------------------------------
@@ -162,24 +260,38 @@ function preencherEstatisticas(perfil) {
   el.textContent = totalAcoes > 0 ? `${totalAcoes} ${totalAcoes === 1 ? 'ação' : 'ações'}` : 'Nenhuma atividade ainda';
 }
 
-// ---- Notícias curtidas --------------------------------------------------
-function preencherCurtidas(perfil) {
-  const container = document.querySelector('[data-lista-curtidas]');
-  const lista = perfil.noticiasCurtidas || [];
+// ---- Abas de atividade (curtidas / comentários / salvas) ------------------
+function preencherAtividade(perfil) {
+  const curtidas = perfil.noticiasCurtidas || [];
+  const comentarios = perfil.comentarios || [];
+  const salvas = perfil.noticiasSalvas || [];
 
+  document.querySelector('[data-contador-curtidas]').textContent = curtidas.length;
+  document.querySelector('[data-contador-comentarios]').textContent = comentarios.length;
+  document.querySelector('[data-contador-salvas]').textContent = salvas.length;
+
+  renderizarListaNoticias('[data-lista-curtidas]', curtidas, 'curtido_em', 'curtida', 'Você ainda não curtiu nenhuma notícia.');
+  renderizarListaNoticias('[data-lista-salvas]', salvas, 'salvo_em', 'salva', 'Você ainda não salvou nenhuma notícia para ler depois.');
+  renderizarListaComentarios(comentarios);
+
+  configurarAbas();
+}
+
+function renderizarListaNoticias(seletor, lista, campoData, rotuloAcao, textoVazio) {
+  const container = document.querySelector(seletor);
   container.innerHTML = '';
 
   if (!lista.length) {
     const vazio = document.createElement('div');
     vazio.className = 'estado-vazio';
-    vazio.innerHTML = 'Você ainda não curtiu nenhuma notícia.<br><a href="noticias.html">Explore as notícias do Gira-Brasil →</a>';
+    vazio.innerHTML = `${textoVazio}<br><a href="noticias.html">Explore as notícias do Gira-Brasil →</a>`;
     container.appendChild(vazio);
     return;
   }
 
-  lista.slice(0, 5).forEach((noticia) => {
+  lista.forEach((noticia) => {
     const item = document.createElement('a');
-    item.className = 'news-item';
+    item.className = 'activity-item';
     item.href = `noticia.html?id=${encodeURIComponent(noticia.id)}`;
 
     const thumb = document.createElement('div');
@@ -191,8 +303,8 @@ function preencherCurtidas(perfil) {
     const titulo = document.createElement('strong');
     titulo.textContent = noticia.titulo;
     const meta = document.createElement('small');
-    const data = new Date(noticia.curtido_em);
-    meta.textContent = [noticia.categoria, Number.isNaN(data.getTime()) ? '' : `curtida em ${data.toLocaleDateString('pt-BR')}`].filter(Boolean).join(' · ');
+    const data = new Date(noticia[campoData]);
+    meta.textContent = [noticia.categoria, Number.isNaN(data.getTime()) ? '' : `${rotuloAcao} em ${data.toLocaleDateString('pt-BR')}`].filter(Boolean).join(' · ');
     copy.append(titulo, meta);
 
     item.append(thumb, copy);
@@ -200,14 +312,62 @@ function preencherCurtidas(perfil) {
   });
 }
 
-// ---- Jogos: acesso real, sem pontuação inventada --------------------------
-// Mesmos 4 jogos de jogos.html — aqui é só um atalho, não existe histórico
-// de partidas/pontuação persistido em lugar nenhum do projeto ainda.
+function renderizarListaComentarios(lista) {
+  const container = document.querySelector('[data-lista-comentarios]');
+  container.innerHTML = '';
+
+  if (!lista.length) {
+    const vazio = document.createElement('div');
+    vazio.className = 'estado-vazio';
+    vazio.innerHTML = 'Você ainda não comentou em nenhuma notícia.<br><a href="noticias.html">Explore as notícias do Gira-Brasil →</a>';
+    container.appendChild(vazio);
+    return;
+  }
+
+  lista.forEach((comentario) => {
+    const item = document.createElement('a');
+    item.className = 'activity-item';
+    item.href = `noticia.html?id=${encodeURIComponent(comentario.noticia_id)}#comentarios`;
+
+    const icone = document.createElement('div');
+    icone.className = 'activity-icone';
+    icone.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 9 9 0 0 1-3.9-1L3 20l1.2-5.1a8.4 8.4 0 1 1 16.8-3.4Z"/></svg>';
+
+    const copy = document.createElement('div');
+    copy.className = 'item-copy';
+    const trecho = document.createElement('strong');
+    const texto = comentario.conteudo || '';
+    trecho.textContent = texto.length > 110 ? `${texto.slice(0, 110)}…` : texto;
+    const meta = document.createElement('small');
+    const data = new Date(comentario.criado_em);
+    meta.textContent = [comentario.noticia_titulo, Number.isNaN(data.getTime()) ? '' : data.toLocaleDateString('pt-BR')].filter(Boolean).join(' · ');
+    copy.append(trecho, meta);
+
+    item.append(icone, copy);
+    container.appendChild(item);
+  });
+}
+
+function configurarAbas() {
+  const abas = document.querySelectorAll('.tab');
+  abas.forEach((aba) => {
+    aba.addEventListener('click', () => {
+      abas.forEach((a) => { a.classList.remove('is-ativa'); a.setAttribute('aria-selected', 'false'); });
+      aba.classList.add('is-ativa');
+      aba.setAttribute('aria-selected', 'true');
+
+      document.querySelectorAll('.tab-painel').forEach((painel) => { painel.hidden = true; });
+      document.querySelector(`[data-painel="${aba.dataset.aba}"]`).hidden = false;
+    });
+  });
+}
+
+// ---- Jogos: molde de desempenho (sem inventar pontuação/ranking) ---------
 const JOGOS_DISPONIVEIS = [
-  { id: 'quiz-da-floresta', nome: 'Quiz de Espécies', descricao: 'Reconheça animais da fauna brasileira', imagem: 'assets/jogos/game-quiz.avif' },
-  { id: 'guardioes-da-amazonia', nome: 'Guarda da Floresta', descricao: 'Destrua as motosserras, poupe os animais', imagem: 'assets/jogos/game-guardioes.jpg' },
-  { id: 'missao-biodiversidade', nome: 'Defender o Rio', descricao: 'Bloqueie o lixo antes que chegue ao mar', imagem: 'assets/jogos/game-biodiversidade.jpg' },
-  { id: 'desafio-dos-biomas', nome: 'Fuga pela Floresta', descricao: 'Guie a onça-pintada pelos obstáculos', imagem: 'assets/jogos/game-biomas.jpg' },
+  { id: 'quiz-da-floresta', nome: 'Quiz de Espécies', imagem: 'assets/jogos/game-quiz.avif' },
+  { id: 'guardioes-da-amazonia', nome: 'Guarda da Floresta', imagem: 'assets/jogos/game-guardioes.jpg' },
+  { id: 'missao-biodiversidade', nome: 'Defender o Rio', imagem: 'assets/jogos/game-biodiversidade.jpg' },
+  { id: 'desafio-dos-biomas', nome: 'Fuga pela Floresta', imagem: 'assets/jogos/game-biomas.jpg' },
 ];
 
 function preencherJogos() {
@@ -215,9 +375,13 @@ function preencherJogos() {
   container.innerHTML = '';
 
   JOGOS_DISPONIVEIS.forEach((jogo) => {
-    const item = document.createElement('a');
-    item.className = 'game-item';
-    item.href = `jogos.html#${jogo.id}`;
+    const card = document.createElement('a');
+    card.className = 'game-card';
+    card.href = `jogos.html#${jogo.id}`;
+    // Preparado pra receber dados reais quando o histórico existir:
+    card.dataset.jogoId = jogo.id;
+    card.dataset.pontuacao = '';
+    card.dataset.posicao = '';
 
     const thumb = document.createElement('div');
     thumb.className = 'game-thumb';
@@ -227,12 +391,13 @@ function preencherJogos() {
     copy.className = 'item-copy';
     const titulo = document.createElement('strong');
     titulo.textContent = jogo.nome;
-    const desc = document.createElement('small');
-    desc.textContent = jogo.descricao;
-    copy.append(titulo, desc);
+    const placeholder = document.createElement('span');
+    placeholder.className = 'game-placeholder';
+    placeholder.textContent = 'Pontuação em breve';
+    copy.append(titulo, placeholder);
 
-    item.append(thumb, copy);
-    container.appendChild(item);
+    card.append(thumb, copy);
+    container.appendChild(card);
   });
 }
 
@@ -245,9 +410,7 @@ function configurarBio(perfil, usuario) {
   const botaoCancelar = document.querySelector('[data-cancelar-bio]');
 
   function mostrarTexto() {
-    textoEl.textContent = perfil.bio && perfil.bio.trim()
-      ? perfil.bio
-      : 'Você ainda não escreveu uma bio. Conte um pouco sobre você.';
+    textoEl.textContent = perfil.bio && perfil.bio.trim() ? perfil.bio : 'Você ainda não escreveu uma bio. Conte um pouco sobre você.';
     textoEl.hidden = false;
     form.hidden = true;
   }
@@ -298,7 +461,6 @@ function configurarLogout() {
   });
 }
 
-// Itens ainda sem página própria
 function configurarEmBreve() {
   document.querySelectorAll('[data-em-breve]').forEach((item) => {
     item.addEventListener('click', (evento) => {
@@ -306,6 +468,12 @@ function configurarEmBreve() {
       showToast(`${item.dataset.emBreve} em breve!`);
     });
   });
+}
+
+function preencherFraseDoDia() {
+  const frase = fraseDoDia();
+  document.querySelector('[data-frase-dia]').textContent = `"${frase.texto}"`;
+  document.querySelector('[data-frase-autor]').textContent = `— ${frase.autor}`;
 }
 
 // ---- Inicialização -----------------------------------------------------
@@ -318,23 +486,31 @@ async function iniciarPerfil() {
 
   configurarLogout();
   configurarEmBreve();
-  configurarModalNivel();
+  configurarModal('[data-modal-nivel]', '[data-abrir-nivel]', '[data-fechar-modal-nivel]');
+  configurarModal('[data-modal-avatar]', '[data-abrir-avatar]', '[data-fechar-modal-avatar]');
   preencherJogos();
+  preencherFraseDoDia();
 
   try {
     const resposta = await fetch(`/api/perfil/${encodeURIComponent(usuario.id)}`);
     if (!resposta.ok) throw new Error(`API respondeu ${resposta.status}`);
     const perfil = await resposta.json();
 
-    preencherIdentidade(usuario, perfil);
-    renderizarNivel(perfil);
+    // isAdmin agora vem do backend (que consultou o Supabase Auth de
+    // verdade nesta mesma resposta) — não do localStorage em cache, que
+    // pode ficar desatualizado se a permissão mudar depois do login.
+    const isAdmin = perfil.isAdmin === true;
+
+    preencherIdentidade(usuario, perfil, isAdmin);
+    renderizarNivel(perfil, isAdmin);
     preencherEstatisticas(perfil);
-    preencherCurtidas(perfil);
+    preencherAtividade(perfil);
     configurarBio(perfil, usuario);
+    configurarSeletorAvatar(perfil, usuario);
   } catch (erro) {
     console.error('Erro ao carregar perfil:', erro);
     showToast('Não foi possível carregar seu perfil agora.');
-    preencherIdentidade(usuario, { nome: usuario.nome, criado_em: null });
+    preencherIdentidade(usuario, { nome: usuario.nome, criado_em: null }, usuario.is_admin === true);
   }
 }
 
