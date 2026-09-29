@@ -197,8 +197,8 @@
 }
 
 .estado-vazio-icone {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: var(--cor-fundo-alt);
   border: 1px solid var(--cor-borda);
@@ -207,6 +207,12 @@
   justify-content: center;
   font-size: 1.6rem;
   margin-bottom: 20px;
+}
+.estado-vazio-icone img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain; /* mantém a proporção, sem esticar a logo */
+  display: block;
 }
 
 .estado-vazio h1 {

@@ -208,15 +208,14 @@ h1, h2, h3 {
     background-color 0.2s ease;
 }
 
-/* Link sobre o qual o mouse está passando */
 .nav-site a:hover {
-  background-color: #008614b2;
-  color: var(--cor-texto-claro);
+    background-color: #16281f;
+    color: var(--cor-texto-claro);
 }
 
 /* Página atualmente selecionada */
 .nav-site a.ativo {
-  background-color: #1a7420;
+  background-color: #16281f;
   color: #FFFFFF;
 }
 
