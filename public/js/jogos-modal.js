@@ -519,10 +519,10 @@ function buildQueue() {
      JOGO — FUGA DO DESMATAMENTO
   ════════════════════════════════════ */
   function initFuga() {
-    titleEl.textContent = '🐆 Fuga dz Onça';
+    titleEl.textContent = '🐆 Fuga pela Floresta';
     tipEl.textContent   = 'Espaço (ou toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
     updateHUD(0,1,3,true,true);
-    showScreen('Fuga da Onça',
+    showScreen('Fuga pela Floresta',
       'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço/Clique</strong>.');
 
     const GH=H; const GROUND=GH-50;
