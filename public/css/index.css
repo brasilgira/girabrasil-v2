@@ -18,7 +18,7 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(40, 22, 31, 0.85)),
-                url('https://nossoimpacto.com.br/wp-content/uploads/2024/07/floresta-amazonica-a-importancia-do-bioma-para-o-planeta-e-as-ameacas-que-o-colocam-em-risco.jpg') center/cover;
+     url('../assets/hero/hero-amazonia.jpg') center/cover;
     z-index: 0;
   }
   .hero-inner {
