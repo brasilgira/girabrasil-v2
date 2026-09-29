@@ -377,3 +377,33 @@ h1, h2, h3 {
     background-size: auto 220%;
   }
 }
+/* Indicador animado do menu — vale para todas as páginas */
+.nav-site {
+  --duracao-indicador: 0.85s;   /* <<< MEXA AQUI: quanto maior, mais suave/lento */
+  position: relative;
+}
+.nav-site a {
+  position: relative;
+  z-index: 2;
+  transition: color var(--duracao-indicador) ease, background-color 0.2s ease;
+}
+.nav-site a.ativo { background-color: transparent !important; }
+
+.nav-site .indicador-verde {
+  position: absolute;
+  z-index: 1;
+  border-radius: 999px;
+  background: var(--cor-floresta, #16281f);
+  pointer-events: none;
+  opacity: 0;
+}
+.nav-site .indicador-verde.animando {
+  transition:
+    left   var(--duracao-indicador) cubic-bezier(0.22, 1, 0.36, 1),
+    width  var(--duracao-indicador) cubic-bezier(0.22, 1, 0.36, 1),
+    top    var(--duracao-indicador) cubic-bezier(0.22, 1, 0.36, 1),
+    height var(--duracao-indicador) cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* durante a entrada: texto legível enquanto a pílula ainda está no link antigo */
+.nav-site.entrando a.ativo { color: var(--cor-texto-suave); }
+.nav-site a.origem { color: #fff; }
