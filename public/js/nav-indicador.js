@@ -1,17 +1,21 @@
 /* ==========================================================================
    GiraBrasil — Indicador animado do menu (header)
    Funciona em TODAS as páginas que têm <nav class="nav-site">.
-   Ao clicar em qualquer link do menu (ou no logo), a página muda na hora e
-   a "pílula" do menu desliza da posição antiga até a nova, de forma suave.
+   - A "pílula" desliza da posição em que ESTAVA (mesmo no meio de uma animação)
+     até o link da nova página.
+   - O texto fica branco SÓ onde a pílula passa por cima (se ela estiver no meio
+     de uma palavra, metade fica branca e metade normal).
    ========================================================================== */
 (function () {
   const CHAVE = 'giraNavOrigem';
 
-  // --- AJUSTES DE VELOCIDADE (mexa aqui) ---------------------------------
-  // A pílula anda sempre na MESMA velocidade: quanto mais longe o destino,
-  // mais tempo ela leva (em vez de correr mais pra chegar no mesmo tempo).
-  const VELOCIDADE = 500;   // pixels por segundo — menor = mais lento/suave
-  const DURACAO_MIN = 350;  // ms — tempo mínimo (pra links vizinhos não ficarem bruscos)
+  // --- AJUSTES (mexa aqui) ------------------------------------------------
+  // O tempo depende de QUANTOS links do menu a pílula atravessa.
+  const DURACAO_1_PASSO = 600;     // ms — quando anda 1 link (quanto maior, mais lento)
+  const ADICIONAL_POR_PASSO = 150; // ms — somado a cada link a mais
+  //   1 passo = 600ms | 2 = 750ms | 3 = 900ms | 4 = 1050ms | 5 = 1200ms
+  const SUAVIDADE = 'cubic-bezier(0.65, 0, 0.35, 1)'; // começa e termina devagar
+  const JANELA_MS = 20000;  // tempo máximo entre sair de uma página e carregar a outra
 
   function iniciar() {
     const nav = document.querySelector('.nav-site');
@@ -26,51 +30,102 @@
       nav.prepend(ind);
     }
 
-    const links = Array.from(nav.querySelectorAll('a'));
+    const links = Array.from(nav.querySelectorAll('a')).filter(a => !ind.contains(a));
     const logo = document.querySelector('.logo-site');
     const ativo = nav.querySelector('a.ativo');
 
-    function posicionar(el) {
-      ind.style.width = el.offsetWidth + 'px';
-      ind.style.height = el.offsetHeight + 'px';
-      ind.style.left = el.offsetLeft + 'px';
-      ind.style.top = el.offsetTop + 'px';
-      ind.style.opacity = '1';
+    // --- Camada de texto branco (fica DENTRO da pílula e é recortada por ela) --
+    // É uma cópia do menu, alinhada por cima do menu de verdade. Como a pílula
+    // tem overflow:hidden, só aparece o pedaço de texto que está sob a pílula.
+    const camada = document.createElement('div');
+    camada.className = 'indicador-texto';
+    camada.setAttribute('aria-hidden', 'true');
+    links.forEach(l => {
+      const c = l.cloneNode(true);
+      c.removeAttribute('href');
+      c.removeAttribute('id');
+      c.classList.remove('ativo');
+      c.tabIndex = -1;
+      camada.appendChild(c);
+    });
+    ind.textContent = '';
+    ind.appendChild(camada);
+
+    function ajustarCamada() {
+      if (!links.length) return;
+      camada.style.gap = getComputedStyle(nav).gap;
+      camada.style.paddingLeft = links[0].offsetLeft + 'px';
+      camada.style.paddingTop = links[0].offsetTop + 'px';
     }
+
+    // A transição vai direto nos elementos (vence qualquer CSS antigo).
+    // A camada de texto anda em sentido oposto, com o MESMO tempo e curva,
+    // pra ficar parada em relação ao menu.
+    function transicao(ms) {
+      const t = props => ms ? props.map(p => p + ' ' + ms + 'ms ' + SUAVIDADE).join(', ') : 'none';
+      ind.style.transition = t(['left', 'width', 'top', 'height']);
+      camada.style.transition = t(['left', 'top']);
+    }
+    function aplicar(g) {
+      ind.style.left = g.left + 'px';
+      ind.style.top = g.top + 'px';
+      ind.style.width = g.width + 'px';
+      ind.style.height = g.height + 'px';
+      ind.style.opacity = '1';
+      camada.style.left = -g.left + 'px';
+      camada.style.top = -g.top + 'px';
+    }
+    function geometria(el) {
+      return { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+    }
+    function posicionar(el) { ajustarCamada(); aplicar(geometria(el)); }
+
+    // Enquanto a pílula está deslizando, nada pode reposicioná-la.
+    let deslizando = false;
+    let ajustePendente = false;
 
     // --- Ao carregar a página ---------------------------------------------
     if (ativo) {
-      let origem = null;
+      ajustarCamada();
+      let salvo = null;
       try {
-        const salvo = JSON.parse(sessionStorage.getItem(CHAVE));
+        const bruto = JSON.parse(sessionStorage.getItem(CHAVE));
         sessionStorage.removeItem(CHAVE);
-        if (salvo && Date.now() - salvo.t < 4000) {
-          origem = links.find(l => l.getAttribute('href') === salvo.href) || null;
-        }
+        if (bruto && Date.now() - bruto.t < JANELA_MS) salvo = bruto;
       } catch (e) {}
 
-      if (origem && origem !== ativo) {
-        // Começa onde a pílula estava na página anterior e desliza até aqui.
-        const distancia = Math.abs(ativo.offsetLeft - origem.offsetLeft);
-        const duracao = Math.max(DURACAO_MIN, (distancia / VELOCIDADE) * 1000);
-        nav.style.setProperty('--duracao-indicador', duracao + 'ms');
-        nav.classList.add('entrando');
-        origem.classList.add('origem');
-        posicionar(origem);
+      const alvo = geometria(ativo);
+      const distancia = salvo ? Math.abs(salvo.left - alvo.left) + Math.abs(salvo.width - alvo.width) : 0;
+
+      if (salvo && distancia > 1) {
+        // Começa exatamente de onde a pílula estava na página anterior
+        // (mesmo que estivesse no meio do caminho) e desliza até aqui.
+        const centro = salvo.left + salvo.width / 2;
+        const maisPerto = links.reduce((melhor, l) =>
+          Math.abs(l.offsetLeft + l.offsetWidth / 2 - centro) < Math.abs(melhor.offsetLeft + melhor.offsetWidth / 2 - centro) ? l : melhor
+        , links[0]);
+        const passos = Math.max(1, Math.abs(links.indexOf(ativo) - links.indexOf(maisPerto)));
+        const duracao = DURACAO_1_PASSO + (passos - 1) * ADICIONAL_POR_PASSO;
+
+        deslizando = true;
+        transicao(0);
+        aplicar(salvo);
         void ind.offsetWidth; // força o navegador a "fixar" a posição inicial
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          ind.classList.add('animando');
-          nav.classList.remove('entrando');
-          origem.classList.remove('origem');
+          transicao(duracao);
           posicionar(ativo);
+          setTimeout(() => {
+            deslizando = false;
+            if (ajustePendente) { ajustePendente = false; posicionar(ativo); }
+          }, duracao + 100);
         }));
       } else {
+        transicao(0);
         posicionar(ativo);
-        setTimeout(() => ind.classList.add('animando'), 50);
       }
     }
 
-    // --- Ao clicar: guarda de onde saiu e deixa a página trocar normalmente --
+    // --- Ao clicar: guarda ONDE A PÍLULA ESTÁ AGORA (mesmo no meio da animação) --
     function aoClicar(e) {
       if (!ativo || e.defaultPrevented || e.button !== 0) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -81,25 +136,38 @@
       const url = new URL(a.href, location.href);
       if (url.origin !== location.origin || url.pathname === location.pathname) return;
       try {
-        sessionStorage.setItem(CHAVE, JSON.stringify({ href: ativo.getAttribute('href'), t: Date.now() }));
+        const cs = getComputedStyle(ind); // valor atual, já interpolado pela animação
+        const atual = {
+          left: parseFloat(cs.left), top: parseFloat(cs.top),
+          width: parseFloat(cs.width), height: parseFloat(cs.height)
+        };
+        if ([atual.left, atual.top, atual.width, atual.height].some(isNaN)) return;
+        transicao(0);   // congela a pílula aqui enquanto a próxima página carrega
+        aplicar(atual);
+        sessionStorage.setItem(CHAVE, JSON.stringify({ ...atual, t: Date.now() }));
       } catch (err) {}
     }
     links.forEach(l => l.addEventListener('click', aoClicar));
     if (logo) logo.addEventListener('click', aoClicar);
 
-    // --- Manter alinhado se a janela/fonte mudar ------------------------------
-    function realinhar() {
-      if (!ativo) return;
-      ind.classList.remove('animando');
-      posicionar(ativo);
-      void ind.offsetWidth;
-      ind.classList.add('animando');
+    // --- Manter alinhado -------------------------------------------------------
+    if (ativo && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        if (deslizando) ajustePendente = true; // espera a animação acabar
+        else posicionar(ativo);
+      });
     }
-    window.addEventListener('resize', realinhar);
-    window.addEventListener('pageshow', e => { if (e.persisted) realinhar(); }); // botão "voltar"
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(realinhar);
+    function realinharAgora() {
+      if (!ativo) return;
+      deslizando = false;
+      transicao(0);
+      posicionar(ativo);
+    }
+    window.addEventListener('resize', realinharAgora);
+    window.addEventListener('pageshow', e => { if (e.persisted) realinharAgora(); });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
-  else iniciar();
+  // O script fica no fim do <body>: o menu já existe, então roda na hora.
+  if (document.querySelector('.nav-site')) iniciar();
+  else document.addEventListener('DOMContentLoaded', iniciar);
 })();

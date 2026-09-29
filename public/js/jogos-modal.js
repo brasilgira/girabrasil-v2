@@ -523,7 +523,7 @@ function buildQueue() {
     tipEl.textContent   = 'Espaço (ou toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
     updateHUD(0,1,3,true,true);
     showScreen('Fuga pela Floresta',
-      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço/Clique</strong>.');
+      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço ou toque na tela</strong>.');
 
     const GH=H; const GROUND=GH-50;
     const OBSTACLE_SINK = 12;
@@ -541,7 +541,7 @@ const FIRE_RENDER_HEIGHT = 1080 * FIRE_SCALE;
     let onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
     let obstacles=[],powerups=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
     let groundX = 0; 
-    const JUMP_V=-11.5, GRAVITY=0.45;
+    const JUMP_V=-11.5, GRAVITY=0.55;
     let jumpTime = 0;
     let jumpDuration = 2 * Math.abs(JUMP_V) / GRAVITY;
     const delta = makeDelta();
@@ -1019,8 +1019,8 @@ function updateOncaSprite() {
     w,
     h,
     /* área da onça que realmente conta para o dano (o resto é só desenho) */
-    hitX1: px + w * 0.2,
-    hitX2: px + w * 0.8,
+    hitX1: px + w * 0.1,
+    hitX2: px + w * 0.9,
     hitY1: py + h * 0.1,
     hitY2: py + h * 0.9
   };
@@ -1110,7 +1110,7 @@ const OBS_TYPES=[
   }
 }
 
-    const JUMP_CUT = -4;   // mais perto de 0 = toque mais curto · mais negativo = toque mais alto
+    const JUMP_CUT = -8;   // mais perto de 0 = toque mais curto · mais negativo = toque mais alto
     function releaseJump(){
       if(!onca.onGround && onca.vy < JUMP_CUT) onca.vy = JUMP_CUT;
     }
@@ -1460,7 +1460,7 @@ if (t.type === 'tree') {
       const dt=delta(ts);
       tick+=dt;
       dist+=speed*dt; score=~~(dist/6);
-      speed=3.2+level*0.4; if(dist>level*1200)level++;
+      speed=4.8+level*0.4; if(dist>level*1700)level++;
       updateHUD(score,level,lives);
       clrCanvas();
             ctx.save();

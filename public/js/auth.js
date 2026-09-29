@@ -162,7 +162,7 @@ async function logarUsuario(event) {
 function renderizarHeaderAuth() {
   const container = document.querySelector('.header-acoes');
   if (!container) return;
-
+  if (container.querySelector('#perfilUsuario')) return; // já foi renderizado
   const usuario = obterUsuarioLogado();
   if (!usuario) return; // mantém o HTML padrão (Entrar / Criar conta)
 
@@ -213,3 +213,22 @@ if (window.location.pathname.endsWith('/admin.html')) {
 }
 
 document.addEventListener('DOMContentLoaded', renderizarHeaderAuth);
+
+// Renderiza o header assim que ele termina de ser lido pelo navegador
+// (evita piscar "Entrar / Criar conta" antes de mostrar o nome e o avatar).
+(function () {
+  function headerPronto() {
+    const header = document.querySelector('.header-site');
+    if (header && header.nextElementSibling) {
+      renderizarHeaderAuth();
+      return true;
+    }
+    return false;
+  }
+  if (headerPronto()) return;
+  const observador = new MutationObserver(() => {
+    if (headerPronto()) observador.disconnect();
+  });
+  observador.observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener('DOMContentLoaded', () => observador.disconnect());
+})();
