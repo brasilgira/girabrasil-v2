@@ -686,37 +686,3 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   .gb-news-media img { transition: none; }
 }
 
-/* ---------- Notícias: última foto pequena alinhada com a base da foto grande ---------- */
-@media (min-width: 1180px) {
-  .lista-noticias {
-    container-type: inline-size;   /* permite usar a largura da própria coluna (cqw) */
-    align-self: start;
-  }
-  .item-noticia .gb-news-media {
-    /* 3 quadrados + 82px (espaços e linhas entre eles) = altura da foto grande */
-    width: calc((81.25cqw - 82px) / 3);
-    height: calc((81.25cqw - 82px) / 3);
-  }
-  /* a última notícia não tem espaço/linha embaixo, senão a foto não chega na base */
-  .item-noticia:last-child {
-    padding-bottom: 0;
-    border-bottom: 0;
-  }
-}
-
-/* ---------- Notícia grande: o texto "come" a parte de baixo da foto ---------- */
-.noticia-destaque .gb-news-media { margin-bottom: 0; }   /* a foto mantém o tamanho, sem margem embaixo */
-
-.gb-news-info {
-  position: relative;
-  z-index: 1;
-  background: var(--gb-cream);      /* mesma cor do fundo da seção: "apaga" a base da foto */
-  margin-top: -104px;               /* quanto do fundo da foto é coberto */
-  padding: 22px 0 0;
-}
-
-/* em telas largas: cobre exatamente a altura de UMA foto pequena,
-   então o corte começa na altura do topo da 3ª notícia pequena */
-@media (min-width: 1180px) {
-  .gb-news-info { margin-top: calc(27.3px - 20.83%); }
-}
