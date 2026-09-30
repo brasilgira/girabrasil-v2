@@ -608,17 +608,17 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
 .item-noticia:hover .gb-news-media img { transform: scale(1.07); }
 
 .noticia-destaque .gb-news-media { aspect-ratio: 16 / 10; margin-bottom: 18px; }
-.item-noticia .gb-news-media { width: 104px; height: 104px; flex-shrink: 0; } /* quadrada */
+.item-noticia .gb-news-media { width: 130px; height: 104px; flex-shrink: 0; } /* retangular, um pouco mais larga que alta */
 
 /* ---------- Tags: mono, verde, com a bolinha laranja (igual ao .gb-kicker) ---------- */
 .secao-noticias .tag {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0;
-  background: none;
-  border: 0;
-  border-radius: 0;
+  padding: 6px 12px;
+  background: rgba(36, 107, 90, .08);
+  border: 1px solid var(--gb-line);
+  border-radius: 999px;            /* pílula */
   color: var(--gb-teal);
   font-family: var(--gb-font-mono);
   font-size: .62rem;
@@ -686,3 +686,21 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   .gb-news-media img { transition: none; }
 }
 
+/* ---------- Notícias: última foto pequena alinhada com a base da foto grande ---------- */
+@media (min-width: 1180px) {
+  .lista-noticias {
+    container-type: inline-size;   /* permite usar a largura da própria coluna (cqw) */
+    align-self: start;
+  }
+  .item-noticia .gb-news-media {
+    /* altura: 3 fotos + 82px (espaços e linhas entre elas) = altura da foto grande */
+    height: calc((81.25cqw - 82px) / 3);
+    /* largura: 25% maior que a altura */
+    width: calc((81.25cqw - 82px) / 3 * 1.25);
+  }
+  /* a última notícia não tem espaço/linha embaixo, senão a foto não chega na base */
+  .item-noticia:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
