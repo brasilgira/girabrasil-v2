@@ -520,3 +520,203 @@
   .girabot-preview-texto h2 { font-size: 2.6rem; }
   .secao-cabecalho .link-ver-todas { margin-top: 21px; }
 }
+
+/* ---------- Fundo único da home (mesma cor da seção "Seis paisagens") ---------- */
+body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as laterais das seções */
+
+.secao-noticias,
+.secao-destaque,
+.secao-jogos-preview { background: var(--gb-cream); }
+
+.secao-jogos-preview { border-top: 0; border-bottom: 0; } /* sem as linhas, senão aparece divisão entre seções da mesma cor */
+
+/* ---------- Espaço entre "Últimas notícias" e "Em destaque" ---------- */
+/* Antes: 72px (fim de notícias) + 72px (topo de destaque) = 144px.
+   Agora só 72px, igual ao espaço entre o hero e "Últimas notícias". */
+.secao-destaque { padding-top: 0; }
+
+/* ---------- Espaçamento padrão entre seções da home: 72px ---------- */
+/* (mesma distância que existe entre o hero e "Últimas notícias") */
+.secao-noticias          { padding: 72px 32px; }
+.secao-destaque          { padding: 0 32px; }        /* o 72px de baixo de "notícias" já cobre */
+.gb-biomes-fundo         { padding-top: 72px; }
+.gb-biomes-section       { padding-bottom: 0; }      /* o 72px de cima de "jogos" já cobre */
+.secao-jogos-preview     { padding: 72px 32px; }
+.secao-girabot-preview   { padding: 72px 32px; }
+.cta-institucional       { padding: 72px 32px; }
+
+/* ---------- Setas (SVG) alinhadas ao texto nos links e botões ---------- */
+.link-explorar {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  transition: gap .2s;
+}
+.card-bioma-destaque:hover .link-explorar { gap: 14px; }
+
+/* ---------- Cards de jogos da home ---------- */
+.grid-jogos-mini { gap: 13px; }            /* mesma distância entre os cards de "Seis paisagens" */
+
+/* zoom suave da imagem no hover (mesma curva dos cards de biomas) */
+.card-jogo-mini .fundo-imagem img {
+  transition: transform .7s cubic-bezier(.2, .8, .2, 1), filter .5s ease;
+}
+.card-jogo-mini:hover .fundo-imagem img { transform: scale(1.07); }
+
+/* ---------- Cards de jogos: mesmo arredondamento dos cards de "Seis paisagens" ---------- */
+.card-jogo-mini { border-radius: 3px; }
+
+/* ---------- Só o card da onça (4º): verde de baixo mais leve, some mais cedo ---------- */
+.grid-jogos-mini .card-jogo-mini:nth-child(4) .fundo-imagem::after {
+  background: linear-gradient(0deg, rgba(22,40,31,0.75) 0%, rgba(22,40,31,0) 35%);
+}
+.grid-jogos-mini .card-jogo-mini:nth-child(4):hover .fundo-imagem::after {
+  background: linear-gradient(0deg, rgba(22,40,31,0.75) 0%, rgba(22,40,31,0) 30%);
+}
+
+/* ---------- Seção dos jogos: cards centralizados na vertical ---------- */
+
+.secao-jogos-preview { padding: 150px 32px 110px !important; } /* cima 150 · baixo 110 (o de baixo não muda) */
+
+@media (max-width: 760px) {
+  .secao-jogos-preview { padding: 96px 20px 72px !important; }
+}
+
+/* ==========================================================================
+   Notícias da home — estrutura original, com o visual de "Seis paisagens"
+   ========================================================================== */
+.secao-noticias .grid-destaque {
+  font-family: var(--gb-font-sans);
+  gap: 13px;                       /* mesma distância dos cards de biomas */
+}
+
+/* ---------- Imagens: cantos de 3px + zoom suave no hover ---------- */
+.gb-news-media {
+  overflow: hidden;
+  border-radius: 3px;
+}
+.secao-noticias .gb-news-media img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  object-fit: cover;
+  transition: transform .7s cubic-bezier(.2, .8, .2, 1);
+}
+.noticia-destaque:hover .gb-news-media img,
+.item-noticia:hover .gb-news-media img { transform: scale(1.07); }
+
+.noticia-destaque .gb-news-media { aspect-ratio: 16 / 10; margin-bottom: 18px; }
+.item-noticia .gb-news-media { width: 104px; height: 104px; flex-shrink: 0; } /* quadrada */
+
+/* ---------- Tags: mono, verde, com a bolinha laranja (igual ao .gb-kicker) ---------- */
+.secao-noticias .tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: var(--gb-teal);
+  font-family: var(--gb-font-mono);
+  font-size: .62rem;
+  font-weight: 500;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.secao-noticias .tag::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gb-orange);
+}
+
+/* ---------- Notícia grande ---------- */
+.noticia-destaque h3 {
+  font-family: var(--gb-font-serif);
+  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -.05em;
+  line-height: 1.08;
+  color: var(--gb-ink);
+  margin: 12px 0 10px;
+  transition: color .2s;
+}
+.noticia-destaque p {
+  max-width: 52ch;
+  color: var(--gb-muted);
+  font-size: .84rem;
+  line-height: 1.7;
+}
+
+/* ---------- Notícias pequenas ---------- */
+.item-noticia {
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--gb-line);
+}
+.item-noticia:first-child { padding-top: 0; }
+.item-noticia h4 {
+  font-family: var(--gb-font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -.04em;
+  line-height: 1.15;
+  color: var(--gb-ink);
+  margin: 8px 0;
+  transition: color .2s;
+}
+.item-noticia .meta {
+  color: var(--gb-muted);
+  font-family: var(--gb-font-mono);
+  font-size: .58rem;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+
+/* hover: título fica verde, como os links do resto da home */
+.noticia-destaque:hover h3,
+.item-noticia:hover h4 { color: var(--gb-teal); }
+
+@media (prefers-reduced-motion: reduce) {
+  .gb-news-media img { transition: none; }
+}
+
+/* ---------- Notícias: última foto pequena alinhada com a base da foto grande ---------- */
+@media (min-width: 1180px) {
+  .lista-noticias {
+    container-type: inline-size;   /* permite usar a largura da própria coluna (cqw) */
+    align-self: start;
+  }
+  .item-noticia .gb-news-media {
+    /* 3 quadrados + 82px (espaços e linhas entre eles) = altura da foto grande */
+    width: calc((81.25cqw - 82px) / 3);
+    height: calc((81.25cqw - 82px) / 3);
+  }
+  /* a última notícia não tem espaço/linha embaixo, senão a foto não chega na base */
+  .item-noticia:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
+
+/* ---------- Notícia grande: o texto "come" a parte de baixo da foto ---------- */
+.noticia-destaque .gb-news-media { margin-bottom: 0; }   /* a foto mantém o tamanho, sem margem embaixo */
+
+.gb-news-info {
+  position: relative;
+  z-index: 1;
+  background: var(--gb-cream);      /* mesma cor do fundo da seção: "apaga" a base da foto */
+  margin-top: -104px;               /* quanto do fundo da foto é coberto */
+  padding: 22px 0 0;
+}
+
+/* em telas largas: cobre exatamente a altura de UMA foto pequena,
+   então o corte começa na altura do topo da 3ª notícia pequena */
+@media (min-width: 1180px) {
+  .gb-news-info { margin-top: calc(27.3px - 20.83%); }
+}
