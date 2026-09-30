@@ -423,3 +423,100 @@
   .gb-button,
   .gb-card-arrow { transition: none; }
 }
+
+/* ==========================================================================
+   HOME — ajustes (cabeçalhos de seção, margens, jogos)
+   ========================================================================== */
+:root { --gb-largura: 1240px; } /* mesma largura do .gb-container */
+
+/* ---------- Cabeçalhos "Últimas notícias" e "Em destaque" ---------- */
+.secao-cabecalho {
+  font-family: var(--gb-font-sans);
+  color: var(--gb-ink);
+  justify-content: space-between;
+  align-items: end;
+  gap: 30px;
+  margin-bottom: 38px;
+}
+.secao-cabecalho h2,
+.jogos-preview-texto h2,
+.girabot-preview-texto h2 {
+  font-family: var(--gb-font-serif);
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  font-weight: 600;
+  letter-spacing: -.06em;
+  line-height: .98;
+  margin: 16px 0 0;
+}
+.secao-cabecalho h2 { color: var(--gb-ink); }
+.jogos-preview-texto h2,
+.girabot-preview-texto h2 { margin-bottom: 20px; }
+.secao-cabecalho p {
+  max-width: 48ch;
+  color: var(--gb-muted);
+  margin: 15px 0 0;
+  font-size: .84rem;
+  line-height: 1.7;
+}
+.secao-cabecalho .link-ver-todas {
+  border-bottom: 1px solid var(--gb-ink);
+  color: var(--gb-ink);
+  white-space: nowrap;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 6px;
+  font-size: .72rem;
+  font-weight: 800;
+  transition: gap .2s;
+  display: inline-flex;
+}
+.secao-cabecalho .link-ver-todas:hover {
+  color: var(--gb-teal);
+  border-color: var(--gb-teal);
+  gap: 14px;
+}
+
+/* ---------- Mesmas margens laterais da seção "Seis paisagens" ---------- */
+.secao-noticias,
+.secao-destaque { max-width: calc(var(--gb-largura) + 64px); }
+.secao-jogos-preview { max-width: none; margin: 0; }
+.grid-jogos-preview-layout,
+.grid-girabot-preview {
+  max-width: var(--gb-largura);
+  margin-inline: auto;
+}
+
+/* ---------- Jogos (home): mesmo efeito de imagem da página de jogos ---------- */
+.card-jogo-mini .fundo-imagem img {
+  --brilho-ativo: 1.18;
+  --contraste-ativo: 1.12;
+  --cor-ativo: 1.15;
+  --brilho-recolhido: 0.90;
+  filter: brightness(var(--brilho-recolhido)) saturate(0.9);
+  transition: filter .5s ease;
+}
+.card-jogo-mini:hover .fundo-imagem img {
+  filter: brightness(var(--brilho-ativo)) contrast(var(--contraste-ativo)) saturate(var(--cor-ativo));
+}
+.card-jogo-mini .fundo-imagem::after {
+  background: linear-gradient(0deg, rgba(22,40,31,0.85) 0%, rgba(22,40,31,0.15) 45%, rgba(22,40,31,0.35) 100%);
+}
+.card-jogo-mini:hover .fundo-imagem::after {
+  background: linear-gradient(0deg, rgba(22,40,31,0.94) 0%, rgba(22,40,31,0.85) 15%, rgba(22,40,31,0) 55%);
+}
+.card-jogo-mini .fundo-imagem img[src*="game-biomas"] {
+  object-position: 75% center;
+  --brilho-ativo: 1.05;
+  --contraste-ativo: 1.03;
+  --cor-ativo: 1.05;
+  --brilho-recolhido: 0.92;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 760px) {
+  .secao-cabecalho { display: block; }
+  .secao-cabecalho h2,
+  .jogos-preview-texto h2,
+  .girabot-preview-texto h2 { font-size: 2.6rem; }
+  .secao-cabecalho .link-ver-todas { margin-top: 21px; }
+}
