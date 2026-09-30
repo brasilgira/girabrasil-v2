@@ -586,8 +586,13 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
    Notícias da home — estrutura original, com o visual de "Seis paisagens"
    ========================================================================== */
 .secao-noticias .grid-destaque {
+  /* ===== AJUSTES RÁPIDOS (mexa só aqui) ===== */
+  --espaco-noticias: 32px;         /* espaço lateral entre a foto grande e as notícias menores */
+  --largura-img-menor: 1.5;        /* largura das fotos menores = altura x este número (1 = quadrada) */
+  /* ========================================== */
   font-family: var(--gb-font-sans);
-  gap: 13px;                       /* mesma distância dos cards de biomas */
+  gap: 13px;                       /* espaço vertical (quando as colunas empilham no celular) */
+  column-gap: var(--espaco-noticias);
 }
 
 /* ---------- Imagens: cantos de 3px + zoom suave no hover ---------- */
@@ -608,30 +613,22 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
 .item-noticia:hover .gb-news-media img { transform: scale(1.07); }
 
 .noticia-destaque .gb-news-media { aspect-ratio: 16 / 10; margin-bottom: 18px; }
-.item-noticia .gb-news-media { width: 130px; height: 104px; flex-shrink: 0; } /* retangular, um pouco mais larga que alta */
+.item-noticia .gb-news-media { width: calc(104px * var(--largura-img-menor)); height: 104px; flex-shrink: 0; } /* retangular */
 
-/* ---------- Tags: mono, verde, com a bolinha laranja (igual ao .gb-kicker) ---------- */
+/* ---------- Tags: pílula igual à do menu do header, só que na cor laranja ---------- */
 .secao-noticias .tag {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(36, 107, 90, .08);
-  border: 1px solid var(--gb-line);
-  border-radius: 999px;            /* pílula */
-  color: var(--gb-teal);
-  font-family: var(--gb-font-mono);
-  font-size: .62rem;
+  padding: 7px 13px;               /* mesmo respiro da pílula do header */
+  background: var(--gb-orange);    /* sólida; a cor é a única diferença pro header */
+  border: 0;
+  border-radius: 999px;
+  color: #FFFFFF;
+  font-family: var(--fonte-corpo);
+  font-size: 0.9rem;
   font-weight: 500;
-  letter-spacing: .11em;
-  text-transform: uppercase;
-}
-.secao-noticias .tag::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--gb-orange);
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 /* ---------- Notícia grande ---------- */
@@ -660,6 +657,7 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   border-bottom: 1px solid var(--gb-line);
 }
 .item-noticia:first-child { padding-top: 0; }
+
 .item-noticia h4 {
   font-family: var(--gb-font-serif);
   font-size: 1.25rem;
@@ -667,7 +665,7 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   letter-spacing: -.04em;
   line-height: 1.15;
   color: var(--gb-ink);
-  margin: 8px 0;
+  margin: 8px 0 0;
   transition: color .2s;
 }
 .item-noticia .meta {
@@ -676,6 +674,16 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   font-size: .58rem;
   letter-spacing: .045em;
   text-transform: uppercase;
+}
+
+/* A pílula do tema fica acima do título; o "Data · Tempo de leitura" não aparece mais */
+.item-noticia .meta { display: none; }
+.item-noticia .tag {
+  display: flex;
+  width: fit-content;              /* pílula só do tamanho do texto */
+  padding: 3px 11px;
+  font-size: .72rem;
+  line-height: 14px;               /* altura total da pílula = 20px */
 }
 
 /* hover: título fica verde, como os links do resto da home */
@@ -695,8 +703,8 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   .item-noticia .gb-news-media {
     /* altura: 3 fotos + 82px (espaços e linhas entre elas) = altura da foto grande */
     height: calc((81.25cqw - 82px) / 3);
-    /* largura: 25% maior que a altura */
-    width: calc((81.25cqw - 82px) / 3 * 1.25);
+    /* largura: altura x --largura-img-menor */
+    width: calc((81.25cqw - 82px) / 3 * var(--largura-img-menor));
   }
   /* a última notícia não tem espaço/linha embaixo, senão a foto não chega na base */
   .item-noticia:last-child {
