@@ -18,8 +18,11 @@
       z-index: 90;                       /* abaixo do header (z-index 100) */
       background: rgba(22, 40, 31, 0.08);
       display: none;
+      opacity: 0;                        /* apagada por padrão */
+      transition: opacity .5s ease;
     }
     .gb-scroll.visivel { display: block; }
+    .gb-scroll.ativo { opacity: 1; }     /* acesa ao rolar, passar o mouse ou arrastar */
     .gb-scroll-thumb {
       position: absolute;
       left: 0;
@@ -75,6 +78,20 @@
     requestAnimationFrame(function () { pendente = false; atualizar(); });
   }
 
+    // ---- some depois de alguns segundos parada; volta ao rolar, passar o mouse ou arrastar ----
+  var TEMPO_APAGAR = 2000;   // ms parada antes de apagar
+  var timerApagar = null;
+  var mouseEmCima = false;
+  function mostrar() {
+    track.classList.add('ativo');
+    clearTimeout(timerApagar);
+    timerApagar = setTimeout(function () {
+      if (!arrastando && !mouseEmCima) track.classList.remove('ativo');
+    }, TEMPO_APAGAR);
+  }
+  track.addEventListener('pointerenter', function () { mouseEmCima = true; mostrar(); });
+  track.addEventListener('pointerleave', function () { mouseEmCima = false; mostrar(); });
+
   // ---- arrastar a barra: a página vai EXATAMENTE para onde você puxa ----
   var arrastando = false, inicioY = 0, inicioScroll = 0;
 
@@ -84,6 +101,7 @@
     inicioScroll = root.scrollTop;
     html.style.scrollBehavior = 'auto';   // desliga o "smooth" durante o arrasto
     track.classList.add('arrastando');
+    mostrar();
     thumb.setPointerCapture(e.pointerId);
     e.preventDefault();
   });
@@ -98,6 +116,7 @@
     arrastando = false;
     html.style.scrollBehavior = '';       // volta ao padrão do site
     track.classList.remove('arrastando');
+    mostrar();
   }
   thumb.addEventListener('pointerup', soltar);
   thumb.addEventListener('pointercancel', soltar);
@@ -111,8 +130,10 @@
   });
 
   window.addEventListener('scroll', agendar, { passive: true });
+    window.addEventListener('scroll', mostrar, { passive: true });
   window.addEventListener('resize', agendar);
   window.addEventListener('load', agendar);
   if ('ResizeObserver' in window) new ResizeObserver(agendar).observe(document.body);
   atualizar();
+  mostrar();
 })();
