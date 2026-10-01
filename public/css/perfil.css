@@ -18,22 +18,43 @@
 .perfil-app .header-acoes{display:flex;align-items:center;gap:14px}
 
 /* Sidebar + conteúdo lado a lado, sempre abaixo do header */
-.app-shell{display:flex;align-items:flex-start;min-height:calc(100vh - 66px)}
+.app-shell{display:flex}
+/* sem align-items:flex-start e sem min-height fixo: o padrão (stretch) faz a
+   sidebar acompanhar a altura real do conteúdo, terminando junto com ele
+   em vez de um bloco verde cortado antes do rodapé. */
 
 /* ---------- SIDEBAR ---------- */
 .sidebar{
-  width:250px;min-height:calc(100vh - 66px);background:var(--cor-floresta);
+  width:250px;background:var(--cor-floresta);
   color:var(--cor-texto-claro);position:relative;flex:none;
-  padding:28px 18px 28px;display:flex;flex-direction:column;
+  padding:28px 18px 24px;display:flex;flex-direction:column;gap:22px;
 }
-.profile-mini{text-align:center;margin-top:6px}
+/* ---------- Composição em blocos (Identidade / Bioma / Exploração / Sair) */
+.sb-bloco{padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-bloco:first-child{padding-top:0;border-top:0}
+.sb-titulo{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cor-texto-suave-claro);margin:0 0 12px;font-weight:600}
+
+/* BLOCO 1 — Identidade */
+.sb-identidade{text-align:center}
+
+/* Avatar circular — container fixo, a imagem sempre cobre 100% sem
+   deformar (object-fit:cover) e sem depender do <span> interno ter altura
+   própria (position:absolute + inset:0 garante isso mesmo se o span for
+   inline por padrão). */
 .avatar-large{
   width:78px;height:78px;border-radius:50%;margin:0 auto 12px;
   border:1px solid var(--cor-borda-escura);overflow:hidden;position:relative;
-  display:grid;place-items:center;font-family:var(--fonte-titulo);font-size:26px;font-weight:600;
-  background:var(--cor-floresta-hover);color:var(--cor-texto-claro);cursor:pointer;padding:0;
+  display:block;background:var(--cor-floresta-hover);color:var(--cor-texto-claro);
+  cursor:pointer;padding:0;flex:none;
 }
-.avatar-large img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.avatar-large__img{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fonte-titulo);font-size:26px;font-weight:600;border-radius:50%;overflow:hidden;
+}
+.avatar-large__img img{
+  width:100%;height:100%;object-fit:cover;object-position:center;border-radius:50%;
+  display:block;
+}
 .avatar-editar-dica{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:rgba(15,25,18,.68);color:var(--cor-texto-claro);font-size:9.5px;font-weight:600;
@@ -42,23 +63,54 @@
 .avatar-large:hover .avatar-editar-dica,
 .avatar-large:focus-visible .avatar-editar-dica{opacity:1}
 
-.profile-mini h2{font-family:var(--fonte-titulo);font-size:18px;font-weight:600;margin:0 0 3px}
-.profile-mini p{font-size:11px;color:var(--cor-texto-suave-claro);margin:0 0 10px;word-break:break-word}
-.admin-badge{display:inline-block;border:1px solid var(--cor-borda-escura);border-radius:99px;padding:4px 11px;font-size:9.5px;letter-spacing:.04em;color:var(--cor-texto-suave-claro)}
+.sb-identidade h2{font-family:var(--fonte-titulo);font-size:17px;font-weight:600;margin:0 0 8px}
 
-.side-nav{display:flex;flex-direction:column;gap:3px;margin-top:26px}
-.side-nav a{height:38px;border-radius:var(--raio-pequeno);display:flex;align-items:center;gap:11px;padding:0 12px;color:var(--cor-texto-suave-claro);font-size:12.5px;transition:background .15s,color .15s}
-.side-nav a:hover{background:rgba(255,255,255,.08);color:var(--cor-texto-claro)}
-.side-nav a.active{background:var(--cor-texto-claro);color:var(--cor-floresta);font-weight:600}
-.side-nav a.active svg{stroke:var(--cor-floresta)}
-
-.logout{
-  width:100%;margin-top:auto;padding-top:16px;height:38px;border-radius:var(--raio-pequeno);
-  border:1px solid transparent;background:transparent;color:var(--cor-texto-suave-claro);
-  cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;gap:9px;
-  transition:background .15s,color .15s;
+.nivel-chip{
+  display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:0;
+  border-radius:99px;padding:5px 12px 5px 9px;color:var(--cor-texto-claro);font-size:10.5px;font-weight:600;
+  cursor:pointer;transition:background .15s;
 }
-.logout:hover{background:rgba(239,118,92,.12);color:#ff9c86}
+.nivel-chip svg{width:12px;height:12px;color:var(--cor-destaque)}
+.nivel-chip:hover,.nivel-chip:focus-visible{background:rgba(255,255,255,.16)}
+
+/* Selo "Administrador" — hidden precisa vencer o display de baixo, senão
+   o atributo [hidden] do HTML é ignorado e o selo aparece sempre. */
+.admin-badge{display:inline-block;margin-top:8px;border:1px solid var(--cor-borda-escura);border-radius:99px;padding:4px 11px;font-size:9.5px;letter-spacing:.04em;color:var(--cor-texto-suave-claro)}
+.admin-badge[hidden]{display:none}
+
+/* BLOCO 2 — Meu bioma */
+.bioma-card{
+  width:100%;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);border-radius:var(--raio-pequeno);padding:8px;cursor:pointer;
+  text-align:left;transition:background .15s,border-color .15s;
+}
+.bioma-card:hover,.bioma-card:focus-visible{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22)}
+.bioma-card__img{width:40px;height:40px;border-radius:8px;flex:none;background-size:cover;background-position:center;background-color:rgba(255,255,255,.1)}
+.bioma-card__texto{display:flex;flex-direction:column;gap:2px;min-width:0}
+.bioma-card__texto strong{font-size:12px;font-weight:600;color:var(--cor-texto-claro);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bioma-card__texto small{font-size:9.5px;color:var(--cor-texto-suave-claro)}
+
+/* BLOCO 3 — Minha exploração */
+.exploracao-carregando{font-size:11px;color:var(--cor-texto-suave-claro);margin:0}
+.exploracao-lista{display:flex;flex-direction:column;gap:10px}
+.exploracao-item{display:flex;flex-direction:column;gap:4px}
+.exploracao-item__topo{display:flex;justify-content:space-between;align-items:baseline;font-size:11px}
+.exploracao-item__topo span:first-child{color:var(--cor-texto-claro)}
+.exploracao-item__topo span:last-child{color:var(--cor-texto-suave-claro);font-size:10px}
+.exploracao-barra{height:5px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}
+.exploracao-barra i{display:block;height:100%;background:var(--cor-destaque);border-radius:5px}
+.exploracao-vazio{font-size:11px;color:var(--cor-texto-suave-claro);line-height:1.5;margin:0}
+.exploracao-vazio a{color:var(--cor-texto-claro);text-decoration:underline;text-underline-offset:2px}
+
+/* BLOCO 4 — Sair (mais visível: preenchido e perto do resto da conta) */
+.sb-conta{margin-top:auto;padding-top:18px}
+.logout{
+  width:100%;height:40px;border-radius:var(--raio-pequeno);
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:var(--cor-texto-claro);
+  cursor:pointer;font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.logout:hover,.logout:focus-visible{background:rgba(239,118,92,.16);border-color:rgba(239,118,92,.4);color:#ffb7a6}
 
 /* ---------- ÁREA PRINCIPAL ---------- */
 .perfil-app .main{flex:1;min-width:0;padding-bottom:60px}
@@ -165,25 +217,44 @@
 .modal-escada li.atual .marcador{background:var(--cor-destaque)}
 .modal-escada li.concluido .marcador{background:var(--cor-texto-suave)}
 
-/* Modal de avatar — cards grandes, estilo editorial/streaming */
+/* Modal de avatar — cada opção é o MESMO container circular da foto final
+   (mesma técnica: caixa circular com overflow:hidden + img 100%/cover),
+   com o nome como legenda abaixo, não sobreposto ao círculo. */
 .modal-caixa--avatar{max-width:640px}
-.avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px 10px}
 .avatar-opcao{
-  position:relative;aspect-ratio:1/1;border-radius:var(--raio-pequeno);overflow:hidden;border:2px solid transparent;
-  cursor:pointer;background:var(--cor-borda);padding:0;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  background:none;border:0;cursor:pointer;padding:0;
 }
-.avatar-opcao img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
-.avatar-opcao:hover img{transform:scale(1.06)}
-.avatar-opcao:hover,.avatar-opcao:focus-visible{border-color:var(--cor-borda-escura)}
-.avatar-opcao.selecionado{border-color:var(--cor-destaque)}
-.avatar-opcao.selecionado::after{
+.avatar-opcao__foto{
+  position:relative;width:100%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;
+  border:2px solid transparent;background:var(--cor-borda);
+}
+.avatar-opcao img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;border-radius:50%;transition:transform .2s}
+.avatar-opcao:hover img{transform:scale(1.07)}
+.avatar-opcao:hover .avatar-opcao__foto,
+.avatar-opcao:focus-visible .avatar-opcao__foto{border-color:var(--cor-borda-escura)}
+.avatar-opcao.selecionado .avatar-opcao__foto{border-color:var(--cor-destaque)}
+.avatar-opcao.selecionado .avatar-opcao__foto::after{
+  content:"✓";position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;
+  background:var(--cor-destaque);color:var(--cor-texto-claro);font-size:10px;font-weight:700;display:grid;place-items:center;
+}
+.avatar-opcao__nome{font-size:9.5px;font-weight:600;color:var(--cor-texto);text-align:center;line-height:1.25}
+
+/* Modal de bioma — mesma grade, cards com cantos suaves (paisagem, não rosto) */
+.bioma-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bioma-opcao{display:flex;flex-direction:column;gap:7px;background:none;border:0;cursor:pointer;padding:0;text-align:left}
+.bioma-opcao__foto{position:relative;width:100%;aspect-ratio:4/3;border-radius:var(--raio-pequeno);overflow:hidden;border:2px solid transparent;background:var(--cor-borda)}
+.bioma-opcao img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transition:transform .2s}
+.bioma-opcao:hover img{transform:scale(1.06)}
+.bioma-opcao:hover .bioma-opcao__foto,
+.bioma-opcao:focus-visible .bioma-opcao__foto{border-color:var(--cor-borda-escura)}
+.bioma-opcao.selecionado .bioma-opcao__foto{border-color:var(--cor-destaque)}
+.bioma-opcao.selecionado .bioma-opcao__foto::after{
   content:"✓";position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;
   background:var(--cor-destaque);color:var(--cor-texto-claro);font-size:11px;font-weight:700;display:grid;place-items:center;
 }
-.avatar-opcao__nome{
-  position:absolute;left:0;right:0;bottom:0;padding:6px 8px 5px;font-size:9.5px;font-weight:600;color:#fff;
-  background:linear-gradient(0deg,rgba(0,0,0,.72),transparent);text-align:left;
-}
+.bioma-opcao__nome{font-size:11.5px;font-weight:600;color:var(--cor-texto)}
 
 .toast{position:fixed;right:22px;bottom:22px;background:var(--cor-floresta);color:var(--cor-texto-claro);padding:11px 16px;border-radius:var(--raio-pequeno);font-size:12px;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s;z-index:200}
 .toast.show{opacity:1;transform:translateY(0)}
@@ -195,8 +266,13 @@
   .avatar-grid{grid-template-columns:repeat(4,1fr)}
 }
 @media (max-width:760px){
+  /* A sidebar guarda funções exclusivas do perfil agora (bioma,
+     exploração) — em vez de sumir no celular, ela empilha acima do
+     conteúdo principal, ocupando a largura toda. */
   .app-shell{flex-direction:column}
-  .sidebar{display:none}
+  .sidebar{width:100%;padding:22px 20px}
+  .sb-identidade{display:flex;align-items:center;gap:14px;text-align:left}
+  .avatar-large{margin:0}
   .content{padding:18px 16px 0}
   .welcome-card{padding:18px 20px}
   .welcome-card h1{font-size:18px}
@@ -204,6 +280,7 @@
   .progress{width:100%}
   .games-list{grid-template-columns:1fr}
   .avatar-grid{grid-template-columns:repeat(3,1fr)}
+  .bioma-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media (max-width:420px){
   .stat-card{padding:14px}
@@ -214,5 +291,6 @@
 
 /* ---------- prefers-reduced-motion ---------- */
 @media (prefers-reduced-motion: reduce){
-  .stat-card--nivel,.progress i,.toast,.side-nav a,.logout,.avatar-opcao img,.avatar-editar-dica{transition:none}
+  .stat-card--nivel,.progress i,.toast,.logout,.nivel-chip,.bioma-card,.exploracao-barra i,
+  .avatar-opcao img,.bioma-opcao img,.avatar-editar-dica{transition:none}
 }

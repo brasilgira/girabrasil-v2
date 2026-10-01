@@ -552,3 +552,210 @@ body.pagina-jogos .header-site {
     aspect-ratio: var(--proporcao-card);
   }
 }
+
+/* ==========================================================================
+   MOLDURA DOS JOGOS — creme com borda dourada, FORMATO FIXO
+   A moldura tem proporção fixa e tudo dentro dela é medido em % da largura
+   dela (unidade cqw). No F11 ou em qualquer janela ela só muda de tamanho,
+   nunca de formato, e sempre cabe inteira na tela.
+   ========================================================================== */
+.game-overlay {
+  padding: 1rem;
+}
+
+.games-menu,
+.game-panel {
+  --ouro: #C9A24B;              /* <<< cor da borda e detalhes */
+  --creme: #F5EDD8;             /* <<< fundo da moldura */
+  --creme-claro: #FBF6E8;
+  --verde: var(--cor-floresta); /* texto e barras escuras */
+
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+
+  font-family: var(--fonte-titulo);
+  color: var(--verde);
+  background: linear-gradient(180deg, var(--creme-claro) 0%, var(--creme) 100%);
+  border: 2px solid var(--ouro);
+  border-radius: 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+.games-menu {
+  width: min(94vw, 720px);
+}
+
+/* --- Tamanho e formato da moldura --- */
+.game-panel {
+  --prop-largura: 1000;          /* <<< formato da moldura: largura... */
+  --prop-altura: 705;            /* <<< ...e altura (aumente a altura pra deixá-la mais "alta") */
+  --largura-max-moldura: 1400px; /* <<< teto do tamanho (em telas muito grandes) */
+
+  /* a largura é limitada pela largura da tela E pela altura da tela,
+     então a moldura sempre cabe inteira, sem rolagem */
+  width: min(94vw, var(--largura-max-moldura), calc((100dvh - 2rem) * var(--prop-largura) / var(--prop-altura)));
+  aspect-ratio: var(--prop-largura) / var(--prop-altura);
+  container-type: inline-size;   /* permite medir tudo dentro em % da largura (cqw) */
+}
+
+/* --- Cabeçalho --- */
+.game-panel .game-header {
+  flex: 0 0 auto;
+  height: 7.4cqw;
+  padding: 0 3cqw;
+  border-bottom: 0;
+}
+.games-menu-header {
+  padding: 16px 32px;
+  border-bottom: 0;
+}
+.game-title {
+  font-family: var(--fonte-titulo);
+  font-size: max(15px, 2.74cqw);
+  font-weight: 600;
+  color: var(--verde);
+}
+.games-menu-title {
+  font-family: var(--fonte-titulo);
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--verde);
+}
+.btn-back {
+  font-family: var(--fonte-titulo);
+  font-size: max(11px, 1.45cqw);
+  background: transparent;
+  border: 1.5px solid var(--ouro);
+  border-radius: 12px;
+  padding: 0.75cqw 1.5cqw;
+  color: var(--verde);
+}
+.btn-back:hover { background: rgba(201, 162, 75, 0.15); }
+.game-close {
+  width: 4.4cqw;
+  height: 4.4cqw;
+  min-width: 30px;
+  min-height: 30px;
+  background: transparent;
+  border: 2px solid var(--ouro);
+  color: var(--verde);
+  font-size: max(12px, 1.1cqw);
+}
+.game-close:hover { background: rgba(201, 162, 75, 0.15); color: var(--verde); }
+
+/* --- Barra de pontos / nível / vidas (pílula verde escura) --- */
+.game-hud {
+  flex: 0 0 auto;
+  margin: 0 2.1cqw 1.1cqw;
+  padding: 1.1cqw 2.7cqw;
+  background: var(--verde);
+  border: 2px solid var(--ouro);
+  border-radius: 999px;
+  color: var(--cor-texto-claro);
+  font-family: var(--fonte-titulo);
+  font-size: max(11px, 1.6cqw);
+}
+.hud-score strong,
+.hud-level strong { color: #5BD65B; }   /* o nível ganha cor própria pelo jogo (Fácil/Médio/Difícil) */
+.hud-lives strong { color: var(--cor-texto-claro); }
+.hud-score::before { content: "⬢"; color: #5BD65B; margin-right: 0.9cqw; }
+.hud-level::before { content: "🌿"; margin-right: 0.7cqw; }
+
+/* --- Área do jogo: ocupa o espaço que sobra, sempre sem deformar --- */
+.game-canvas-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+}
+#game-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;           /* mostra o jogo inteiro, sem esticar */
+}
+/* No quiz (com os botões embaixo) a área da foto fica mais baixa: a foto preenche
+   a área sem deformar, alinhada ao topo (a barra de tempo continua visível). */
+.game-panel:has(.especies-opcoes[style*="grid"]) #game-canvas {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* --- Tela de início / fim de jogo (por cima do jogo) --- */
+.game-screen {
+  gap: 1.3cqw;
+  padding: 3cqw;
+}
+.game-screen h2 {
+  font-size: max(18px, 2.6cqw);
+}
+.game-screen p {
+  font-size: max(11px, 1.44cqw);
+  max-width: 44cqw;
+}
+.btn-start-game {
+  padding: 1.2cqw 3.3cqw;
+  font-size: max(12px, 1.4cqw);
+}
+
+/* --- Botões de resposta do quiz --- */
+.especies-opcoes {
+  flex: 0 0 auto;
+  gap: 2.6cqw;
+  padding: 1.9cqw 2.5cqw;
+  background: transparent;
+  border-top: 1.5px solid var(--ouro);
+}
+.especie-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.3cqw;
+  padding: 1.4cqw 1cqw;
+  font-family: var(--fonte-titulo);
+  font-size: max(11px, 1.75cqw);
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--verde);
+  background: var(--creme-claro);
+  border: 2px solid var(--ouro);
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+.especie-btn::before {
+  content: "🐾";
+  font-size: 1.05em;
+  filter: sepia(1) saturate(2.5) brightness(0.95); /* pata dourada */
+}
+.especie-btn:hover {
+  background: #FFF9E9;
+  border-color: #A67F2E;
+  transform: translateY(-1px);
+}
+.especie-btn.correct {
+  background: rgba(47, 125, 79, 0.18);
+  border-color: #2F7D4F;
+  color: #1F6B3F;
+}
+.especie-btn.wrong {
+  background: rgba(192, 57, 43, 0.14);
+  border-color: #C0392B;
+  color: #A93226;
+}
+
+/* --- Faixa de dica embaixo (verde escura) --- */
+.game-tip {
+  flex: 0 0 auto;
+  padding: 1.3cqw 2cqw;
+  background: var(--verde);
+  color: var(--cor-texto-claro);
+  border-top: 1.5px solid var(--ouro);
+  font-family: var(--fonte-titulo);
+  font-size: max(9px, 1.22cqw);
+  letter-spacing: 0.05em;
+}
+.game-tip::before,
+.game-tip::after {
+  content: "🐾";
+  margin: 0 1.3cqw;
+  filter: sepia(1) saturate(2.5) brightness(0.95);
+}

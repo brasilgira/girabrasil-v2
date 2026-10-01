@@ -106,6 +106,7 @@ function renderizarNivel(perfil, isAdmin) {
 
   document.querySelector('[data-nivel-nome]').textContent = info.atual.nome;
   document.querySelector('[data-nivel-barra]').style.width = `${info.progresso}%`;
+  document.querySelector('[data-nivel-chip]').textContent = info.atual.nome;
   document.querySelector('[data-tempo-conta]').textContent = isAdmin ? 'Acesso administrativo' : formatarTempoDeConta(info.diasTotais);
 
   document.querySelector('[data-modal-nivel-nome]').textContent = info.atual.nome;
@@ -141,24 +142,23 @@ function renderizarNivel(perfil, isAdmin) {
 
 function configurarModal(seletorModal, seletorAbrir, seletorFechar) {
   const modal = document.querySelector(seletorModal);
-  const abrir = document.querySelector(seletorAbrir);
+  const abridores = document.querySelectorAll(seletorAbrir);
   if (!modal) return;
 
-  function abrirModal() {
+  function abrirModal(evento) {
+    if (evento) evento.preventDefault();
     modal.hidden = false;
     modal.querySelector(seletorFechar)?.focus();
   }
   function fecharModal() {
     modal.hidden = true;
-    abrir?.focus();
   }
 
-  abrir?.addEventListener('click', abrirModal);
-  abrir?.addEventListener('keydown', (evento) => {
-    if (evento.key === 'Enter' || evento.key === ' ') {
-      evento.preventDefault();
-      abrirModal();
-    }
+  abridores.forEach((abrir) => {
+    abrir.addEventListener('click', abrirModal);
+    abrir.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Enter' || evento.key === ' ') abrirModal(evento);
+    });
   });
   modal.querySelector(seletorFechar)?.addEventListener('click', fecharModal);
   modal.addEventListener('click', (evento) => {
@@ -178,7 +178,11 @@ function preencherIdentidade(usuario, perfil, isAdmin) {
 
   document.querySelector('[data-nome-usuario]').textContent = nome;
   document.querySelector('[data-nome-boasvindas]').textContent = nome;
-  document.querySelector('[data-email-usuario]').textContent = usuario.email || '';
+  // O e-mail saiu da sidebar nesta rodada (composição mais enxuta); o
+  // optional chaining aqui é só pra não quebrar se algum outro trecho da
+  // página ainda tiver esse elemento.
+  const elEmail = document.querySelector('[data-email-usuario]');
+  if (elEmail) elEmail.textContent = usuario.email || '';
 
   atualizarAvatarNaTela(perfil.avatar_url, nome, iniciais);
 
@@ -214,16 +218,21 @@ function configurarSeletorAvatar(perfil, usuario) {
     botao.className = 'avatar-opcao';
     if (perfil.avatar_url === opcao.url) botao.classList.add('selecionado');
 
+    // Container circular fixo (mesma técnica do avatar final): a imagem
+    // preenche 100% com object-fit:cover, nunca esticada/deformada.
+    const foto = document.createElement('span');
+    foto.className = 'avatar-opcao__foto';
     const img = document.createElement('img');
     img.src = opcao.url;
     img.alt = opcao.nome;
     img.loading = 'lazy';
+    foto.appendChild(img);
 
     const rotulo = document.createElement('span');
     rotulo.className = 'avatar-opcao__nome';
     rotulo.textContent = opcao.nome;
 
-    botao.append(img, rotulo);
+    botao.append(foto, rotulo);
     botao.addEventListener('click', () => selecionarAvatar(opcao, perfil, usuario, grid));
     grid.appendChild(botao);
   });
@@ -251,6 +260,156 @@ async function selecionarAvatar(opcao, perfil, usuario, grid) {
     console.error('Erro ao trocar avatar:', erro);
     showToast('Não foi possível salvar sua nova foto agora.');
   }
+}
+
+// ---- Meu bioma --------------------------------------------------------
+// Os 6 biomas reais do projeto (mesmas imagens usadas em regioes.html).
+// IMPORTANTE: a tabela `perfil` não tem hoje nenhum campo pra guardar essa
+// escolha (só nome/avatar_url/bio/criado_em). Criar esse campo exigiria
+// uma migration — por instrução explícita, isso não foi feito sem
+// aprovação. Então esta escolha fica só NESTA visita (em memória), nunca
+// em localStorage fingindo ser persistência real. Ver relatório final para
+// a proposta exata de campo/tabela/tipo.
+const BIOMAS_DISPONIVEIS = [
+  { id: 'amazonia', nome: 'Amazônia', imagem: 'assets/biomas/bioma-amazonia.jpg' },
+  { id: 'cerrado', nome: 'Cerrado', imagem: 'assets/biomas/bioma-cerrado.jpg' },
+  { id: 'caatinga', nome: 'Caatinga', imagem: 'assets/biomas/bioma-caatinga.jpg' },
+  { id: 'mata-atlantica', nome: 'Mata Atlântica', imagem: 'assets/biomas/bioma-mata-atlantica.jpg' },
+  { id: 'pampa', nome: 'Pampa', imagem: 'assets/biomas/bioma-pampa.jpg' },
+  { id: 'pantanal', nome: 'Pantanal', imagem: 'assets/biomas/bioma-pantanal.jpg' },
+];
+
+let biomaEscolhido = null; // só em memória — ver comentário acima
+
+function atualizarCardBioma() {
+  const imgEl = document.querySelector('[data-bioma-atual-img]');
+  const nomeEl = document.querySelector('[data-bioma-atual-nome]');
+  if (biomaEscolhido) {
+    imgEl.style.backgroundImage = `url("${biomaEscolhido.imagem}")`;
+    nomeEl.textContent = biomaEscolhido.nome;
+  } else {
+    imgEl.style.backgroundImage = '';
+    nomeEl.textContent = 'Escolher bioma';
+  }
+}
+
+function configurarSeletorBioma() {
+  const grid = document.querySelector('[data-bioma-grid]');
+  grid.innerHTML = '';
+
+  BIOMAS_DISPONIVEIS.forEach((bioma) => {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.className = 'bioma-opcao';
+
+    const foto = document.createElement('span');
+    foto.className = 'bioma-opcao__foto';
+    const img = document.createElement('img');
+    img.src = bioma.imagem;
+    img.alt = bioma.nome;
+    img.loading = 'lazy';
+    foto.appendChild(img);
+
+    const rotulo = document.createElement('span');
+    rotulo.className = 'bioma-opcao__nome';
+    rotulo.textContent = bioma.nome;
+
+    botao.append(foto, rotulo);
+    botao.addEventListener('click', () => {
+      biomaEscolhido = bioma;
+      grid.querySelectorAll('.bioma-opcao').forEach((el) => el.classList.remove('selecionado'));
+      botao.classList.add('selecionado');
+      atualizarCardBioma();
+      showToast(`Bioma representativo: ${bioma.nome}.`);
+      document.querySelector('[data-modal-bioma]').hidden = true;
+    });
+
+    grid.appendChild(botao);
+  });
+
+  atualizarCardBioma();
+}
+
+// ---- Minha exploração ---------------------------------------------------
+// Conta interações REAIS (curtidas + salvas + comentários) por região,
+// usando noticias.regiao_id que já vem em cada item do perfil. Notícias
+// gerais (regiao_id nulo) não contam pra nenhuma região específica.
+// Se não houver nenhuma interação com região definida, mostra o estado
+// vazio em vez de 5 barras zeradas sem sentido.
+async function preencherExploracao(perfil) {
+  const container = document.querySelector('[data-exploracao-lista]');
+
+  let regioes = [];
+  try {
+    const resposta = await fetch('/api/regioes');
+    if (resposta.ok) regioes = await resposta.json();
+  } catch (erro) {
+    console.error('Erro ao carregar regiões para Minha exploração:', erro);
+  }
+
+  if (!regioes.length) {
+    container.innerHTML = '';
+    const vazio = document.createElement('p');
+    vazio.className = 'exploracao-vazio';
+    vazio.textContent = 'Não foi possível carregar as regiões agora.';
+    container.appendChild(vazio);
+    return;
+  }
+
+  const interacoes = [
+    ...(perfil.noticiasCurtidas || []),
+    ...(perfil.noticiasSalvas || []),
+    ...(perfil.comentarios || []),
+  ];
+
+  const contagemPorRegiao = {};
+  interacoes.forEach((item) => {
+    if (!item.regiao_id) return; // notícia geral, não conta pra região nenhuma
+    contagemPorRegiao[item.regiao_id] = (contagemPorRegiao[item.regiao_id] || 0) + 1;
+  });
+
+  const totalComRegiao = Object.values(contagemPorRegiao).reduce((soma, n) => soma + n, 0);
+  container.innerHTML = '';
+
+  if (totalComRegiao === 0) {
+    const vazio = document.createElement('p');
+    vazio.className = 'exploracao-vazio';
+    vazio.innerHTML = 'Comece a explorar o Brasil — curta, salve ou comente em notícias de uma região.<br><a href="regioes.html">Ver o mapa de regiões →</a>';
+    container.appendChild(vazio);
+    return;
+  }
+
+  const maiorContagem = Math.max(...Object.values(contagemPorRegiao));
+
+  // Ordem geográfica fixa (Norte → Sul), não por quantidade — mais fácil
+  // de ler que uma ordenação que muda a cada visita.
+  const ordem = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+  const regioesOrdenadas = [...regioes].sort((a, b) => ordem.indexOf(a.nome) - ordem.indexOf(b.nome));
+
+  regioesOrdenadas.forEach((regiao) => {
+    const contagem = contagemPorRegiao[regiao.id] || 0;
+    const percentual = contagem ? Math.max(6, Math.round((contagem / maiorContagem) * 100)) : 0;
+
+    const item = document.createElement('div');
+    item.className = 'exploracao-item';
+
+    const topo = document.createElement('div');
+    topo.className = 'exploracao-item__topo';
+    const nome = document.createElement('span');
+    nome.textContent = regiao.nome;
+    const valor = document.createElement('span');
+    valor.textContent = contagem ? `${contagem} ${contagem === 1 ? 'interação' : 'interações'}` : '—';
+    topo.append(nome, valor);
+
+    const barra = document.createElement('div');
+    barra.className = 'exploracao-barra';
+    const preenchimento = document.createElement('i');
+    preenchimento.style.width = `${percentual}%`;
+    barra.appendChild(preenchimento);
+
+    item.append(topo, barra);
+    container.appendChild(item);
+  });
 }
 
 // ---- Estatísticas -----------------------------------------------------
@@ -485,11 +644,12 @@ async function iniciarPerfil() {
   }
 
   configurarLogout();
-  configurarEmBreve();
   configurarModal('[data-modal-nivel]', '[data-abrir-nivel]', '[data-fechar-modal-nivel]');
   configurarModal('[data-modal-avatar]', '[data-abrir-avatar]', '[data-fechar-modal-avatar]');
+  configurarModal('[data-modal-bioma]', '[data-abrir-bioma]', '[data-fechar-modal-bioma]');
   preencherJogos();
   preencherFraseDoDia();
+  configurarSeletorBioma();
 
   try {
     const resposta = await fetch(`/api/perfil/${encodeURIComponent(usuario.id)}`);
@@ -505,6 +665,7 @@ async function iniciarPerfil() {
     renderizarNivel(perfil, isAdmin);
     preencherEstatisticas(perfil);
     preencherAtividade(perfil);
+    preencherExploracao(perfil);
     configurarBio(perfil, usuario);
     configurarSeletorAvatar(perfil, usuario);
   } catch (erro) {

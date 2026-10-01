@@ -694,21 +694,44 @@ body:has(.gb-hero) { background: var(--gb-cream); }   /* cobre também as latera
   .gb-news-media img { transition: none; }
 }
 
-/* ---------- Notícias: última foto pequena alinhada com a base da foto grande ---------- */
 @media (min-width: 1180px) {
   .lista-noticias {
     container-type: inline-size;   /* permite usar a largura da própria coluna (cqw) */
     align-self: start;
+    /* altura de cada foto: 3 fotos + 82px (espaços e linhas entre elas) = altura da foto grande */
+    --h-foto: calc((81.25cqw - 82px) / 3);
   }
   .item-noticia .gb-news-media {
-    /* altura: 3 fotos + 82px (espaços e linhas entre elas) = altura da foto grande */
-    height: calc((81.25cqw - 82px) / 3);
+    height: var(--h-foto);
     /* largura: altura x --largura-img-menor */
-    width: calc((81.25cqw - 82px) / 3 * var(--largura-img-menor));
+    width: calc(var(--h-foto) * var(--largura-img-menor));
   }
   /* a última notícia não tem espaço/linha embaixo, senão a foto não chega na base */
   .item-noticia:last-child {
     padding-bottom: 0;
     border-bottom: 0;
+  }
+
+  /* ----- Título: vai do mesmo ponto de antes até a base da foto ----- */
+  .item-noticia > div:not(.gb-news-media) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: var(--h-foto);         /* mesma altura da foto */
+  }
+  .item-noticia .tag {
+    margin-top: calc((var(--h-foto) - 51px) / 2);   /* pílula fica onde já estava */
+  }
+  .item-noticia h4 {
+    /* 2 linhas exatas: o tamanho da fonte cresce com a foto (mesmo tamanho nas 3 notícias) */
+    font-size: calc((var(--h-foto) / 2 - 7.15px) / 1.845);
+    line-height: 1.15;
+    max-width: 10em;               /* força o título a quebrar em 2 linhas */
+    margin: auto 0 -0.27em;        /* cola a base das letras da última linha na base da foto */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
   }
 }

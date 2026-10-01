@@ -140,12 +140,19 @@
   function hideScreen() { screenEl.style.display = 'none'; }
   function popup(x, y, color, text) {
     const rect = canvas.getBoundingClientRect();
-    const sx = rect.width / W; const sy = rect.height / H;
+    let sx = rect.width / W, sy = rect.height / H, ox = 0, oy = 0;
+    const ajuste = getComputedStyle(canvas).objectFit;
+    if (ajuste === 'cover' || ajuste === 'contain') {
+      const s = ajuste === 'cover' ? Math.max(sx, sy) : Math.min(sx, sy);
+      ox = (rect.width - W * s) / 2;
+      oy = ajuste === 'cover' ? 0 : (rect.height - H * s) / 2;
+      sx = sy = s;
+    }
     const wrapRect = canvasWrap.getBoundingClientRect();
     const el = document.createElement('div');
     el.className = 'hit-popup';
-    el.style.left  = (rect.left - wrapRect.left + x * sx) + 'px';
-    el.style.top   = (y * sy - 12) + 'px';
+    el.style.left  = (rect.left - wrapRect.left + ox + x * sx) + 'px';
+    el.style.top   = (rect.top - wrapRect.top + oy + y * sy - 12) + 'px';
     el.style.color = color;
     el.textContent = text;
     canvasWrap.appendChild(el);

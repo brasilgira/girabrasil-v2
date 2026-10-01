@@ -40,31 +40,48 @@
     <div class="app-shell">
 
       <aside class="sidebar" id="sidebar">
-        <div class="profile-mini">
+
+        <!-- BLOCO 1 — Identidade -->
+        <div class="sb-bloco sb-identidade">
           <button class="avatar-large" type="button" data-abrir-avatar aria-haspopup="dialog">
-            <span data-avatar>?</span>
+            <span class="avatar-large__img" data-avatar>?</span>
             <span class="avatar-editar-dica">Trocar foto</span>
           </button>
           <h2 data-nome-usuario>—</h2>
-          <p data-email-usuario></p>
+          <button type="button" class="nivel-chip" data-abrir-nivel aria-haspopup="dialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 15 9l7 1-5.2 5 1.4 7-6.2-3.4L5.8 22l1.4-7L2 10l7-1 3-6.5Z"/></svg>
+            <span data-nivel-chip>—</span>
+          </button>
           <span class="admin-badge" data-admin-badge hidden>Administrador</span>
         </div>
 
-        <nav class="side-nav" aria-label="Menu do perfil">
-          <a href="perfil.html" class="active">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
-            Meu perfil
-          </a>
-          <a href="#" data-em-breve="Configurações">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
-            Configurações
-          </a>
-        </nav>
+        <!-- BLOCO 2 — Meu bioma -->
+        <div class="sb-bloco">
+          <h3 class="sb-titulo">Meu bioma</h3>
+          <button type="button" class="bioma-card" data-abrir-bioma aria-haspopup="dialog">
+            <span class="bioma-card__img" data-bioma-atual-img></span>
+            <span class="bioma-card__texto">
+              <strong data-bioma-atual-nome>Escolher bioma</strong>
+              <small>Seu bioma representativo</small>
+            </span>
+          </button>
+        </div>
 
-        <button class="logout" id="logoutBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
-          Sair da conta
-        </button>
+        <!-- BLOCO 3 — Minha exploração -->
+        <div class="sb-bloco sb-exploracao">
+          <h3 class="sb-titulo">Minha exploração</h3>
+          <div class="exploracao-lista" data-exploracao-lista>
+            <p class="exploracao-carregando">Carregando…</p>
+          </div>
+        </div>
+
+        <!-- BLOCO 4 — Sair -->
+        <div class="sb-bloco sb-conta">
+          <button class="logout" id="logoutBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+            Sair da conta
+          </button>
+        </div>
       </aside>
 
       <main class="main">
@@ -251,6 +268,25 @@
       <p class="modal-texto">Espécies da fauna brasileira em alta qualidade. Sua escolha fica salva no seu perfil.</p>
 
       <div class="avatar-grid" data-avatar-grid></div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: Meu bioma ===================== -->
+  <div class="modal-fundo" data-modal-bioma hidden>
+    <div class="modal-caixa modal-caixa--avatar" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-bioma">
+      <div class="modal-caixa__cabecalho">
+        <div>
+          <div class="modal-kicker">SEU TERRITÓRIO</div>
+          <h2 id="titulo-modal-bioma">Escolha seu bioma</h2>
+        </div>
+        <button class="modal-fechar" type="button" data-fechar-modal-bioma aria-label="Fechar">×</button>
+      </div>
+      <p class="modal-texto" data-aviso-bioma>
+        Os 6 biomas brasileiros. Essa escolha ainda não é salva permanentemente — fica só
+        para esta visita, até o perfil ganhar um campo próprio para guardá-la.
+      </p>
+
+      <div class="bioma-grid" data-bioma-grid></div>
     </div>
   </div>
 

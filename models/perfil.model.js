@@ -13,7 +13,7 @@ async function buscarPorId(usuarioId) {
 // já com o título da notícia comentada pra poder linkar de volta.
 async function listarComentariosDoUsuario(usuarioId) {
   const resultado = await pool.query(
-    `SELECT c.id, c.conteudo, c.criado_em, c.noticia_id, n.titulo AS noticia_titulo
+    `SELECT c.id, c.conteudo, c.criado_em, c.noticia_id, n.titulo AS noticia_titulo, n.regiao_id
      FROM comentario c
      JOIN noticias n ON n.id = c.noticia_id
      WHERE c.usuario_id = $1 AND c.ativo = true
@@ -24,9 +24,12 @@ async function listarComentariosDoUsuario(usuarioId) {
 }
 
 // Notícias que esse usuário salvou (favoritos)
+// `regiao_id` foi incluído (coluna que já existe em `noticias`, nada de
+// migration) só pra dar pro perfil calcular "Minha exploração" com dados
+// reais, sem inventar número nenhum.
 async function listarNoticiasSalvasDoUsuario(usuarioId) {
   const resultado = await pool.query(
-    `SELECT n.id, n.titulo, n.resumo, n.imagem_url, n.categoria, ns.criado_em AS salvo_em
+    `SELECT n.id, n.titulo, n.resumo, n.imagem_url, n.categoria, n.regiao_id, ns.criado_em AS salvo_em
      FROM noticia_salva ns
      JOIN noticias n ON n.id = ns.noticia_id
      WHERE ns.usuario_id = $1 AND n.ativo = true
@@ -39,7 +42,7 @@ async function listarNoticiasSalvasDoUsuario(usuarioId) {
 // Notícias que esse usuário curtiu
 async function listarNoticiasCurtidasDoUsuario(usuarioId) {
   const resultado = await pool.query(
-    `SELECT n.id, n.titulo, n.resumo, n.imagem_url, n.categoria, nc.criado_em AS curtido_em
+    `SELECT n.id, n.titulo, n.resumo, n.imagem_url, n.categoria, n.regiao_id, nc.criado_em AS curtido_em
      FROM noticia_curtida nc
      JOIN noticias n ON n.id = nc.noticia_id
      WHERE nc.usuario_id = $1 AND n.ativo = true
