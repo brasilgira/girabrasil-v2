@@ -303,7 +303,7 @@ const BIOMAS_DISPONIVEIS = [
   { id: 'pantanal', nome: 'Pantanal', imagem: 'assets/biomas/bioma-pantanal.jpg' },
 ];
 
-let biomaEscolhido = null; // só em memória — ver comentário acima
+let biomaEscolhido = null; // espelha perfil.bioma_favorito, carregado do backend
 
 function atualizarCardBioma() {
   const imgEl = document.querySelector('[data-bioma-atual-img]');
@@ -317,7 +317,12 @@ function atualizarCardBioma() {
   }
 }
 
-function configurarSeletorBioma() {
+// perfil.bioma_favorito agora é persistido de verdade (coluna bioma_favorito
+// em `perfil`, migration 006) — carregado aqui no início e salvo via o
+// mesmo PUT /api/perfil/:id que já existia pra nome/avatar/bio.
+function configurarSeletorBioma(perfil, usuario) {
+  biomaEscolhido = BIOMAS_DISPONIVEIS.find((b) => b.nome === perfil.bioma_favorito) || null;
+
   const grid = document.querySelector('[data-bioma-grid]');
   grid.innerHTML = '';
 
@@ -325,6 +330,8 @@ function configurarSeletorBioma() {
     const botao = document.createElement('button');
     botao.type = 'button';
     botao.className = 'bioma-opcao';
+    botao.dataset.biomaId = bioma.id;
+    if (biomaEscolhido?.id === bioma.id) botao.classList.add('selecionado');
 
     const foto = document.createElement('span');
     foto.className = 'bioma-opcao__foto';
@@ -339,19 +346,48 @@ function configurarSeletorBioma() {
     rotulo.textContent = bioma.nome;
 
     botao.append(foto, rotulo);
-    botao.addEventListener('click', () => {
-      biomaEscolhido = bioma;
-      grid.querySelectorAll('.bioma-opcao').forEach((el) => el.classList.remove('selecionado'));
-      botao.classList.add('selecionado');
-      atualizarCardBioma();
-      showToast(`Bioma representativo: ${bioma.nome}.`);
-      document.querySelector('[data-modal-bioma]').hidden = true;
-    });
-
     grid.appendChild(botao);
   });
 
   atualizarCardBioma();
+
+  if (!grid.dataset.delegado) {
+    grid.addEventListener('click', (evento) => {
+      const botao = evento.target.closest('.bioma-opcao');
+      if (!botao || grid.dataset.salvando === '1') return;
+      const bioma = BIOMAS_DISPONIVEIS.find((b) => b.id === botao.dataset.biomaId);
+      if (bioma) salvarBioma(bioma, perfil, usuario, grid);
+    });
+    grid.dataset.delegado = '1';
+  }
+}
+
+async function salvarBioma(bioma, perfil, usuario, grid) {
+  grid.dataset.salvando = '1';
+  const biomaAnterior = biomaEscolhido;
+
+  try {
+    const resposta = await fetchAutenticado(`/api/perfil/${encodeURIComponent(usuario.id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ biomaFavorito: bioma.nome }),
+    });
+    const dados = await resposta.json();
+    if (!resposta.ok) throw new Error(dados.erro || 'Erro ao salvar bioma');
+
+    perfil.bioma_favorito = dados.bioma_favorito;
+    biomaEscolhido = bioma;
+    grid.querySelectorAll('.bioma-opcao').forEach((el) => el.classList.toggle('selecionado', el.dataset.biomaId === bioma.id));
+    atualizarCardBioma();
+    showToast(`Bioma representativo: ${bioma.nome}.`);
+    document.querySelector('[data-modal-bioma]').hidden = true;
+  } catch (erro) {
+    console.error('Erro ao salvar bioma:', erro);
+    biomaEscolhido = biomaAnterior; // preserva a escolha anterior em caso de falha
+    showToast('Não foi possível salvar seu bioma agora. Tente de novo.');
+  } finally {
+    grid.dataset.salvando = '0';
+  }
 }
 
 // ---- Minha exploração ---------------------------------------------------
@@ -673,7 +709,7 @@ async function iniciarPerfil() {
   configurarModal('[data-modal-bioma]', '[data-abrir-bioma]', '[data-fechar-modal-bioma]');
   preencherJogos();
   preencherFraseDoDia();
-  configurarSeletorBioma();
+
 
   try {
     const resposta = await fetch(`/api/perfil/${encodeURIComponent(usuario.id)}`);
@@ -697,6 +733,7 @@ async function iniciarPerfil() {
     preencherExploracao(perfil);
     configurarBio(perfil, usuario);
     configurarSeletorAvatar(perfil, usuario);
+    configurarSeletorBioma(perfil, usuario);
   } catch (erro) {
     console.error('Erro ao carregar perfil:', erro);
     showToast('Não foi possível carregar seu perfil agora.');

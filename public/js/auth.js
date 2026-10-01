@@ -192,9 +192,19 @@ function atualizarAvatarHeader(usuario) {
 
   el.textContent = '';
   if (usuario.avatar_url) {
+    // Estilo aplicado também inline (não só via CSS externo) pra garantir
+    // o recorte circular mesmo se css/base.css estiver em cache antigo
+    // numa implantação — não depende de nada além deste próprio script.
+    el.style.overflow = 'hidden';
     const img = document.createElement('img');
     img.src = usuario.avatar_url;
     img.alt = '';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    img.style.objectPosition = 'center';
+    img.style.display = 'block';
+    img.style.borderRadius = '50%';
     el.appendChild(img);
   } else {
     const nome = usuario.nome || (usuario.email ? usuario.email.split('@')[0] : '');

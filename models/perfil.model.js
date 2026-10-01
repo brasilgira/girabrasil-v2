@@ -3,7 +3,7 @@ const pool = require('../config/db');
 // Dados básicos do perfil (nome, avatar, bio)
 async function buscarPorId(usuarioId) {
   const resultado = await pool.query(
-    'SELECT id, nome, avatar_url, bio, criado_em FROM perfil WHERE id = $1',
+    'SELECT id, nome, avatar_url, bio, bioma_favorito, criado_em FROM perfil WHERE id = $1',
     [usuarioId]
   );
   return resultado.rows[0] || null;
@@ -64,16 +64,22 @@ async function garantirPerfil(usuarioId, nome) {
   return resultado.rows[0];
 }
 
-// Atualiza nome/avatar/bio do próprio usuário (edição de perfil)
-async function atualizar(usuarioId, { nome, avatarUrl, bio }) {
+// Atualiza nome/avatar/bio/bioma favorito do próprio usuário.
+// biomaFavorito aceita string (um dos 6 nomes, checado também no banco via
+// constraint) ou null explícito pra "limpar a escolha" — por isso não usa
+// COALESCE: precisa diferenciar "não mandou esse campo" (undefined, mantém
+// o que tinha) de "mandou null de propósito" (zera a escolha). Como o
+// controller sempre resolve pra um dos dois antes de chegar aqui, OK.
+async function atualizar(usuarioId, { nome, avatarUrl, bio, biomaFavorito }) {
   const resultado = await pool.query(
     `UPDATE perfil SET
        nome = COALESCE($2, nome),
        avatar_url = COALESCE($3, avatar_url),
-       bio = COALESCE($4, bio)
+       bio = COALESCE($4, bio),
+       bioma_favorito = CASE WHEN $5::boolean THEN $6 ELSE bioma_favorito END
      WHERE id = $1
-     RETURNING id, nome, avatar_url, bio, criado_em`,
-    [usuarioId, nome, avatarUrl, bio]
+     RETURNING id, nome, avatar_url, bio, bioma_favorito, criado_em`,
+    [usuarioId, nome, avatarUrl, bio, biomaFavorito !== undefined, biomaFavorito ?? null]
   );
   return resultado.rows[0] || null;
 }

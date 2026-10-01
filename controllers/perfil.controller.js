@@ -63,13 +63,18 @@ async function buscarPerfil(req, res) {
 async function atualizarPerfil(req, res) {
   try {
     const { id } = req.params;
-    const { nome, avatarUrl, bio } = req.body;
+    const { nome, avatarUrl, bio, biomaFavorito } = req.body;
+
+    const BIOMAS_VALIDOS = ['Amazônia', 'Cerrado', 'Caatinga', 'Mata Atlântica', 'Pampa', 'Pantanal'];
+    if (biomaFavorito !== undefined && biomaFavorito !== null && !BIOMAS_VALIDOS.includes(biomaFavorito)) {
+      return res.status(400).json({ erro: 'Bioma favorito inválido.' });
+    }
 
     if (req.usuarioLogado.id !== id) {
       return res.status(403).json({ erro: 'Você só pode editar o seu próprio perfil.' });
     }
 
-    const perfilAtualizado = await perfilModel.atualizar(id, { nome, avatarUrl, bio });
+    const perfilAtualizado = await perfilModel.atualizar(id, { nome, avatarUrl, bio, biomaFavorito });
     if (!perfilAtualizado) {
       return res.status(404).json({ erro: 'Perfil não encontrado.' });
     }
