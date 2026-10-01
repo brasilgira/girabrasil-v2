@@ -27,12 +27,15 @@ const AVATARES_DISPONIVEIS = [
 
 // ---- Frases do dia (reais, com autoria verificada; mesma para todo mundo
 // no mesmo dia — escolhida de forma determinística, sem precisar de banco) --
+// Critério: só entram frases com relação direta e verificável com
+// natureza/meio ambiente/conservação — nada de citações famosas só porque
+// o autor é conhecido (ver histórico de revisões deste arquivo).
 const FRASES_DO_DIA = [
   { texto: 'No começo eu pensava que estava lutando para salvar seringueiras. Depois pensei que estava lutando para salvar a floresta amazônica. Agora percebo que estou lutando pela humanidade.', autor: 'Chico Mendes' },
+  { texto: 'Não quero flores no meu enterro, porque sei que elas seriam arrancadas da floresta.', autor: 'Chico Mendes' },
+  { texto: 'O extrativismo, aliado à preservação, é a melhor alternativa para conciliar produção e meio ambiente.', autor: 'Chico Mendes' },
   { texto: 'A humanidade perdeu o sentido da Terra.', autor: 'Ailton Krenak' },
-  { texto: 'Ninguém educa ninguém, ninguém se educa a si mesmo, os homens se educam entre si, mediatizados pelo mundo.', autor: 'Paulo Freire' },
-  { texto: 'Um país se faz com homens e livros.', autor: 'Monteiro Lobato' },
-  { texto: 'Quem tem fome tem pressa.', autor: 'Herbert de Souza (Betinho)' },
+  { texto: 'Adiar o fim do mundo é hoje o exercício mais urgente que a humanidade deveria se policiar para fazer.', autor: 'Ailton Krenak' },
 ];
 
 function fraseDoDia() {
@@ -216,6 +219,7 @@ function configurarSeletorAvatar(perfil, usuario) {
     const botao = document.createElement('button');
     botao.type = 'button';
     botao.className = 'avatar-opcao';
+    botao.dataset.avatarUrl = opcao.url;
     if (perfil.avatar_url === opcao.url) botao.classList.add('selecionado');
 
     // Container circular fixo (mesma técnica do avatar final): a imagem
@@ -233,12 +237,26 @@ function configurarSeletorAvatar(perfil, usuario) {
     rotulo.textContent = opcao.nome;
 
     botao.append(foto, rotulo);
-    botao.addEventListener('click', () => selecionarAvatar(opcao, perfil, usuario, grid));
     grid.appendChild(botao);
   });
+
+  // Delegação de evento no container, não um listener por botão: assim
+  // a troca continua funcionando mesmo que o grid seja reconstruído no
+  // futuro, e nunca existe risco de um listener "grudado" num botão antigo
+  // impedir trocas seguintes.
+  if (!grid.dataset.delegado) {
+    grid.addEventListener('click', (evento) => {
+      const botao = evento.target.closest('.avatar-opcao');
+      if (!botao || grid.dataset.salvando === '1') return;
+      const opcao = AVATARES_DISPONIVEIS.find((a) => a.url === botao.dataset.avatarUrl);
+      if (opcao) selecionarAvatar(opcao, perfil, usuario, grid);
+    });
+    grid.dataset.delegado = '1';
+  }
 }
 
 async function selecionarAvatar(opcao, perfil, usuario, grid) {
+  grid.dataset.salvando = '1';
   try {
     const resposta = await fetchAutenticado(`/api/perfil/${encodeURIComponent(usuario.id)}`, {
       method: 'PUT',
@@ -249,16 +267,22 @@ async function selecionarAvatar(opcao, perfil, usuario, grid) {
     if (!resposta.ok) throw new Error(dados.erro || 'Erro ao salvar avatar');
 
     perfil.avatar_url = dados.avatar_url;
-    grid.querySelectorAll('.avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
-    [...grid.children].find((el) => el.querySelector('img').src.endsWith(opcao.url))?.classList.add('selecionado');
+    grid.querySelectorAll('.avatar-opcao').forEach((el) => el.classList.toggle('selecionado', el.dataset.avatarUrl === dados.avatar_url));
 
     const nome = document.querySelector('[data-nome-usuario]').textContent;
     atualizarAvatarNaTela(perfil.avatar_url, nome, nome[0]);
+
+    // Mesma foto precisa aparecer na bolinha do header — em qualquer
+    // página, inclusive na própria tela de perfil.
+    atualizarCamposUsuarioLogado({ avatar_url: perfil.avatar_url });
+
     showToast(`Foto de perfil atualizada: ${opcao.nome}.`);
     document.querySelector('[data-modal-avatar]').hidden = true;
   } catch (erro) {
     console.error('Erro ao trocar avatar:', erro);
-    showToast('Não foi possível salvar sua nova foto agora.');
+    showToast('Não foi possível salvar sua nova foto agora. Tente de novo.');
+  } finally {
+    grid.dataset.salvando = '0';
   }
 }
 
@@ -660,6 +684,11 @@ async function iniciarPerfil() {
     // verdade nesta mesma resposta) — não do localStorage em cache, que
     // pode ficar desatualizado se a permissão mudar depois do login.
     const isAdmin = perfil.isAdmin === true;
+
+    // Garante que o cache do usuário (o mesmo que o header lê em
+    // qualquer outra página) já sai da tela de perfil com o avatar certo,
+    // mesmo que o usuário não troque nada nesta visita.
+    atualizarCamposUsuarioLogado({ avatar_url: perfil.avatar_url || null });
 
     preencherIdentidade(usuario, perfil, isAdmin);
     renderizarNivel(perfil, isAdmin);

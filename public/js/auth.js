@@ -34,6 +34,19 @@ function definirUsuarioLogado(usuario) {
   localStorage.setItem(CHAVE_USUARIO, JSON.stringify(usuario));
 }
 
+// Atualiza só os campos passados no usuário em cache (ex: avatar_url vindo
+// do perfil), sem apagar o resto (id, nome, email, is_admin). Usado pra
+// sincronizar o avatar escolhido no perfil com a bolinha do header, sem
+// criar um segundo lugar de armazenamento — continua sendo o mesmo
+// localStorage que o auth.js já controla.
+function atualizarCamposUsuarioLogado(campos) {
+  const atual = obterUsuarioLogado();
+  if (!atual) return;
+  const atualizado = { ...atual, ...campos };
+  definirUsuarioLogado(atualizado);
+  if ('avatar_url' in campos) atualizarAvatarHeader(atualizado);
+}
+
 function sairDaConta() {
   localStorage.removeItem(CHAVE_USUARIO);
   supabaseClient.auth.signOut();
@@ -159,6 +172,36 @@ async function logarUsuario(event) {
 }
 
 // ---- Header (Entrar/Criar conta -> nome + avatar) -------------------------
+
+function iniciaisDoNome(nome) {
+  return (nome || '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((parte) => parte[0])
+    .join('')
+    .toUpperCase();
+}
+
+// Preenche só o conteúdo da bolinha (.perfil-avatar): foto se avatar_url
+// existir, iniciais caso contrário. Nunca usa innerHTML com texto do
+// usuário — tudo via textContent/DOM, pra evitar XSS no nome.
+function atualizarAvatarHeader(usuario) {
+  const el = document.querySelector('.perfil-avatar');
+  if (!el || !usuario) return;
+
+  el.textContent = '';
+  if (usuario.avatar_url) {
+    const img = document.createElement('img');
+    img.src = usuario.avatar_url;
+    img.alt = '';
+    el.appendChild(img);
+  } else {
+    const nome = usuario.nome || (usuario.email ? usuario.email.split('@')[0] : '');
+    el.textContent = iniciaisDoNome(nome) || '?';
+  }
+}
+
 function renderizarHeaderAuth() {
   const container = document.querySelector('.header-acoes');
   if (!container) return;
@@ -167,22 +210,40 @@ function renderizarHeaderAuth() {
   if (!usuario) return; // mantém o HTML padrão (Entrar / Criar conta)
 
   const nome = usuario.nome || usuario.email.split('@')[0];
-  const iniciais = nome
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((parte) => parte[0])
-    .join('')
-    .toUpperCase();
 
-  container.innerHTML = `
-    <div class="perfil-usuario" id="perfilUsuario" title="Clique para sair">
-      <span class="perfil-avatar">${iniciais}</span>
-      <span class="perfil-nome">${nome}</span>
-    </div>
-  `;
+  const wrapper = document.createElement('div');
+  wrapper.className = 'perfil-usuario';
+  wrapper.id = 'perfilUsuario';
+  wrapper.title = 'Clique para sair';
 
-  document.getElementById('perfilUsuario').addEventListener('click', () => {
+  const avatar = document.createElement('span');
+  avatar.className = 'perfil-avatar';
+
+  const nomeEl = document.createElement('span');
+  nomeEl.className = 'perfil-nome';
+  nomeEl.textContent = nome;
+
+  wrapper.append(avatar, nomeEl);
+  container.innerHTML = '';
+  container.appendChild(wrapper);
+
+  atualizarAvatarHeader(usuario);
+
+  // avatar_url não vem do Supabase Auth (só nome/email/is_admin ficam em
+  // cache no login) — então na primeira vez que o header aparece numa
+  // sessão, ele ainda não sabe se existe avatar escolhido. Busca uma vez
+  // no /api/perfil/:id (o mesmo endpoint que o perfil já usa) e guarda no
+  // cache pra não precisar buscar de novo nas próximas páginas.
+  if (usuario.avatar_url === undefined) {
+    fetch(`/api/perfil/${encodeURIComponent(usuario.id)}`)
+      .then((resposta) => (resposta.ok ? resposta.json() : null))
+      .then((perfil) => {
+        if (perfil) atualizarCamposUsuarioLogado({ avatar_url: perfil.avatar_url || null });
+      })
+      .catch(() => {}); // sem avatar por enquanto, sem problema — fica nas iniciais
+  }
+
+  wrapper.addEventListener('click', () => {
     // Páginas dentro de /biomas/ e /regioes/ precisam voltar uma pasta
     const emSubpasta = /\/(biomas|regioes)\//.test(window.location.pathname);
     window.location.href = (emSubpasta ? '../' : '') + 'perfil.html';
