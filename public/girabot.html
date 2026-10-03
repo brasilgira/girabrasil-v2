@@ -52,18 +52,31 @@
          backend/persistência de conversas — quando existir, isso deve
          vir de uma consulta real (API ou localStorage), não fixo no HTML. -->
     <div class="sidebar-historico">
-      <span class="sidebar-secao-titulo">Recentes</span>
-      <button class="item-historico">Qual bioma é mais ameaçado?</button>
-      <button class="item-historico">Animais em extinção na Amazônia</button>
-      <button class="item-historico">O que são rios voadores?</button>
-    </div>
+  <span class="sidebar-secao-titulo">Recentes</span>
+
+  <button class="item-historico ativo">
+    <span class="item-texto"><span class="item-titulo">Qual bioma é mais ameaçado?</span><span class="item-data">Hoje, 10:24</span></span>
+  </button>
+  <button class="item-historico">
+    <span class="item-texto"><span class="item-titulo">Animais em extinção na Amazônia</span><span class="item-data">Ontem, 16:40</span></span>
+  </button>
+  <button class="item-historico">
+    <span class="item-texto"><span class="item-titulo">O que são rios voadores?</span><span class="item-data">24 de abr., 11:32</span></span>
+  </button>
+  <button class="item-historico">
+    <span class="item-texto"><span class="item-titulo">Povos indígenas e a floresta</span><span class="item-data">27 de abr., 09:15</span></span>
+  </button>
+  <button class="item-historico">
+    <span class="item-texto"><span class="item-titulo">Diferenças entre os biomas</span><span class="item-data">20 de abr., 14:37</span></span>
+  </button>
+</div>
   </aside>
 
   <main class="girabot-main">
 
     <div class="girabot-topbar">
       <button class="botao-menu" id="botaoAbrirSidebar" aria-label="Abrir menu de conversas">☰</button>
-      <span class="girabot-topbar-titulo">Gira-Bot</span>
+      
     </div>
 
     <div class="girabot-conteudo">
@@ -71,7 +84,7 @@
       <!-- Estado inicial / boas-vindas. Recebe a classe .escondido via JS
            assim que o usuário envia a primeira mensagem (fade out suave). -->
       <div class="estado-vazio" id="estadoVazio">
-       <div class="estado-vazio-icone"><img src="assets/logo/bot.svg" alt="Gira-Bot"></div>
+       <div class="estado-vazio-icone"><img src="assets/logo/bot.webp" alt="Gira-Bot"></div>
         <h1>Olá! Eu sou o <em>Gira-Bot</em></h1>
         <p>Sua inteligência artificial especializada na natureza e florestas do Brasil. Pergunte sobre biomas, fauna, flora, desmatamento, povos da floresta e muito mais.</p>
 
@@ -80,8 +93,7 @@
           <button class="sugestao-chip">Animais em extinção na Amazônia</button>
           <button class="sugestao-chip">O que são rios voadores?</button>
           <button class="sugestao-chip">Como o desmatamento afeta o clima?</button>
-          <button class="sugestao-chip">Povos indígenas e a floresta</button>
-          <button class="sugestao-chip">Diferenças entre os biomas</button>
+          
         </div>
       </div>
 
@@ -100,7 +112,7 @@
         placeholder="Pergunte sobre a floresta brasileira..."
         autocomplete="off"
       >
-      <button type="submit" class="botao-enviar" aria-label="Enviar mensagem">→</button>
+      <button type="submit" class="botao-enviar" aria-label="Enviar mensagem"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
     </form>
 
     <p class="girabot-aviso">O Gira-Bot pode cometer erros. Verifique informações importantes com fontes oficiais.</p>

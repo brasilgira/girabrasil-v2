@@ -2,7 +2,8 @@
 // (.env local / painel da Vercel em produção)
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-// Mesmo prompt de sistema usado no v1 — define a personalidade e os
+// Prompt de sistema do GiraBot — definido a partir do v1, mas com o formato
+// de resposta ajustado (tópicos curtos) pra respostas mais diretas.— define a personalidade e os
 // limites de assunto do GiraBot. Mantido igual de propósito, já estava
 // funcionando bem lá.
 const SYSTEM_PROMPT = `Você é o Gira-Bot, a inteligência artificial oficial do site GiraBrasil — um portal de notícias e informações sobre a natureza e as florestas do Brasil.
@@ -29,9 +30,14 @@ REGRA IMPORTANTE: Se o usuário perguntar sobre algo fora desses temas, responda
 
 Formato das respostas:
 - Respostas em português brasileiro
-- Escreva em texto corrido, sem usar formatação markdown (nunca use #, ##, ** ou qualquer símbolo de marcação — nada de negrito nem títulos, só texto puro)
-- Seja direto e conciso: no máximo 2 ou 3 parágrafos curtos por resposta
-- Sempre que possível, termine com um dado curioso ou convite para explorar mais o tema`;
+- Não use formatação markdown (nunca use #, ##, **, tabelas, nem listas com "-" ou "*" — só texto puro). Para listar, use apenas o símbolo "•" no começo da linha
+- Seja direto: comece pela resposta, sem introdução longa e sem repetir a pergunta
+- Tamanho: mire em até uns 100 palavras no total; só passe disso se o usuário pedir mais detalhes
+- Na maioria das respostas, organize em tópicos curtos, um por linha, começando com "• ". Use de 3 a 5 tópicos, cada um com no máximo 1 ou 2 frases
+- Pode abrir com UMA frase curta antes dos tópicos, deixando uma linha em branco entre ela e a lista
+- Use texto corrido (sem tópicos) só para perguntas simples que se resolvem em 1 ou 2 frases, cumprimentos e conversa casual
+- Se o assunto for muito amplo, dê só o essencial e ofereça aprofundar (ex: "Quer que eu detalhe algum desses pontos?")
+- Só termine com um dado curioso se couber em 1 frase e realmente agregar; não é obrigatório`;
 
 // POST /api/girabot
 // Recebe { messages: [{ role: 'user'|'assistant', content: '...' }, ...] }
@@ -67,7 +73,8 @@ async function conversar(req, res) {
           { role: 'system', content: SYSTEM_PROMPT },
           ...messages,
         ],
-        max_tokens: 400,
+        max_completion_tokens: 600,
+        reasoning_effort: 'low',
         temperature: 0.7,
       }),
     });
@@ -80,7 +87,7 @@ async function conversar(req, res) {
       return res.status(502).json({ erro: 'Erro ao obter resposta da IA' });
     }
 
-    res.json({ resposta: textoResposta });
+    res.json({ resposta: textoResposta.trim () });
   } catch (erro) {
     console.error('Erro ao conversar com o GiraBot:', erro);
     res.status(500).json({ erro: 'Erro interno ao conversar com o GiraBot' });

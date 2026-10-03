@@ -1,34 +1,74 @@
 // ============================================================================
 // js/noticia-regiao-react.js
 //
-// Monta a tela de LEITURA de uma notícia de região, a partir do que vem na
-// URL: noticia-regiao.html?regiao=norte&id=3. Busca a notícia certa dentro
-// de window.REGIAO_NOTICIAS (js/regiao-noticias-data.js) e desenha o
-// `corpo` dela — mesmo esquema de blocos usado em js/noticias-data.js
-// (paragrafo, titulo, subtitulo, lista, estatisticas, citacao, regiao).
+// Monta a tela de LEITURA de uma notícia de região, a partir da URL:
+// noticia-regiao.html?regiao=norte&id=3.
+//
+// FASE 2: antes lia window.REGIAO_NOTICIAS (js/regiao-noticias-data.js);
+// agora busca da API (/api/noticias/:id).
+//
+// Abordagem HÍBRIDA (opção C):
+//   - se a notícia tiver `blocos` (JSON com parágrafo, título, estatísticas,
+//     citação...), desenha o visual rico;
+//   - se não tiver, cai pro campo `conteudo` (texto simples) e transforma
+//     cada linha em branco em um parágrafo.
 // ============================================================================
 
-const { useEffect } = React;
+const { useEffect, useState } = React;
 
-function obterParametrosDaUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    regiao: params.get('regiao'),
-    id: parseInt(params.get('id'), 10),
-  };
-}
-
-const { regiao: regiaoChaveUrl, id: idUrl } = obterParametrosDaUrl();
-const listaDaRegiao = (window.REGIAO_NOTICIAS || {})[regiaoChaveUrl] || [];
-const artigo = listaDaRegiao.find((n) => n.id === idUrl) || listaDaRegiao[0];
+// Lê ?regiao= e ?id= da URL
+const parametrosUrl = new URLSearchParams(window.location.search);
+const regiaoChaveUrl = parametrosUrl.get('regiao');
+const idUrl = parseInt(parametrosUrl.get('id'), 10);
 const regiaoInfo = (window.REGIOES || {})[regiaoChaveUrl];
 
-const sumario = (artigo?.corpo || [])
-  .filter((b) => b.tipo === 'titulo' || b.tipo === 'subtitulo')
-  .map((b) => ({ id: b.id, titulo: b.texto }));
+function normalizarTexto(texto) {
+  return (texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
 
-// Outras notícias da mesma região, pra seção "Continue lendo".
-const outrasDaRegiao = listaDaRegiao.filter((n) => n.id !== artigo?.id).slice(0, 3);
+function formatarData(iso) {
+  const data = new Date(iso);
+  if (Number.isNaN(data.getTime())) return '';
+  return data.toLocaleDateString('pt-BR');
+}
+
+function caminhoImagemDe(imagem) {
+  if (!imagem) return '';
+  const valor = String(imagem).trim();
+  return /^https?:\/\//i.test(valor) ? valor : `../${valor.replace(/^\/+/, '')}`;
+}
+
+// Só deixa passar link http/https (evita javascript: e coisas do tipo)
+function urlExternaSegura(url) {
+  if (!url) return '';
+  try {
+    const v = new URL(String(url), window.location.origin);
+    if (v.protocol === 'http:' || v.protocol === 'https:') return v.href;
+  } catch (_) {}
+  return '';
+}
+
+// Aceita `blocos` como array (JSONB já vem parseado) ou como string JSON.
+// Se não existir ou estiver inválido, devolve null e usamos o `conteudo`.
+function obterBlocos(artigo) {
+  let blocos = artigo.blocos;
+  if (typeof blocos === 'string') {
+    try { blocos = JSON.parse(blocos); } catch (_) { blocos = null; }
+  }
+  return Array.isArray(blocos) && blocos.length > 0 ? blocos : null;
+}
+
+// Plano B: transforma o texto simples em blocos de parágrafo.
+function blocosDoConteudo(conteudo) {
+  return String(conteudo || '')
+    .split(/\n\s*\n/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((texto) => ({ tipo: 'paragrafo', texto }));
+}
 
 function renderBloco(bloco, i) {
   switch (bloco.tipo) {
@@ -39,11 +79,11 @@ function renderBloco(bloco, i) {
     case 'subtitulo':
       return <h3 key={i} id={bloco.id}>{bloco.texto}</h3>;
     case 'lista':
-      return <ul key={i}>{bloco.itens.map((item, j) => <li key={j}>{item}</li>)}</ul>;
+      return <ul key={i}>{(bloco.itens || []).map((item, j) => <li key={j}>{item}</li>)}</ul>;
     case 'estatisticas':
       return (
         <div className="stat-strip" key={i}>
-          {bloco.itens.map((s, j) => (
+          {(bloco.itens || []).map((s, j) => (
             <div className="stat-cell" key={j}>
               <span className="stat-num">{s.numero}</span>
               <span className="stat-label">{s.legenda}</span>
@@ -72,23 +112,71 @@ function renderBloco(bloco, i) {
   }
 }
 
-function caminhoImagemDe(imagem) {
-  if (!imagem) return '';
-  return /^https?:\/\//i.test(imagem) ? imagem : `../${imagem}`;
+function Aviso({ children }) {
+  return (
+    <div className="breadcrumb" style={{ padding: '60px 32px' }}>
+      {children} <a href="../regioes.html">Voltar para regiões</a>
+    </div>
+  );
 }
 
 function App() {
+  const [artigo, setArtigo] = useState(null);
+  const [outras, setOutras] = useState([]);
+  const [estado, setEstado] = useState('carregando'); // carregando | ok | erro
+
+  // Busca a notícia na API
   useEffect(() => {
-    if (artigo) document.title = `${artigo.titulo} — Gira-Brasil`;
+    async function carregar() {
+      try {
+        const resp = await fetch(`/api/noticias/${idUrl}`);
+        if (!resp.ok) throw new Error(`API respondeu ${resp.status}`);
+        const dados = await resp.json();
+        // Algumas APIs devolvem a notícia direto, outras dentro de um array
+        const noticia = Array.isArray(dados) ? dados[0] : dados;
+        if (!noticia) throw new Error('Notícia vazia');
+        setArtigo(noticia);
+        setEstado('ok');
+        document.title = `${noticia.titulo} — Gira-Brasil`;
+      } catch (erro) {
+        console.error('Erro ao carregar notícia:', erro);
+        setEstado('erro');
+      }
+    }
+    if (Number.isNaN(idUrl)) setEstado('erro');
+    else carregar();
   }, []);
 
-  if (!artigo || !regiaoInfo) {
-    return (
-      <div className="breadcrumb" style={{ padding: '60px 32px' }}>
-        Notícia não encontrada. <a href="../regioes.html">Voltar para regiões</a>
-      </div>
-    );
-  }
+  // Busca "Continue lendo": outras notícias da mesma região
+  useEffect(() => {
+    if (!regiaoInfo) return;
+    async function carregarOutras() {
+      try {
+        const rRegioes = await fetch('/api/regioes');
+        const regioes = await rRegioes.json();
+        const achada = regioes.find((r) => normalizarTexto(r.nome) === normalizarTexto(regiaoInfo.nome));
+        if (!achada) return;
+        const rNoticias = await fetch(`/api/noticias?regiao=${achada.id}`);
+        const lista = await rNoticias.json();
+        setOutras(lista.filter((n) => n.id !== idUrl).slice(0, 3));
+      } catch (erro) {
+        // "Continue lendo" é um extra: se falhar, só não mostra
+        console.error('Erro ao carregar outras notícias:', erro);
+      }
+    }
+    carregarOutras();
+  }, []);
+
+  if (!regiaoInfo) return <Aviso>Região não encontrada.</Aviso>;
+  if (estado === 'carregando') return <Aviso>Carregando notícia...</Aviso>;
+  if (estado === 'erro' || !artigo) return <Aviso>Notícia não encontrada.</Aviso>;
+
+  const blocos = obterBlocos(artigo) || blocosDoConteudo(artigo.conteudo);
+  const sumario = blocos
+    .filter((b) => (b.tipo === 'titulo' || b.tipo === 'subtitulo') && b.id)
+    .map((b) => ({ id: b.id, titulo: b.texto }));
+  const imagem = caminhoImagemDe(artigo.imagem_url);
+  const linkFonte = urlExternaSegura(artigo.link_fonte);
 
   return (
     <React.Fragment>
@@ -104,67 +192,63 @@ function App() {
         <h1 className="headline">{artigo.titulo}</h1>
         <p className="deck">{artigo.resumo}</p>
         <div className="meta-row">
-          <span className="author">Por {artigo.autor}</span>
-          <span className="meta-dot"></span>
-          <span>{artigo.dataPublicacao}</span>
-          <span className="meta-dot"></span>
-          <span>{artigo.tempoLeitura}</span>
+          {artigo.autor && (<React.Fragment><span className="author">Por {artigo.autor}</span><span className="meta-dot"></span></React.Fragment>)}
+          <span>{formatarData(artigo.criado_em)}</span>
         </div>
       </header>
 
-      {caminhoImagemDe(artigo.imagem) && (
-        <React.Fragment>
-          <div className="hero">
-            <div className="hero-frame">
-              <img src={caminhoImagemDe(artigo.imagem)} alt={artigo.titulo} />
-            </div>
+      {imagem && (
+        <div className="hero">
+          <div className="hero-frame">
+            <img src={imagem} alt={artigo.titulo} />
           </div>
-          <p className="hero-caption">{artigo.legendaHero}</p>
-        </React.Fragment>
+        </div>
       )}
 
       <div className="layout">
 
         <article className="article-body">
-          {artigo.corpo.map((bloco, i) => renderBloco(bloco, i))}
+          {blocos.map((bloco, i) => renderBloco(bloco, i))}
 
-          {artigo.linkFonte && (
+          {linkFonte && (
             <p style={{ fontSize: '0.85rem', marginTop: '24px' }}>
-              Fonte original: <a href={artigo.linkFonte} target="_blank" rel="noopener noreferrer">{artigo.linkFonte}</a>
+              Fonte original: <a href={linkFonte} target="_blank" rel="noopener noreferrer">{linkFonte}</a>
             </p>
           )}
         </article>
 
         <aside className="sidebar">
-          <div className="side-block">
-            <div className="side-title">Neste artigo</div>
-            <ul className="toc-list">
-              {sumario.map((item) => (
-                <li key={item.id}><a href={`#${item.id}`}>{item.titulo}</a></li>
-              ))}
-            </ul>
-          </div>
+          {sumario.length > 0 && (
+            <div className="side-block">
+              <div className="side-title">Neste artigo</div>
+              <ul className="toc-list">
+                {sumario.map((item) => (
+                  <li key={item.id}><a href={`#${item.id}`}>{item.titulo}</a></li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
 
       </div>
 
-      {outrasDaRegiao.length > 0 && (
+      {outras.length > 0 && (
         <section className="related">
           <span className="section-label">Continue lendo</span>
           <h2>Mais notícias da Região {regiaoInfo.nome}</h2>
           <div className="related-grid">
-            {outrasDaRegiao.map((n) => (
+            {outras.map((n) => (
               <a className="news-card" href={`noticia-regiao.html?regiao=${regiaoChaveUrl}&id=${n.id}`} key={n.id}>
                 <div className="thumb">
-                  {caminhoImagemDe(n.imagem)
-                    ? <img src={caminhoImagemDe(n.imagem)} alt={n.titulo} />
+                  {caminhoImagemDe(n.imagem_url)
+                    ? <img src={caminhoImagemDe(n.imagem_url)} alt={n.titulo} />
                     : null}
                 </div>
                 <div className="body">
                   <span className="cat">{n.categoria}</span>
                   <h3>{n.titulo}</h3>
                   <p>{n.resumo}</p>
-                  <span className="meta">{n.data}</span>
+                  <span className="meta">{formatarData(n.criado_em)}</span>
                 </div>
               </a>
             ))}
