@@ -26,9 +26,11 @@
   const canvasWrap = document.getElementById('game-canvas-wrap');
 
   const W = 960, H = 500;
-  const LIVES_MAP = ['❤️❤️❤️','❤️❤️','❤️','💀'];
+  const LIVES_MAP = ['❤️❤️❤️','❤️❤️','❤️',''];
 
   let activeGame = null;
+  let scoreEmMetros = false;
+  const scoreLabelEl = document.getElementById('score-label');
   let raf = null;
 
   if (!overlay) return;
@@ -125,7 +127,8 @@
 
   function clrCanvas() { ctx.clearRect(0, 0, W, H); }
   function updateHUD(score, level, lives, showLevel=true, showLives=true) {
-    scoreEl.textContent = score;
+    scoreEl.textContent = scoreEmMetros ? score + ' m' : score;
+    if (scoreLabelEl) scoreLabelEl.style.display = scoreEmMetros ? 'none' : '';
     levelEl.textContent = level;
     livesEl.textContent = LIVES_MAP[Math.max(0, 3 - lives)];
     hudLevel.style.display = showLevel ? '' : 'none';
@@ -191,16 +194,17 @@
   ════════════════════════════════════ */
   function loadGame(id) {
     stopCurrentGame();
+        scoreEmMetros = false;
     const extra = document.getElementById('especies-opcoes');
     if (extra) extra.remove();
     switch(id) {
       case 'quiz-da-floresta':          initEspecies(); break;
-      case 'guardioes-da-amazonia':     initGuarda();   break;
+      case 'jogo-do-mico':              initMico();     break;
       case 'desafio-dos-biomas':        initFuga();     break;
       case 'missao-biodiversidade':     initRio();      break;
       /* aliases (ids originais do protótipo) */
       case 'especies': initEspecies(); break;
-      case 'guarda':   initGuarda();   break;
+      case 'mico':     initMico();     break;
       case 'fuga':     initFuga();     break;
       case 'rio':      initRio();      break;
     }
@@ -211,7 +215,7 @@
      JOGO — QUIZ DE ESPÉCIES
   ════════════════════════════════════ */
 function initEspecies() {
-  titleEl.textContent = '🦜 Identificar Espécies';
+  titleEl.textContent = 'Identificar Espécies';
   tipEl.textContent = 'Identifique o animal antes do tempo acabar · Erre 3 = fim de jogo';
   updateHUD(0, '', 3, false, true);
 
@@ -346,14 +350,14 @@ function buildQueue() {
       score += pontos;
       correct++;
       btn.classList.add('correct');
-      popup(W / 2, H / 2, '#22c55e', `+${pontos} ✓`);
+      popup(W / 2, H / 2, '#22c55e', `+${pontos}`);
     } else {
       lives--;
       btn.classList.add('wrong');
       opcoesEl.querySelectorAll('.especie-btn').forEach(b => {
         if (b.dataset.nome === current.nome) b.classList.add('correct');
       });
-      popup(W / 2, H / 2, '#f87171', '✗ Errou');
+      popup(W / 2, H / 2, '#f87171', 'Errou');
       shakePanel();
     }
 
@@ -406,7 +410,7 @@ function buildQueue() {
         opcoesEl.querySelectorAll('.especie-btn').forEach(b => {
           if (b.dataset.nome === current.nome) b.classList.add('correct');
         });
-        popup(W / 2, 60, '#f87171', '⏱ Tempo!');
+        popup(W / 2, 60, '#f87171', 'Tempo!');
        updateHUD(score, categoriaAtual, lives);
        updateDifficultyColor();
         if (lives <= 0) { setTimeout(() => end(false), 900); }
@@ -420,7 +424,7 @@ function buildQueue() {
     running = false;
     cancelAnimationFrame(raf);
     opcoesEl.style.display = 'none';
-    showScreen('🦜 Fim do Quiz!', `Espécies identificadas: <strong>${correct}</strong><br>Pontuação: <strong>${score}</strong>`, 'Jogar de novo');
+    showScreen('Fim do Quiz!', `Espécies identificadas: <strong>${correct}</strong><br>Pontuação: <strong>${score}</strong>`, 'Jogar de novo');
   }
 
       function start() {
@@ -457,76 +461,346 @@ function buildQueue() {
   );
 }
 
-
   /* ════════════════════════════════════
-     JOGO — GUARDA DA FLORESTA
+     JOGO — JOGO DO MICO (VS 1 BOT)
   ════════════════════════════════════ */
-  function initGuarda() {
-    titleEl.textContent = '🌿 Guarda da Floresta';
-    tipEl.textContent   = 'Clique nas motosserras · Poupe os animais · Cada inimigo destruído = +10 pts';
-    updateHUD(0,1,3);
-    showScreen('Guarda da Floresta',
-      'Clique nas <strong>motosserras 🪚</strong> para destruí-las.<br>Não clique nos <strong>animais aliados</strong> 🦋🦜🐸 — eles precisam de você!');
+  /* ════════════════════════════════════
+     JOGO — JOGO DO MICO (VS 1 BOT)
+  ════════════════════════════════════ */
+  /* ════════════════════════════════════
+     JOGO — JOGO DO MICO (VS 1 BOT)
+  ════════════════════════════════════ */
+  function initMico() {
+    titleEl.textContent = 'Jogo do Mico';
+    tipEl.textContent   = 'Clique numa carta do oponente · Forme pares · Quem ficar com o Mico perde';
+    updateHUD(0, '', 3, false, false);
+    showScreen('Jogo do Mico',
+      'Pegue uma carta do oponente e forme <strong>pares</strong>.<br>Quem ficar com o <strong>Mico</strong> no final perde!<br>Pontos por pares, combos, rapidez e poucas rodadas.');
 
-    const ENEMIES=['🪚','🪚','🪚','⛏️'];
-    const ALLIES=['🦋','🦜','🐸','🦎','🐦','🌺'];
-    let score=0,lives=3,level=1,entities=[],tick=0,interval=85,running=false;
-    const delta=makeDelta();
+    /* ── CONFIG ── */
+    const NUM_PARES = 13;   // fixo: 13 pares + 1 mico = 27 cartas por jogo (máx. 19 com as imagens atuais)
+    const FUNDO_SRC = 'assets/games/fundomico.png';
+    const S = 'assets/games/species/';
+    /* Troque só img/nome aqui depois (por imagens de animais) */
+    const TODAS = [
+      { id: 'onca',       nome: 'Onça-pintada', img: S + 'onca.jpg' },
+      { id: 'arara',      nome: 'Arara-azul',   img: S + 'arara.jpg' },
+      { id: 'tucano',     nome: 'Tucano-toco',  img: S + 'Tucano.jpg' },
+      { id: 'capivara',   nome: 'Capivara',     img: S + 'capivara.webp' },
+      { id: 'tamandua',   nome: 'Tamanduá',     img: S + 'tamandua.jpg' },
+      { id: 'lobo',       nome: 'Lobo-guará',   img: S + 'lobo.webp' },
+      { id: 'anta',       nome: 'Anta',         img: S + 'anta.jpg' },
+      { id: 'boto',       nome: 'Boto',         img: S + 'boto.webp' },
+      { id: 'jacare',     nome: 'Jacaré-açu',   img: S + 'jacare.jpg' },
+      { id: 'jaguatirica',nome: 'Jaguatirica',  img: S + 'jaguatirica.jpg' },
+      { id: 'quati',      nome: 'Quati',        img: S + 'quati.jpg' },
+      { id: 'sucuri',     nome: 'Sucuri',       img: S + 'sucuri.jpeg' },
+      { id: 'veado',      nome: 'Veado',        img: S + 'veado.webp' },
+      { id: 'ariranha',   nome: 'Ariranha',     img: S + 'ari.jpg' },
+      { id: 'bugio',      nome: 'Bugio-ruivo',  img: S + 'bugio.webp' },
+      { id: 'preguica',   nome: 'Preguiça',     img: S + 'preg.jpg' },
+      { id: 'seriema',    nome: 'Seriema',      img: S + 'seri.webp' },
+      { id: 'teiu',       nome: 'Teiú',         img: S + 'teiu.jpg' },
+      { id: 'tuiuiu',     nome: 'Tuiuiú',       img: S + 'tui.webp' }
+    ];
+    const PARES = TODAS.slice(0, Math.min(NUM_PARES, TODAS.length));
+    const MICO = { id: 'mico', nome: 'MICO', img: 'assets/games/species/mico.webp', mico: true };
 
-    function spawn(){
-      const isE=Math.random()<0.48;
-      entities.push({x:50+Math.random()*(W-100),y:-35,emoji:isE?ENEMIES[~~(Math.random()*ENEMIES.length)]:ALLIES[~~(Math.random()*ALLIES.length)],isEnemy:isE,size:26+Math.random()*10,speed:1+level*0.35+Math.random(),dead:false,flash:0});
+    const imagens = {};
+    [...PARES, MICO].forEach(c => { const i = new Image(); i.src = c.img; imagens[c.id] = i; });
+    const fundoImg = new Image(); fundoImg.src = FUNDO_SRC;
+
+    /* tamanho base da carta (todo o desenho é feito nessa escala) */
+    const CW = 80, CH = 104, MAO_W = W - 60, TOP_Y = 14, BOT_Y = H - 14 - CH;
+    let player = [], bot = [], descarte = [];
+    /* PONTUAÇÃO (feita pra ranking, quase nunca empata):
+       100 por par · +50 por combo (pares seguidos em rodadas seguidas)
+       vitória: +1000, +1 a cada 0,1 s abaixo de 5 min, +25 por rodada abaixo de 40 */
+    const PTS_PAR = 100, PTS_COMBO = 50, PTS_VITORIA = 1000, TEMPO_BONUS_MS = 300000, RODADAS_BONUS = 40;
+    let parJog = 0, combo = 0, rodadas = 0, t0 = 0;
+    let score = 0, running = false, fase = 'fim', msg = '', hl = null, hover = -1, timers = [];
+
+    const shuffle = a => [...a].sort(() => Math.random() - 0.5);
+    const later = (fn, ms) => { const t = setTimeout(() => { if (running) fn(); }, ms); timers.push(t); };
+
+    /* tira os pares de uma mão; devolve quantos pares saíram */
+    function tirarPares(mao) {
+      let n = 0, achou = true;
+      while (achou) {
+        achou = false;
+        for (let i = 0; i < mao.length && !achou; i++) {
+          if (mao[i].mico) continue;
+          for (let j = i + 1; j < mao.length; j++) {
+            if (mao[j].id === mao[i].id) {
+              descarte.push(mao[i]);
+              mao.splice(j, 1); mao.splice(i, 1);
+              n++; achou = true; break;
+            }
+          }
+        }
+      }
+      return n;
     }
-    function loop(ts){
-      if(!running)return;
-      const dt=delta(ts);
-      clrCanvas(); drawForestBg();
-      tick+=dt; if(tick>=interval){tick=0;interval=Math.max(28,85-level*7);spawn();if(Math.random()<0.3)spawn();}
-      entities.forEach(e=>{
-        if(e.dead)return; e.y+=e.speed*dt;
-        if(e.y>H+30){e.dead=true;if(e.isEnemy){lives--;updateHUD(score,level,lives);shakePanel();if(lives<=0){end(false);return;}}return;}
-        ctx.globalAlpha=0.14; ctx.fillStyle='#000'; ctx.beginPath();
-        ctx.ellipse(e.x,e.y+e.size*.42,e.size*.38,e.size*.1,0,0,Math.PI*2); ctx.fill();
-        if(e.flash>0){ctx.globalAlpha=0.5+e.flash*.05;e.flash--;}else{ctx.globalAlpha=1;}
-        ctx.font=`${e.size}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(e.emoji,e.x,e.y); ctx.globalAlpha=1;
+
+    /* mão em leque: se não couber, as cartas se sobrepõem */
+    function layout(mao, y) {
+      const n = mao.length;
+      let step = CW + 8;
+      if (n > 1 && n * CW + (n - 1) * 8 > MAO_W) step = (MAO_W - CW) / (n - 1);
+      const total = n > 0 ? CW + (n - 1) * step : 0;
+      const x0 = (W - total) / 2;
+      return mao.map((c, i) => ({ c, x: x0 + i * step, y, w: CW, h: CH }));
+    }
+
+    function rr(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    /* folha desenhada (sem emoji) */
+    function folha(cx, cy, r) {
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(-0.7);
+      ctx.fillStyle = '#8FC9A6'; ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#0f3d22'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
+      ctx.restore();
+    }
+
+    /* desenha uma carta com moldura. k = escala (1 = tamanho normal) */
+    function drawCard(x, y, k, card, faceUp, destaque) {
+      ctx.save();
+      ctx.translate(x, y); ctx.scale(k, k);
+      const mico = faceUp && card.mico;
+      const ouro = mico ? '#dc2626' : '#c9a24a';
+
+      /* corpo da carta (com sombra) */
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+      rr(0, 0, CW, CH, 9);
+      ctx.fillStyle = faceUp ? (mico ? '#fde8e8' : '#f6edd4') : '#0f3d22';
+      ctx.fill();
+      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+      if (faceUp) {
+        /* área da imagem (quadrada) */
+        ctx.save();
+        rr(7, 7, 66, 66, 5); ctx.clip();
+        const img = imagens[card.id];
+        if (img && img.complete && img.naturalWidth) {
+          const s = Math.max(66 / img.naturalWidth, 66 / img.naturalHeight);
+          const w = img.naturalWidth * s, h = img.naturalHeight * s;
+          ctx.drawImage(img, 7 + (66 - w) / 2, 7 + (66 - h) / 2, w, h);
+        } else { ctx.fillStyle = '#1a5c35'; ctx.fillRect(7, 7, 66, 66); }
+        ctx.restore();
+        rr(7, 7, 66, 66, 5); ctx.lineWidth = 1.5; ctx.strokeStyle = mico ? '#991b1b' : '#145228'; ctx.stroke();
+
+        /* faixa do nome */
+        if (mico) {
+          rr(7, 78, 66, 19, 4); ctx.fillStyle = '#dc2626'; ctx.fill();
+          ctx.fillStyle = '#fff';
+        } else {
+          ctx.fillStyle = '#1a3d26';
+        }
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const txt = (mico ? 'MICO' : card.nome).toUpperCase();
+        let fs = 10;
+        do { ctx.font = '700 ' + fs + 'px Inter, sans-serif'; fs -= 0.5; } while (ctx.measureText(txt).width > 60 && fs > 5);
+        ctx.fillText(txt, CW / 2, 88);
+      } else {
+        /* verso: losangos + folha */
+        ctx.save();
+        rr(7, 7, 66, 90, 5); ctx.clip();
+        ctx.fillStyle = '#145228'; ctx.fillRect(7, 7, 66, 90);
+        ctx.strokeStyle = 'rgba(143,201,166,0.28)'; ctx.lineWidth = 1;
+        for (let d = -100; d < 160; d += 12) {
+          ctx.beginPath(); ctx.moveTo(d, 7); ctx.lineTo(d + 90, 97); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(d + 90, 7); ctx.lineTo(d, 97); ctx.stroke();
+        }
+        ctx.restore();
+        rr(7, 7, 66, 90, 5); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(246,237,212,0.6)'; ctx.stroke();
+        ctx.beginPath(); ctx.arc(CW / 2, CH / 2, 17, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f3d22'; ctx.fill(); ctx.strokeStyle = ouro; ctx.lineWidth = 1.5; ctx.stroke();
+        folha(CW / 2, CH / 2, 10);
+      }
+
+      /* moldura externa + filete interno */
+      rr(0, 0, CW, CH, 9); ctx.lineWidth = 3; ctx.strokeStyle = ouro; ctx.stroke();
+      rr(3.5, 3.5, CW - 7, CH - 7, 6); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(201,162,74,0.55)';
+      if (mico) ctx.strokeStyle = 'rgba(220,38,38,0.5)';
+      ctx.stroke();
+
+      if (destaque) { rr(-3, -3, CW + 6, CH + 6, 11); ctx.lineWidth = 4; ctx.strokeStyle = destaque; ctx.stroke(); }
+      ctx.restore();
+    }
+
+    function drawFundo() {
+      if (fundoImg.complete && fundoImg.naturalWidth) {
+        const s = Math.max(W / fundoImg.naturalWidth, H / fundoImg.naturalHeight);
+        const w = fundoImg.naturalWidth * s, h = fundoImg.naturalHeight * s;
+        ctx.drawImage(fundoImg, (W - w) / 2, (H - h) / 2, w, h);
+      } else {
+        /* fundo vazio, só cor lisa, até a imagem carregar */
+        ctx.fillStyle = '#0d2e16';
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    function loop() {
+      if (!running) return;
+      clrCanvas(); drawFundo();
+
+      layout(bot, TOP_Y).forEach((p, i) => {
+        const dest = hl && hl.lado === 'bot' && hl.card === p.c ? '#f59e0b'
+                   : (fase === 'player' && hover === i ? '#8FC9A6' : null);
+        drawCard(p.x, p.y + (dest ? 8 : 0), 1, p.c, false, dest);
       });
-      entities=entities.filter(e=>!e.dead);
-      if(score>=level*130){level++;updateHUD(score,level,lives);}
-      raf=requestAnimationFrame(loop);
+      layout(player, BOT_Y).forEach(p => {
+        const dest = hl && hl.card === p.c ? (hl.lado === 'player' ? '#f59e0b' : '#22c55e') : null;
+        drawCard(p.x, p.y - (dest ? 8 : 0), 1, p.c, true, dest);
+      });
+
+      /* mensagem central */
+      const msgU = msg.toUpperCase();
+      ctx.font = '700 17px Inter, sans-serif';
+      const tw = ctx.measureText(msgU).width + 36;
+      rr((W - tw) / 2, 150, tw, 38, 19); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#f6edd4'; ctx.fillText(msgU, W / 2, 170);
+      ctx.fillStyle = 'rgba(246,237,212,0.85)'; ctx.font = '700 11px Inter, sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
+      ctx.fillText(`OPONENTE: ${bot.length} CARTAS · VOCÊ: ${player.length} CARTAS · PARES: ${descarte.length / 2}/${PARES.length}`, W / 2, 210);
+      ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+
+      /* pares já descartados (cartas pequenas) */
+      const k = 0.42, mw = CW * k, mg = 6, nd = descarte.length / 2;
+      const x0 = (W - (nd * mw + (nd - 1) * mg)) / 2;
+      for (let i = 0; i < nd; i++) drawCard(x0 + i * (mw + mg), 232, k, descarte[i * 2], true, null);
+
+      raf = requestAnimationFrame(loop);
     }
-    function end(won){
-      running=false; cancelAnimationFrame(raf);
-      showScreen(won?'🌳 Floresta Salva!':'🔥 A floresta queimou...',
-        `Pontuação: <strong>${score}</strong><br>${won?'Você protegeu a biodiversidade!':'Tente de novo — a floresta precisa de você!'}`,
+
+    function checarFim() {
+      if (player.length === 0) { end(true); return true; }
+      if (bot.length === 0)    { end(false); return true; }
+      return false;
+    }
+
+    function turnoPlayer() {
+      fase = 'player'; hl = null;
+      msg = 'Sua vez: escolha uma carta do oponente';
+    }
+
+    function turnoBot() {
+      fase = 'bot'; hl = null;
+      msg = 'Oponente está escolhendo...';
+      later(() => {
+        const alvo = player[Math.floor(Math.random() * player.length)];
+        hl = { lado: 'player', card: alvo };
+        later(() => {
+          player.splice(player.indexOf(alvo), 1);
+          bot.push(alvo);
+          hl = null;
+          const n = tirarPares(bot);
+          msg = n ? 'Oponente formou um par!' : 'Oponente pegou uma carta sua';
+          bot = shuffle(bot);
+          later(() => { if (!checarFim()) turnoPlayer(); }, 600);
+        }, 550);
+      }, 500);
+    }
+
+    function pegar(i) {
+      fase = 'busy';
+      const carta = bot.splice(i, 1)[0];
+      player.push(carta);
+      hl = { lado: 'verde', card: carta };
+      msg = carta.mico ? 'Ops... você pegou o MICO!' : 'Você pegou ' + carta.nome;
+      later(() => {
+        const n = tirarPares(player);
+        hl = null; rodadas++;
+        if (n) {
+          combo++; parJog += n;
+          const pts = PTS_PAR * n + PTS_COMBO * (combo - 1);
+          score += pts; updateHUD(score, '', 3, false, false);
+          popup(W / 2, 170, '#22c55e', '+' + pts + (combo > 1 ? ' combo x' + combo : ''));
+          msg = combo > 1 ? 'Combo x' + combo + '!' : 'Par formado!';
+        } else {
+          combo = 0;
+          if (!carta.mico) msg = 'Sem par...';
+        }
+        later(() => { if (!checarFim()) turnoBot(); }, 650);
+      }, 550);
+    }
+
+    function posCanvas(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    /* percorre de trás pra frente: a carta de cima (última desenhada) tem prioridade */
+    function indiceBot(m) {
+      const L = layout(bot, TOP_Y);
+      for (let i = L.length - 1; i >= 0; i--) {
+        const p = L[i];
+        if (m.x >= p.x && m.x <= p.x + p.w && m.y >= p.y && m.y <= p.y + p.h + 8) return i;
+      }
+      return -1;
+    }
+    canvas.onmousemove = e => { hover = running && fase === 'player' ? indiceBot(posCanvas(e)) : -1; canvas.style.cursor = hover >= 0 ? 'pointer' : ''; };
+    canvas.onclick = e => {
+      if (!running || fase !== 'player') return;
+      const i = indiceBot(posCanvas(e));
+      if (i >= 0) pegar(i);
+    };
+
+    function end(ganhou) {
+      running = false; fase = 'fim';
+      cancelAnimationFrame(raf);
+      canvas.style.cursor = '';
+      const ms = performance.now() - t0;
+      let bonus = 0;
+      if (ganhou) {
+        bonus = PTS_VITORIA
+              + Math.floor(Math.max(0, TEMPO_BONUS_MS - ms) / 100)
+              + Math.max(0, RODADAS_BONUS - rodadas) * 25;
+      }
+      score += bonus;
+      updateHUD(score, '', 3, false, false);
+      const tempo = (ms / 1000).toFixed(1).replace('.', ',') + ' s';
+      showScreen(ganhou ? 'Você venceu!' : 'Você ficou com o Mico!',
+        `Pontuação: <strong>${score}</strong><br>Pares: <strong>${parJog}</strong> · Tempo: <strong>${tempo}</strong> · Rodadas: <strong>${rodadas}</strong>`,
         'Jogar de novo');
     }
-    function start(){score=0;lives=3;level=1;entities=[];tick=0;interval=85;running=true;hideScreen();updateHUD(score,level,lives);delta.reset();raf=requestAnimationFrame(loop);}
-    canvas.onclick=e=>{
-      if(!running)return;
-      const r=canvas.getBoundingClientRect(),sx=W/r.width,sy=H/r.height;
-      const mx=(e.clientX-r.left)*sx,my=(e.clientY-r.top)*sy;
-      entities.forEach(en=>{
-        if(en.dead)return;
-        if(Math.hypot(mx-en.x,my-en.y)<en.size*.7){
-          if(en.isEnemy){en.dead=true;score+=10;updateHUD(score,level,lives);popup(en.x,en.y,'#22c55e','+10');}
-          else{lives--;en.flash=8;updateHUD(score,level,lives);popup(en.x,en.y,'#f87171','−vida');shakePanel();if(lives<=0)end(false);}
-        }
-      });
-    };
-    startBtn.onclick=start;
-    activeGame={cleanup:()=>{running=false;canvas.onclick=null;}};
-  }
 
-  /* ════════════════════════════════════
-     JOGO 2 — FUGA DO DESMATAMENTO
-  ════════════════════════════════════ */
-  
+    function start() {
+      timers.forEach(clearTimeout); timers = [];
+      /* baralho fixo (pares + mico), re-sorteia se alguma mão já começar vazia */
+      do {
+        const deck = shuffle([...PARES, ...PARES, MICO]);
+        const metade = Math.ceil(deck.length / 2);
+        player = deck.slice(0, metade); bot = deck.slice(metade);
+        descarte = [];
+        parJog = tirarPares(player); tirarPares(bot);
+      } while (player.length === 0 || bot.length === 0);
+      player = shuffle(player); bot = shuffle(bot);
+      score = parJog * PTS_PAR; combo = 0; rodadas = 0; t0 = performance.now();
+      hl = null; hover = -1; running = true;
+      hideScreen();
+      updateHUD(score, '', 3, false, false);
+      turnoPlayer();
+      raf = requestAnimationFrame(loop);
+    }
+
+    startBtn.onclick = start;
+    activeGame = { cleanup: () => { running = false; timers.forEach(clearTimeout); timers = []; canvas.onclick = null; canvas.onmousemove = null; canvas.style.cursor = ''; } };
+  }
   /* ════════════════════════════════════
      JOGO — FUGA DO DESMATAMENTO
   ════════════════════════════════════ */
   function initFuga() {
-    titleEl.textContent = '🐆 Fuga pela Floresta';
+    titleEl.textContent = 'Fuga pela Floresta';
+    scoreEmMetros = true;
     tipEl.textContent   = 'Espaço (ou toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
     updateHUD(0,1,3,true,true);
     showScreen('Fuga pela Floresta',
@@ -1541,7 +1815,7 @@ ctx.drawImage(
         if(!p.alive)return;
         ctx.font='22px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(p.emoji,p.x,p.y); p.x-=speed*dt;
-        if(Math.abs(p.x-onca.x)<30&&Math.abs(p.y-(GROUND-30))<30){p.alive=false;score+=25;popup(p.x,p.y,'#fbbf24','+25🍃');}
+        if(Math.abs(p.x-onca.x)<30&&Math.abs(p.y-(GROUND-30))<30){p.alive=false;score+=25;popup(p.x,p.y,'#fbbf24','+25');}
         if(p.x<-20)p.alive=false;
       });
 

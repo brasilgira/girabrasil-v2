@@ -759,3 +759,35 @@ body.pagina-jogos .header-site {
   margin: 0 1.3cqw;
   filter: sepia(1) saturate(2.5) brightness(0.95);
 }
+
+/* ===== Tipografia dos cards aplicada a toda a página de jogos ===== */
+/* Formato 1: título */
+.pagina-jogos .game-title,
+.pagina-jogos .games-menu-title,
+.pagina-jogos .game-screen h2,
+.pagina-jogos .btn-start-game,
+.pagina-jogos .btn-back,
+.pagina-jogos .game-close,
+.pagina-jogos .especie-btn,
+.pagina-jogos .hit-popup {
+  font-family: var(--fonte-corpo);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+/* Formato 2: eyebrow */
+.pagina-jogos .game-screen p,
+.pagina-jogos .game-hud,
+.pagina-jogos .game-tip {
+  font-family: var(--fonte-corpo);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* Sem emojis decorativos (o ⬢ dos pontos continua) */
+.pagina-jogos .hud-level::before,
+.pagina-jogos .especie-btn::before,
+.pagina-jogos .game-tip::before,
+.pagina-jogos .game-tip::after { content: none; }

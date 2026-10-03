@@ -96,79 +96,153 @@ function redirecionarSeJaLogado() {
   }
 }
 
-// ---- Cadastro ------------------------------------------------------------
-// Único caminho de cadastro agora: Supabase Auth (auth.signUp).
-// O nome vai em user_metadata, então não precisa de tabela extra.
-async function cadastrarUsuario(event) {
-  if (event && typeof event.preventDefault === 'function') {
-    event.preventDefault();
+// ---- Checagem de nome (usada pelo cadastro antes de chamar signUp) -------
+// Best-effort: dá feedback cedo (nome duplicado/ofensivo/tamanho). A
+// garantia definitiva de unicidade depende de uma constraint no banco
+// (proposta, não aplicada — ver relatório). Se a checagem falhar por
+// causa de rede, deixamos passar (o resultado traz verificacaoFalhou)
+// pra não travar o cadastro por um problema transitório.
+async function verificarNomeDisponivel(nome) {
+  try {
+    const resposta = await fetch(`/api/auth/nome-disponivel?nome=${encodeURIComponent(nome)}`);
+    return await resposta.json();
+  } catch {
+    return { disponivel: true, verificacaoFalhou: true };
   }
+}
 
-  const nome = document.querySelector('#nome')?.value.trim();
-  const email = document.querySelector('#email')?.value.trim();
-  const senha = document.querySelector('#senha')?.value.trim();
-
+// ---- Cadastro ------------------------------------------------------------
+// Único caminho de cadastro: Supabase Auth (auth.signUp). O nome vai em
+// user_metadata (sem tabela extra). avatarUrl é opcional — se vier (foto
+// de espécie escolhida ou upload concluído), é salva no perfil logo
+// depois do signUp, usando o mesmo PUT /api/perfil/:id que a tela de
+// perfil já usa (nenhum mecanismo novo).
+//
+// Lança Error em caso de falha — quem chama decide como mostrar isso
+// (cadastro.html usa toast + mensagem inline). Não redireciona sozinho.
+async function cadastrarUsuario({ nome, email, senha, avatarUrl } = {}) {
   const { data, error } = await supabaseClient.auth.signUp({
     email,
     password: senha,
     options: {
-      data: { nome }
-    }
+      data: { nome },
+    },
   });
 
   if (error) {
-    alert('Erro no cadastro: ' + error.message);
-    return;
+    throw new Error(traduzirErroSupabase(error, 'cadastro'));
+  }
+  if (!data.user) {
+    throw new Error('Não foi possível criar a conta agora. Tente novamente.');
   }
 
-  if (data.user) {
-    definirUsuarioLogado({
-      email,
-      nome,
-      id: data.user.id,
-      is_admin: data.user.app_metadata?.is_admin === true
-    });
-    alert('Conta criada com sucesso!');
-    window.location.href = obterRedirectDaUrl() || 'index.html';
+  definirUsuarioLogado({
+    email,
+    nome,
+    id: data.user.id,
+    is_admin: data.user.app_metadata?.is_admin === true,
+  });
+
+  // Se a conta foi criada mas o e-mail precisa de confirmação, não existe
+  // sessão ainda — fetchAutenticado (usado pelo PUT de avatar) exige
+  // token, então só tenta salvar o avatar se já houver sessão ativa.
+  if (avatarUrl && data.session) {
+    try {
+      await fetchAutenticado(`/api/perfil/${encodeURIComponent(data.user.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl }),
+      });
+      atualizarCamposUsuarioLogado({ avatar_url: avatarUrl });
+    } catch (erroAvatar) {
+      // A conta já existe nesse ponto — não falha o cadastro inteiro por
+      // causa da foto. A pessoa pode trocar depois no perfil.
+      console.error('Conta criada, mas a foto inicial não pôde ser salva:', erroAvatar);
+    }
   }
+
+  return { usuario: data.user, precisaConfirmarEmail: !data.session };
 }
 
 // ---- Login -----------------------------------------------------------
-async function logarUsuario(event) {
-  if (event && typeof event.preventDefault === 'function') {
-    event.preventDefault();
+// Mesma ideia do cadastro: lança Error em vez de alert, não redireciona
+// sozinho.
+async function logarUsuario({ email, senha } = {}) {
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+
+  if (error) {
+    throw new Error(traduzirErroSupabase(error, 'login'));
   }
 
-  const email = document.querySelector('#email')?.value.trim();
-  const senha = document.querySelector('#senha')?.value.trim();
+  const meta = (data.user && data.user.user_metadata) || {};
+  const nome = meta.nome || meta.display_name || email.split('@')[0];
 
-  try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password: senha
-    });
+  definirUsuarioLogado({
+    email,
+    nome,
+    id: data.user ? data.user.id : null,
+    is_admin: data.user?.app_metadata?.is_admin === true,
+  });
 
-    if (error) throw error;
+  return data.user;
+}
 
-    const meta = (data.user && data.user.user_metadata) || {};
-    const nome = meta.nome || meta.display_name || email.split('@')[0];
+// Mensagens do Supabase vêm em inglês e às vezes técnicas demais pra
+// mostrar direto pro usuário — traduz só os casos mais comuns.
+function traduzirErroSupabase(error, contexto) {
+  const msg = error?.message || '';
+  if (msg === 'Invalid login credentials') return 'E-mail ou senha incorretos.';
+  if (msg.includes('User already registered')) return 'Já existe uma conta com esse e-mail.';
+  if (msg.includes('Password should be at least')) return msg.replace('Password should be at least', 'A senha precisa ter pelo menos').replace('characters', 'caracteres');
+  if (msg.includes('Unable to validate email address')) return 'E-mail inválido.';
+  if (msg.includes('Database error saving new user')) return 'Não foi possível concluir o cadastro agora. Tente novamente em instantes.';
+  return contexto === 'cadastro'
+    ? 'Não foi possível criar a conta agora. Tente novamente.'
+    : 'Não foi possível entrar. Tente novamente.';
+}
 
-    definirUsuarioLogado({
-      email,
-      nome,
-      id: data.user ? data.user.id : null,
-      is_admin: data.user?.app_metadata?.is_admin === true
-    });
+// ---- Upload de foto própria (Supabase Storage) ----------------------------
+// Complementa o seletor de espécies (que já existia e continua sendo a
+// opção garantida/sem dependência externa). Isso aqui só funciona se o
+// bucket 'avatars' existir no Supabase com uma política permitindo o
+// usuário autenticado escrever no próprio caminho (<uid>/...) — ver
+// instruções no relatório final. Lança Error com mensagem amigável se o
+// bucket não existir ou a política não permitir, pra quem chamar poder
+// orientar a pessoa a usar o seletor de espécies em vez disso.
+const AVATAR_BUCKET = 'avatars';
+const AVATAR_TAMANHO_MAX = 3 * 1024 * 1024; // 3 MB
+const AVATAR_TIPOS_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
 
-    alert('Login realizado com sucesso!');
-    window.location.href = obterRedirectDaUrl() || 'index.html';
-  } catch (error) {
-    console.error('Erro de autenticação:', error);
-    const mensagem = error.message === 'Invalid login credentials'
-      ? 'E-mail ou senha incorretos.'
-      : error.message;
-    alert('Erro ao entrar: ' + mensagem);
+function validarArquivoAvatar(arquivo) {
+  if (!AVATAR_TIPOS_ACEITOS.includes(arquivo.type)) {
+    throw new Error('Use uma imagem JPG, PNG ou WEBP.');
   }
+  if (arquivo.size > AVATAR_TAMANHO_MAX) {
+    throw new Error('A imagem precisa ter até 3 MB.');
+  }
+}
+
+async function enviarAvatarArquivo(arquivo, usuarioId) {
+  validarArquivoAvatar(arquivo);
+
+  const extensao = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
+  const caminho = `${usuarioId}/avatar-${Date.now()}.${extensao}`;
+
+  const { error: erroUpload } = await supabaseClient.storage
+    .from(AVATAR_BUCKET)
+    .upload(caminho, arquivo, { upsert: true, contentType: arquivo.type });
+
+  if (erroUpload) {
+    const semBucket = /bucket not found/i.test(erroUpload.message || '');
+    throw new Error(
+      semBucket
+        ? 'Envio de foto própria ainda não está disponível — escolha uma das espécies abaixo.'
+        : 'Não foi possível enviar sua foto agora. Tente de novo ou escolha uma das espécies abaixo.'
+    );
+  }
+
+  const { data } = supabaseClient.storage.from(AVATAR_BUCKET).getPublicUrl(caminho);
+  return data.publicUrl;
 }
 
 // ---- Header (Entrar/Criar conta -> nome + avatar) -------------------------

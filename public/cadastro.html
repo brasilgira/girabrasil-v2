@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criar conta — GiraBrasil</title>
+<title>Criar conta — Gira-Brasil</title>
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
 </head>
@@ -11,13 +11,13 @@
 
 <header class="header-site">
   <div class="header-inner">
-    <a href="index.html" class="logo-site">Gira Brasil</a>
+    <a href="index.html" class="logo-site">Gira-Brasil</a>
     <nav class="nav-site">
       <a href="index.html">Início</a>
       <a href="noticias.html">Notícias</a>
       <a href="regioes.html">Regiões</a>
       <a href="jogos.html">Jogos</a>
-      <a href="girabot.html">GiraBot</a>
+      <a href="girabot.html">Gira-Bot</a>
       <a href="sobre.html">Sobre</a>
     </nav>
     <div class="header-acoes">
@@ -30,7 +30,7 @@
 <div class="auth-grid">
 
   <div class="auth-imagem">
-    <img src="assets/biomas/bioma-pantanal.jpg" alt="Amanhecer no Pantanal com aves na planície alagada">
+    <img src="assets/biomas/bioma-pantanal.jpg" alt="Pôr do sol sobre a planície alagada do Pantanal, com aves silvestres">
     <div class="auth-imagem-conteudo">
       <span class="marca"></span>
       <h2>Jogos, notícias e um guia ambiental em um só lugar.</h2>
@@ -44,36 +44,69 @@
       <h1>Criar conta</h1>
       <p class="auth-descricao">Leva menos de um minuto e libera todas as experiências interativas.</p>
 
-      <form class="auth-form" id="formCadastro">
+      <form class="auth-form" id="formCadastro" novalidate>
+
+        <!-- Foto de perfil (opcional) -->
+        <div class="auth-avatar-etapa">
+          <div class="auth-avatar-linha">
+            <div class="auth-avatar-preview" id="avatarPreview" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.5 3.5-6 8-6s8 2.5 8 6"/></svg>
+            </div>
+            <div class="auth-avatar-acoes">
+              <div class="auth-avatar-botoes">
+                <button type="button" class="auth-avatar-botao-secundario" id="btnEscolherEspecie">Escolher espécie</button>
+                <button type="button" class="auth-avatar-botao-secundario" id="btnEnviarFoto">Enviar minha foto</button>
+                <button type="button" class="auth-avatar-botao-secundario" id="btnRemoverAvatar" hidden>Remover</button>
+              </div>
+              <span class="auth-avatar-ajuda">Opcional — você também pode escolher depois, no seu perfil. JPG, PNG ou WEBP até 3&nbsp;MB.</span>
+            </div>
+          </div>
+          <input type="file" id="inputArquivoAvatar" accept="image/jpeg,image/png,image/webp" hidden>
+          <div class="auth-avatar-grid" id="gridEspecies"></div>
+        </div>
+
         <div class="auth-campo">
           <label for="nome">Nome</label>
-          <input type="text" id="nome" placeholder="Seu nome" required>
+          <input type="text" id="nome" name="name" placeholder="Seu nome" autocomplete="name" maxlength="40" required>
+          <p class="auth-campo-mensagem" id="mensagemNome" aria-live="polite"></p>
         </div>
+
         <div class="auth-campo">
           <label for="email">E-mail</label>
-          <input type="email" id="email" placeholder="seu@email.com" required>
+          <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
+          <p class="auth-campo-mensagem" id="mensagemEmail" aria-live="polite"></p>
         </div>
+
         <div class="auth-campos-duplos">
-          <div class="auth-campo">
+          <div class="auth-campo auth-campo-senha">
             <label for="senha">Senha</label>
-            <input type="password" id="senha" placeholder="••••••••" required>
+            <input type="password" id="senha" name="new-password" placeholder="••••••••" autocomplete="new-password" minlength="6" required>
+            <button type="button" class="auth-toggle-senha" data-alvo="senha" aria-label="Mostrar senha">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
-          <div class="auth-campo">
+          <div class="auth-campo auth-campo-senha">
             <label for="confirmar">Confirmar senha</label>
-            <input type="password" id="confirmar" placeholder="••••••••" required>
+            <input type="password" id="confirmar" name="new-password-confirm" placeholder="••••••••" autocomplete="new-password" required>
+            <button type="button" class="auth-toggle-senha" data-alvo="confirmar" aria-label="Mostrar senha">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
           </div>
         </div>
+        <p class="auth-regra-senha" id="regraSenha">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+          Pelo menos 6 caracteres
+        </p>
 
-        <p class="auth-erro" id="authErro" style="display:none;"></p>
+        <p class="auth-erro" id="authErro" role="alert" style="display:none;"></p>
 
-        <button type="submit" class="botao botao-primario">Criar conta</button>
+        <button type="submit" class="botao botao-primario" id="btnCadastrar">
+          <span class="auth-spinner"></span>
+          <span class="auth-rotulo-botao">Criar conta</span>
+        </button>
       </form>
 
       <p class="auth-rodape-link">Já tem uma conta? <a href="login.html" class="auth-link">Entre.</a></p>
-
-      <p class="auth-aviso-prototipo">
-        Protótipo: o cadastro é demonstrativo e fica salvo apenas neste navegador.
-      </p>
     </div>
   </div>
 
@@ -82,31 +115,230 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/toast.js"></script>
 <script>
   redirecionarSeJaLogado();
 
-  document.getElementById('formCadastro').addEventListener('submit', async (evento) => {
-    evento.preventDefault();
+  // ---- Avatar: seletor de espécies (mesma lista/mecanismo do perfil) ----
+  const AVATARES = [
+    { nome: 'Onça-pintada', url: 'assets/games/species/onca.jpg' },
+    { nome: 'Lobo-guará', url: 'assets/games/species/lobo.webp' },
+    { nome: 'Arara-azul', url: 'assets/games/species/arara.jpg' },
+    { nome: 'Mico-leão-dourado', url: 'assets/games/species/mico.webp' },
+    { nome: 'Tamanduá-bandeira', url: 'assets/games/species/tamandua.jpg' },
+    { nome: 'Boto', url: 'assets/games/species/boto.webp' },
+    { nome: 'Capivara', url: 'assets/games/species/capivara.webp' },
+    { nome: 'Tucano', url: 'assets/games/species/Tucano.jpg' },
+    { nome: 'Jaguatirica', url: 'assets/games/species/jaguatirica.jpg' },
+    { nome: 'Anta', url: 'assets/games/species/anta.jpg' },
+  ];
 
-    const nome = document.getElementById('nome').value.trim();
+  let avatarEscolhidoUrl = null; // string (espécie) quando a origem é o grid
+  let arquivoAvatarPendente = null; // File quando a origem é upload
+
+  const previewEl = document.getElementById('avatarPreview');
+  const gridEl = document.getElementById('gridEspecies');
+  const btnRemover = document.getElementById('btnRemoverAvatar');
+
+  function montarGridEspecies() {
+    gridEl.innerHTML = '';
+    AVATARES.forEach((a) => {
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'auth-avatar-opcao';
+      const img = document.createElement('img');
+      img.src = a.url;
+      img.alt = a.nome;
+      img.loading = 'lazy';
+      botao.appendChild(img);
+      botao.addEventListener('click', () => {
+        arquivoAvatarPendente = null;
+        avatarEscolhidoUrl = a.url;
+        gridEl.querySelectorAll('.auth-avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
+        botao.classList.add('selecionado');
+        atualizarPreview(a.url);
+        gridEl.classList.remove('is-aberto');
+      });
+      gridEl.appendChild(botao);
+    });
+  }
+  montarGridEspecies();
+
+  function atualizarPreview(url) {
+    previewEl.innerHTML = '';
+    previewEl.classList.toggle('tem-foto', !!url);
+    if (url) {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      previewEl.appendChild(img);
+      btnRemover.hidden = false;
+    } else {
+      previewEl.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.5 3.5-6 8-6s8 2.5 8 6"/></svg>';
+      btnRemover.hidden = true;
+    }
+  }
+
+  document.getElementById('btnEscolherEspecie').addEventListener('click', () => {
+    gridEl.classList.toggle('is-aberto');
+  });
+
+  document.getElementById('btnEnviarFoto').addEventListener('click', () => {
+    document.getElementById('inputArquivoAvatar').click();
+  });
+
+  document.getElementById('inputArquivoAvatar').addEventListener('change', (evento) => {
+    const arquivo = evento.target.files[0];
+    if (!arquivo) return;
+    try {
+      validarArquivoAvatar(arquivo);
+    } catch (erro) {
+      mostrarToast(erro.message, 'erro');
+      evento.target.value = '';
+      return;
+    }
+    avatarEscolhidoUrl = null;
+    arquivoAvatarPendente = arquivo;
+    gridEl.querySelectorAll('.auth-avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
+    gridEl.classList.remove('is-aberto');
+    atualizarPreview(URL.createObjectURL(arquivo));
+  });
+
+  btnRemover.addEventListener('click', () => {
+    avatarEscolhidoUrl = null;
+    arquivoAvatarPendente = null;
+    document.getElementById('inputArquivoAvatar').value = '';
+    gridEl.querySelectorAll('.auth-avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
+    atualizarPreview(null);
+  });
+
+  // ---- Mostrar/ocultar senha ----
+  document.querySelectorAll('.auth-toggle-senha').forEach((botao) => {
+    botao.addEventListener('click', () => {
+      const campo = document.getElementById(botao.dataset.alvo);
+      const mostrando = campo.type === 'text';
+      campo.type = mostrando ? 'password' : 'text';
+      botao.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
+  });
+
+  // ---- Checagem de nome (debounced) ----
+  const campoNome = document.getElementById('nome');
+  const mensagemNome = document.getElementById('mensagemNome');
+  let nomeValidado = false;
+  let timeoutNome = null;
+
+  campoNome.addEventListener('input', () => {
+    nomeValidado = false;
+    clearTimeout(timeoutNome);
+    const nome = campoNome.value.trim();
+    mensagemNome.textContent = '';
+    mensagemNome.className = 'auth-campo-mensagem';
+    campoNome.removeAttribute('aria-invalid');
+
+    if (!nome) return;
+    mensagemNome.textContent = 'Verificando…';
+    mensagemNome.classList.add('auth-campo-mensagem--checando');
+
+    timeoutNome = setTimeout(async () => {
+      const resultado = await verificarNomeDisponivel(nome);
+      if (campoNome.value.trim() !== nome) return; // usuário já digitou outra coisa
+      if (resultado.disponivel) {
+        nomeValidado = true;
+        mensagemNome.textContent = '';
+        mensagemNome.className = 'auth-campo-mensagem';
+      } else {
+        mensagemNome.textContent = resultado.mensagem || 'Esse nome não está disponível.';
+        mensagemNome.className = 'auth-campo-mensagem auth-campo-mensagem--erro';
+        campoNome.setAttribute('aria-invalid', 'true');
+      }
+    }, 450);
+  });
+
+  // ---- Envio do formulário ----
+  const form = document.getElementById('formCadastro');
+  const erroGeral = document.getElementById('authErro');
+  const botaoSubmit = document.getElementById('btnCadastrar');
+
+  function mostrarErroGeral(mensagem) {
+    erroGeral.textContent = mensagem;
+    erroGeral.style.display = 'block';
+  }
+  function limparErroGeral() {
+    erroGeral.style.display = 'none';
+  }
+
+  form.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    limparErroGeral();
+
+    const nome = campoNome.value.trim();
     const email = document.getElementById('email').value.trim();
     const senha = document.getElementById('senha').value;
     const confirmar = document.getElementById('confirmar').value;
-    const erro = document.getElementById('authErro');
 
-    if (senha !== confirmar) {
-      erro.textContent = 'As senhas não coincidem.';
-      erro.style.display = 'block';
+    if (!nome) {
+      mostrarErroGeral('Digite seu nome.');
+      campoNome.focus();
       return;
     }
-    erro.style.display = 'none';
+    if (senha.length < 6) {
+      mostrarErroGeral('A senha precisa ter pelo menos 6 caracteres.');
+      document.getElementById('senha').focus();
+      return;
+    }
+    if (senha !== confirmar) {
+      mostrarErroGeral('As senhas não coincidem.');
+      document.getElementById('confirmar').focus();
+      return;
+    }
+
+    // Reconfirma o nome na hora do envio (cobre o caso de a pessoa
+    // enviar antes do debounce terminar, ou mudar o nome depois de validado)
+    const checagemNome = await verificarNomeDisponivel(nome);
+    if (!checagemNome.disponivel) {
+      mostrarErroGeral(checagemNome.mensagem || 'Esse nome não está disponível.');
+      campoNome.focus();
+      return;
+    }
+
+    botaoSubmit.disabled = true;
+    botaoSubmit.dataset.carregando = 'true';
 
     try {
-      await cadastrarUsuario({ nome, email, senha });
+      const resultado = await cadastrarUsuario({ nome, email, senha, avatarUrl: avatarEscolhidoUrl });
+
+      // Upload de arquivo (se houver) só é possível depois de existir
+      // sessão — ver auth.js. Tenta aqui, mas não bloqueia o cadastro se
+      // falhar: a conta já existe e a pessoa pode trocar a foto depois.
+      if (arquivoAvatarPendente && resultado.usuario && !resultado.precisaConfirmarEmail) {
+        try {
+          const url = await enviarAvatarArquivo(arquivoAvatarPendente, resultado.usuario.id);
+          await fetchAutenticado(`/api/perfil/${encodeURIComponent(resultado.usuario.id)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ avatarUrl: url }),
+          });
+          atualizarCamposUsuarioLogado({ avatar_url: url });
+        } catch (erroFoto) {
+          mostrarToast(erroFoto.message || 'Não foi possível enviar sua foto — você pode adicionar depois no seu perfil.', 'aviso');
+        }
+      }
+
+      if (resultado.precisaConfirmarEmail) {
+        mostrarToast('Conta criada! Confirme seu e-mail para entrar.', 'sucesso', { duracao: 6000 });
+        window.location.href = 'login.html';
+        return;
+      }
+
+      mostrarToast('Conta criada com sucesso! Bem-vindo ao Gira-Brasil.', 'sucesso');
       window.location.href = obterRedirectDaUrl() || 'index.html';
-    } catch (e) {
-      erro.textContent = e.message || 'Não foi possível criar a conta.';
-      erro.style.display = 'block';
+    } catch (erro) {
+      mostrarErroGeral(erro.message || 'Não foi possível criar a conta.');
+      mostrarToast(erro.message || 'Não foi possível criar a conta.', 'erro');
+    } finally {
+      botaoSubmit.disabled = false;
+      botaoSubmit.dataset.carregando = 'false';
     }
   });
 </script>
