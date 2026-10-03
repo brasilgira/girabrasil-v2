@@ -1,4 +1,5 @@
 const perfilModel = require('../models/perfil.model');
+const obterClienteSupabaseAdmin = require('../config/supabaseAdmin');
 
 // GET /api/perfil/:id — perfil público de qualquer usuário (é isso que
 // abre quando alguém clica no nome de quem comentou)
@@ -17,7 +18,37 @@ async function buscarPerfil(req, res) {
       perfilModel.listarNoticiasCurtidasDoUsuario(id),
     ]);
 
-    return res.json({ ...perfil, comentarios, noticiasSalvas: salvas, noticiasCurtidas: curtidas });
+    // `perfil.criado_em` é a data em que a LINHA da tabela `perfil` foi
+    // criada — normalmente igual à criação da conta (o trigger do Supabase
+    // cria essa linha logo no signup), mas pode ficar atrasada em relação
+    // à conta real se, por algum motivo, essa linha só tiver sido criada
+    // depois (ex: fallback de garantirPerfil rodando depois do signup).
+    // A fonte da verdade de "quando a conta foi criada" é sempre
+    // auth.users.created_at no Supabase Auth — buscamos ela aqui pra
+    // "Membro desde" e pro nível usarem a data certa. Se essa consulta
+    // falhar por qualquer motivo, caímos de volta em perfil.criado_em em
+    // vez de quebrar a resposta inteira.
+    let criadoEmConta = perfil.criado_em;
+    let isAdmin = false;
+    try {
+      const clienteAdmin = obterClienteSupabaseAdmin();
+      const { data, error } = await clienteAdmin.auth.admin.getUserById(id);
+      if (!error && data?.user) {
+        criadoEmConta = data.user.created_at || criadoEmConta;
+        isAdmin = data.user.app_metadata?.is_admin === true;
+      }
+    } catch (erroSupabase) {
+      console.error('Erro ao buscar dados da conta no Supabase Auth (perfil):', erroSupabase.message);
+    }
+
+    return res.json({
+      ...perfil,
+      criadoEmConta,
+      isAdmin,
+      comentarios,
+      noticiasSalvas: salvas,
+      noticiasCurtidas: curtidas,
+    });
   } catch (erro) {
     console.error('Erro ao buscar perfil:', erro);
     return res.status(500).json({ erro: 'Erro ao buscar perfil.' });
@@ -32,13 +63,18 @@ async function buscarPerfil(req, res) {
 async function atualizarPerfil(req, res) {
   try {
     const { id } = req.params;
-    const { nome, avatarUrl, bio } = req.body;
+    const { nome, avatarUrl, bio, biomaFavorito } = req.body;
+
+    const BIOMAS_VALIDOS = ['Amazônia', 'Cerrado', 'Caatinga', 'Mata Atlântica', 'Pampa', 'Pantanal'];
+    if (biomaFavorito !== undefined && biomaFavorito !== null && !BIOMAS_VALIDOS.includes(biomaFavorito)) {
+      return res.status(400).json({ erro: 'Bioma favorito inválido.' });
+    }
 
     if (req.usuarioLogado.id !== id) {
       return res.status(403).json({ erro: 'Você só pode editar o seu próprio perfil.' });
     }
 
-    const perfilAtualizado = await perfilModel.atualizar(id, { nome, avatarUrl, bio });
+    const perfilAtualizado = await perfilModel.atualizar(id, { nome, avatarUrl, bio, biomaFavorito });
     if (!perfilAtualizado) {
       return res.status(404).json({ erro: 'Perfil não encontrado.' });
     }

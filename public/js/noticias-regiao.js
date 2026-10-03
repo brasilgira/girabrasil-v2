@@ -28,6 +28,35 @@ function formatarDataSimples(isoString) {
   if (Number.isNaN(data.getTime())) return '';
   return data.toLocaleDateString('pt-BR');
 }
+function normalizarUrlImagem(imagem) {
+  if (!imagem) return '';
+
+  const valor = String(imagem).trim();
+
+  // URL externa: somente HTTP/HTTPS
+  if (/^https?:\/\//i.test(valor)) {
+    return valor;
+  }
+
+  // Caminho local relativo ao /public
+  return `../${valor.replace(/^\/+/, '')}`;
+}
+
+function urlExternaSegura(url) {
+  if (!url) return '';
+
+  try {
+    const valor = new URL(String(url), window.location.origin);
+
+    if (valor.protocol === 'http:' || valor.protocol === 'https:') {
+      return valor.href;
+    }
+  } catch (_) {
+    // URL inválida: não cria link
+  }
+
+  return '';
+}
 
 // Ícones simples em SVG (sem emoji) — usados no lugar de 🌿/📅/👁 etc.
 const ICONES = {
@@ -73,71 +102,138 @@ async function montarNoticiasRegiao() {
   let noticiasDaRegiao = [];
   let categoriasDisponiveis = [];
 
-  function cardHtml(n) {
-  // Caminhos locais (ex: 'assets/noticias/foto.jpg') são relativos a
-  // public/, mas esta página vive em public/regioes/, uma pasta abaixo —
-  // por isso precisa do '../' na frente. URLs completas (http://...)
-  // não devem levar esse prefixo.
-  const caminhoImagem = n.imagem && /^https?:\/\//i.test(n.imagem)
-    ? n.imagem
-    : (n.imagem ? `../${n.imagem}` : '');
+  function criarCardNoticia(n) {
+  const card = document.createElement(n.link ? 'a' : 'div');
 
-  const imagemHtml = caminhoImagem
-    ? `<img class="card-noticia-imagem" src="${caminhoImagem}" alt="${n.titulo}">`
-    : `<div class="card-noticia-imagem"></div>`;
+  card.className = 'card-noticia card-noticia-placeholder';
 
-    const conteudoHtml = `
-        ${imagemHtml}
-        <div class="card-noticia-tags">
-          <span class="tag tag-regiao-cor">${n.categoria}</span>
-        </div>
-        <h3>${n.titulo}</h3>
-        <p>${n.resumo}</p>
-        <div class="card-noticia-meta">${n.data || 'Em breve'}</div>
-    `;
+  const linkSeguro = urlExternaSegura(n.link);
 
-    return n.link
-      ? `<a class="card-noticia card-noticia-placeholder" href="${n.link}" target="_blank" rel="noopener">${conteudoHtml}</a>`
-      : `<div class="card-noticia card-noticia-placeholder">${conteudoHtml}</div>`;
+  if (n.link && linkSeguro) {
+    card.href = linkSeguro;
+    card.target = '_blank';
+    card.rel = 'noopener noreferrer';
   }
+
+  const caminhoImagem = normalizarUrlImagem(n.imagem);
+
+  if (caminhoImagem) {
+    const imagem = document.createElement('img');
+
+    imagem.className = 'card-noticia-imagem';
+    imagem.src = caminhoImagem;
+    imagem.alt = n.titulo || 'Imagem da notícia';
+
+    card.appendChild(imagem);
+  } else {
+    const imagemVazia = document.createElement('div');
+    imagemVazia.className = 'card-noticia-imagem';
+
+    card.appendChild(imagemVazia);
+  }
+
+  const tags = document.createElement('div');
+  tags.className = 'card-noticia-tags';
+
+  const categoria = document.createElement('span');
+  categoria.className = 'tag tag-regiao-cor';
+  categoria.textContent = n.categoria || '';
+
+  tags.appendChild(categoria);
+  card.appendChild(tags);
+
+  const titulo = document.createElement('h3');
+  titulo.textContent = n.titulo || '';
+
+  card.appendChild(titulo);
+
+  const resumo = document.createElement('p');
+  resumo.textContent = n.resumo || '';
+
+  card.appendChild(resumo);
+
+  const meta = document.createElement('div');
+  meta.className = 'card-noticia-meta';
+  meta.textContent = n.data || 'Em breve';
+
+  card.appendChild(meta);
+
+  return card;
+}
 
   function renderizarGrid() {
-    const lista = temaAtivo === 'Todas'
-      ? noticiasDaRegiao
-      : noticiasDaRegiao.filter((n) => n.categoria === temaAtivo);
+  const lista = temaAtivo === 'Todas'
+    ? noticiasDaRegiao
+    : noticiasDaRegiao.filter((n) => n.categoria === temaAtivo);
 
-    const grid = raiz.querySelector('#regiao-noticias-grid');
-    const contador = raiz.querySelector('#regiao-noticias-contador');
-    if (!grid || !contador) return;
+  const grid = raiz.querySelector('#regiao-noticias-grid');
+  const contador = raiz.querySelector('#regiao-noticias-contador');
 
-    contador.textContent = `${lista.length} notícia${lista.length === 1 ? '' : 's'}`;
+  if (!grid || !contador) return;
 
-    if (lista.length === 0) {
-      grid.innerHTML = `<div class="sem-resultados"><p>Nenhuma notícia encontrada com esse filtro.</p></div>`;
-      return;
-    }
-    grid.innerHTML = `<div class="grid-noticias">${lista.map(cardHtml).join('')}</div>`;
+  contador.textContent =
+    `${lista.length} notícia${lista.length === 1 ? '' : 's'}`;
+
+  grid.replaceChildren();
+
+  if (lista.length === 0) {
+    const semResultados = document.createElement('div');
+    semResultados.className = 'sem-resultados';
+
+    const mensagem = document.createElement('p');
+    mensagem.textContent = 'Nenhuma notícia encontrada com esse filtro.';
+
+    semResultados.appendChild(mensagem);
+    grid.appendChild(semResultados);
+
+    return;
   }
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'grid-noticias';
+
+  lista.forEach((noticia) => {
+    wrapper.appendChild(criarCardNoticia(noticia));
+  });
+
+  grid.appendChild(wrapper);
+}
 
   function renderizarPills() {
-    const pillsEl = raiz.querySelector('#regiao-pills');
-    if (!pillsEl) return;
+  const pillsEl = raiz.querySelector('#regiao-pills');
 
-    const pillsHtml = ['Todas', ...categoriasDisponiveis]
-      .map((tema) => `<button class="pill-tema-regiao ${tema === temaAtivo ? 'ativo' : ''}" data-tema="${tema}">${tema}</button>`)
-      .join('');
-    pillsEl.innerHTML = pillsHtml;
+  if (!pillsEl) return;
 
-    pillsEl.querySelectorAll('.pill-tema-regiao').forEach((botao) => {
-      botao.addEventListener('click', () => {
-        temaAtivo = botao.dataset.tema;
-        pillsEl.querySelectorAll('.pill-tema-regiao').forEach((b) => b.classList.remove('ativo'));
-        botao.classList.add('ativo');
-        renderizarGrid();
-      });
+  pillsEl.replaceChildren();
+
+  ['Todas', ...categoriasDisponiveis].forEach((tema) => {
+    const botao = document.createElement('button');
+
+    botao.type = 'button';
+    botao.className = 'pill-tema-regiao';
+
+    if (tema === temaAtivo) {
+      botao.classList.add('ativo');
+    }
+
+    botao.dataset.tema = tema;
+    botao.textContent = tema;
+
+    botao.addEventListener('click', () => {
+      temaAtivo = tema;
+
+      pillsEl
+        .querySelectorAll('.pill-tema-regiao')
+        .forEach((b) => b.classList.remove('ativo'));
+
+      botao.classList.add('ativo');
+
+      renderizarGrid();
     });
-  }
 
+    pillsEl.appendChild(botao);
+  });
+}
   const destaquesHtml = regiao.destaques
     .map((texto) => `
       <a href="../noticias.html" class="destaque-regiao-item">
@@ -245,7 +341,18 @@ async function montarNoticiasRegiao() {
     const contador = raiz.querySelector('#regiao-noticias-contador');
     const grid = raiz.querySelector('#regiao-noticias-grid');
     if (contador) contador.textContent = 'Não foi possível carregar as notícias desta região.';
-    if (grid) grid.innerHTML = `<div class="sem-resultados"><p>Tente recarregar a página.</p></div>`;
+   if (grid) {
+  grid.replaceChildren();
+
+  const semResultados = document.createElement('div');
+  semResultados.className = 'sem-resultados';
+
+  const mensagem = document.createElement('p');
+  mensagem.textContent = 'Tente recarregar a página.';
+
+  semResultados.appendChild(mensagem);
+  grid.appendChild(semResultados);
+}
   }
 }
 

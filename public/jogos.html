@@ -49,7 +49,7 @@
 
     <button type="button" class="jogo-card" data-jogo="quiz-da-floresta" aria-pressed="false">
       <div class="jogo-fundo">
-        <img src="assets/jogos/game-quiz.jpg" alt="Ilustração de floresta com pontos de interrogação">
+        <img src="assets/jogos/game-quiz.avif" alt="Ilustração de floresta com pontos de interrogação">
       </div>
       <div class="jogo-titulo-recolhido">Quiz de Espécies</div>
       <div class="jogo-conteudo">
@@ -61,37 +61,23 @@
       </div>
     </button>
 
-    <button type="button" class="jogo-card" data-jogo="guardioes-da-amazonia" aria-pressed="false">
+    <button type="button" class="jogo-card" data-jogo="jogo-do-mico" aria-pressed="false">
       <div class="jogo-fundo">
-        <img src="assets/jogos/game-guardioes.jpg" alt="Ilustração de personagens na floresta amazônica">
+        <img src="assets/jogos/game-guardioes.jpg" alt="Ilustração do Jogo do Mico com animais">
       </div>
-      <div class="jogo-titulo-recolhido">Guarda da Floresta</div>
+      <div class="jogo-titulo-recolhido">Jogo do Mico</div>
       <div class="jogo-conteudo">
-        <div class="jogo-eyebrow">Destrua as motosserras, poupe os animais</div>
-        <h3>Guarda da Floresta</h3>
+        <div class="jogo-eyebrow">Forme pares de animais e fuja do Mico</div>
+        <h3>Jogo do Mico</h3>
         <div class="jogo-botoes">
           <a href="#" class="botao botao-jogar">Jogar</a>
         </div>
       </div>
     </button>
-
-    <button type="button" class="jogo-card" data-jogo="desafio-dos-biomas" aria-pressed="false">
+    
+        <button type="button" class="jogo-card" data-jogo="missao-biodiversidade" aria-pressed="false">
       <div class="jogo-fundo">
-        <img src="assets/jogos/game-biomas.jpg" alt="Ilustração de paisagem com diferentes biomas brasileiros">
-      </div>
-      <div class="jogo-titulo-recolhido">Fuga do Desmatamento</div>
-      <div class="jogo-conteudo">
-        <div class="jogo-eyebrow">Guie a onça-pintada pelos obstáculos da floresta</div>
-        <h3>Fuga do Desmatamento</h3>
-        <div class="jogo-botoes">
-          <a href="#" class="botao botao-jogar">Jogar</a>
-        </div>
-      </div>
-    </button>
-
-    <button type="button" class="jogo-card" data-jogo="missao-biodiversidade" aria-pressed="false">
-      <div class="jogo-fundo">
-        <img src="assets/jogos/game-biodiversidade.png" alt="Ilustração de onça-pintada e tucano na floresta">
+        <img src="assets/jogos/game-biodiversidade.jpg" alt="Ilustração de onça-pintada e tucano na floresta">
       </div>
       <div class="jogo-titulo-recolhido">Defender o Rio</div>
       <div class="jogo-conteudo">
@@ -102,6 +88,22 @@
         </div>
       </div>
     </button>
+
+    <button type="button" class="jogo-card" data-jogo="desafio-dos-biomas" aria-pressed="false">
+      <div class="jogo-fundo">
+        <img src="assets/jogos/game-biomas.jpg" alt="Ilustração de paisagem com diferentes biomas brasileiros">
+      </div>
+      <div class="jogo-titulo-recolhido">Fuga pela Floresta</div>
+      <div class="jogo-conteudo">
+        <div class="jogo-eyebrow">Guie a onça-pintada pelos obstáculos da floresta</div>
+        <h3>Fuga pela Floresta</h3>
+        <div class="jogo-botoes">
+          <a href="#" class="botao botao-jogar">Jogar</a>
+        </div>
+      </div>
+    </button>
+
+
 
   </div>
   <p class="sr-only" aria-live="polite">Selecione um jogo</p>
@@ -131,7 +133,7 @@
       <button class="game-close" id="btn-close-game">✕</button>
     </div>
     <div class="game-hud" id="game-hud">
-      <span class="hud-score">Pontos: <strong id="score-val">0</strong></span>
+      <span class="hud-score"><span id="score-label">Pontos:</span> <strong id="score-val">0</strong></span>
       <span class="hud-level" id="hud-level-wrap">Nível <strong id="level-val">1</strong></span>
       <span class="hud-lives" id="hud-lives-wrap">Vidas: <strong id="lives-val">❤️❤️❤️</strong></span>
     </div>
@@ -148,58 +150,6 @@
 
 </div>
 <script src="js/auth.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Agora capturamos os links do menu E o logótipo
-    const linksMenu = document.querySelectorAll('.nav-site a, .logo-site');
-    const indicador = document.getElementById('indicador');
-    
-    if (!indicador) return; 
-
-    function moverIndicador(elemento) {
-      if (!elemento) return;
-      indicador.style.width = `${elemento.offsetWidth}px`;
-      indicador.style.height = `${elemento.offsetHeight}px`;
-      indicador.style.left = `${elemento.offsetLeft}px`;
-      indicador.style.top = `${elemento.offsetTop}px`;
-      indicador.style.opacity = '1';
-    }
-
-    const itemAtivo = document.querySelector('.nav-site a.ativo');
-    if(itemAtivo) {
-      moverIndicador(itemAtivo);
-      setTimeout(() => {
-        indicador.classList.add('animando');
-      }, 50);
-    }
-
-    linksMenu.forEach(link => {
-      link.addEventListener('click', function(e) {
-        if (this.classList.contains('ativo')) return;
-        
-        e.preventDefault(); 
-        
-        // Se o clique for no logótipo, a barra corre para a primeira opção do menu ("Início")
-        if (this.classList.contains('logo-site')) {
-          const linkInicio = document.querySelector('.nav-site a:first-of-type');
-          moverIndicador(linkInicio);
-        } else {
-          // Lógica normal para os links dentro do menu
-          document.querySelectorAll('.nav-site a').forEach(l => l.classList.remove('ativo'));
-          this.classList.add('ativo');
-          moverIndicador(this);
-        }
-        
-        const destino = this.getAttribute('href');
-        
-        // 250ms garante a velocidade que querias sem parecer um erro
-        setTimeout(() => {
-          window.location.href = destino;
-        }, 250); 
-      });
-    });
-  });
-</script>
+<script src="js/nav-indicador.js"></script>
 </body>
-
 </html>

@@ -124,11 +124,25 @@ body.pagina-jogos .header-site {
   height: 100%;
   object-fit: cover;
 }
+
+/* Deslocar a imagem do card "Fuga do Desmatamento" para a esquerda */
+.jogo-card[data-jogo="desafio-dos-biomas"] .jogo-fundo img {
+  object-position: 75% center; /* padrão é 50% 50% */
+}
+
 .jogo-card .jogo-fundo::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(22,40,31,0.05) 0%, rgba(22,40,31,0.94) 88%);
+  /* Degradê de baixo pra cima: verde forte na base, some totalmente em --altura-degrade.
+     Acima disso a imagem fica sem véu nenhum. */
+  --altura-degrade: 55%;   /* <<< MEXA AQUI: quanto do card (a partir de baixo) o verde ocupa */
+  background: linear-gradient(
+    0deg,
+    rgba(22,40,31,0.94) 0%,
+    rgba(22,40,31,0.85) 15%,
+    rgba(22,40,31,0) var(--altura-degrade)
+  );
   transition: opacity 0.4s ease;
 }
 .jogo-card:not(.ativo) .jogo-fundo::after {
@@ -136,6 +150,29 @@ body.pagina-jogos .header-site {
 }
 .jogo-card:not(.ativo):hover .jogo-fundo img { transform: scale(1.04); }
 .jogo-card .jogo-fundo img { transition: transform 0.6s ease; }
+
+/* Destaque do card selecionado: a imagem ganha brilho, contraste e cor,
+   e os recolhidos ficam levemente apagados. O degradê não é alterado. */
+.jogo-card .jogo-fundo img {
+  --brilho-ativo: 1.18;      /* <<< MEXA AQUI: brilho do card selecionado (1 = normal) */
+  --contraste-ativo: 1.12;   /* contraste do card selecionado */
+  --cor-ativo: 1.15;         /* saturação do card selecionado */
+  --brilho-recolhido: 0.90;  /* brilho dos cards não selecionados (1 = normal) */
+
+  filter: brightness(var(--brilho-recolhido)) saturate(0.9);
+  transition: transform 0.6s ease, filter 0.5s ease;
+}
+.jogo-card.ativo .jogo-fundo img {
+  filter: brightness(var(--brilho-ativo)) contrast(var(--contraste-ativo)) saturate(var(--cor-ativo));
+}
+
+/* Card da onça: efeito de destaque bem mais suave que nos outros cards */
+.jogo-card[data-jogo="desafio-dos-biomas"] .jogo-fundo img {
+  --brilho-ativo: 1.05;      /* geral: 1.18 */
+  --contraste-ativo: 1.03;   /* geral: 1.12 */
+  --cor-ativo: 1.05;         /* geral: 1.15 */
+  --brilho-recolhido: 0.92;  /* geral: 0.85 (menos apagado quando não selecionado) */
+}
 
 /* Título visível só quando o card está recolhido (fatia estreita) — sempre centralizado */
 .jogo-titulo-recolhido {
@@ -493,3 +530,264 @@ body.pagina-jogos .header-site {
   .games-menu, .game-panel { border-radius: var(--raio-pequeno); }
   .especies-opcoes { grid-template-columns: 1fr; }
 }
+
+/* Cards mantêm sempre o mesmo formato. Em telas mais altas (F11) crescem
+   até o limite de --altura-max-card e ficam centralizados na vertical. */
+@media (min-width: 861px) {
+  .secao-jogos {
+    max-width: none;
+    padding-block: 28px;           /* igual em cima e embaixo, pra centralizar de verdade */
+  }
+  .seletor-jogos {
+    --proporcao-card: 329 / 549;   /* formato dos cards (largura / altura) */
+    --altura-max-card: 590px;      /* <<< MEXA AQUI pra controlar o tamanho máximo */
+    justify-content: center;       /* centraliza na horizontal */
+    align-items: center;           /* centraliza na vertical (header → fim da página) */
+  }
+  .jogo-card {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    height: 100%;
+    max-height: min(var(--altura-max-card), calc((100vw - 146px) / 4 * 549 / 329));
+    aspect-ratio: var(--proporcao-card);
+  }
+}
+
+/* ==========================================================================
+   MOLDURA DOS JOGOS — creme com borda dourada, FORMATO FIXO
+   A moldura tem proporção fixa e tudo dentro dela é medido em % da largura
+   dela (unidade cqw). No F11 ou em qualquer janela ela só muda de tamanho,
+   nunca de formato, e sempre cabe inteira na tela.
+   ========================================================================== */
+.game-overlay {
+  padding: 1rem;
+}
+
+.games-menu,
+.game-panel {
+  --ouro: #C9A24B;              /* <<< cor da borda e detalhes */
+  --creme: #F5EDD8;             /* <<< fundo da moldura */
+  --creme-claro: #FBF6E8;
+  --verde: var(--cor-floresta); /* texto e barras escuras */
+
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+
+  font-family: var(--fonte-titulo);
+  color: var(--verde);
+  background: linear-gradient(180deg, var(--creme-claro) 0%, var(--creme) 100%);
+  border: 2px solid var(--ouro);
+  border-radius: 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+.games-menu {
+  width: min(94vw, 720px);
+}
+
+/* --- Tamanho e formato da moldura --- */
+.game-panel {
+  --prop-largura: 1000;          /* <<< formato da moldura: largura... */
+  --prop-altura: 705;            /* <<< ...e altura (aumente a altura pra deixá-la mais "alta") */
+  --largura-max-moldura: 1400px; /* <<< teto do tamanho (em telas muito grandes) */
+
+  /* a largura é limitada pela largura da tela E pela altura da tela,
+     então a moldura sempre cabe inteira, sem rolagem */
+  width: min(94vw, var(--largura-max-moldura), calc((100dvh - 2rem) * var(--prop-largura) / var(--prop-altura)));
+  aspect-ratio: var(--prop-largura) / var(--prop-altura);
+  container-type: inline-size;   /* permite medir tudo dentro em % da largura (cqw) */
+}
+
+/* --- Cabeçalho --- */
+.game-panel .game-header {
+  flex: 0 0 auto;
+  height: 7.4cqw;
+  padding: 0 3cqw;
+  border-bottom: 0;
+}
+.games-menu-header {
+  padding: 16px 32px;
+  border-bottom: 0;
+}
+.game-title {
+  font-family: var(--fonte-titulo);
+  font-size: max(15px, 2.74cqw);
+  font-weight: 600;
+  color: var(--verde);
+}
+.games-menu-title {
+  font-family: var(--fonte-titulo);
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--verde);
+}
+.btn-back {
+  font-family: var(--fonte-titulo);
+  font-size: max(11px, 1.45cqw);
+  background: transparent;
+  border: 1.5px solid var(--ouro);
+  border-radius: 12px;
+  padding: 0.75cqw 1.5cqw;
+  color: var(--verde);
+}
+.btn-back:hover { background: rgba(201, 162, 75, 0.15); }
+.game-close {
+  width: 4.4cqw;
+  height: 4.4cqw;
+  min-width: 30px;
+  min-height: 30px;
+  background: transparent;
+  border: 2px solid var(--ouro);
+  color: var(--verde);
+  font-size: max(12px, 1.1cqw);
+}
+.game-close:hover { background: rgba(201, 162, 75, 0.15); color: var(--verde); }
+
+/* --- Barra de pontos / nível / vidas (pílula verde escura) --- */
+.game-hud {
+  flex: 0 0 auto;
+  margin: 0 2.1cqw 1.1cqw;
+  padding: 1.1cqw 2.7cqw;
+  background: var(--verde);
+  border: 2px solid var(--ouro);
+  border-radius: 999px;
+  color: var(--cor-texto-claro);
+  font-family: var(--fonte-titulo);
+  font-size: max(11px, 1.6cqw);
+}
+.hud-score strong,
+.hud-level strong { color: #5BD65B; }   /* o nível ganha cor própria pelo jogo (Fácil/Médio/Difícil) */
+.hud-lives strong { color: var(--cor-texto-claro); }
+.hud-score::before { content: "⬢"; color: #5BD65B; margin-right: 0.9cqw; }
+.hud-level::before { content: "🌿"; margin-right: 0.7cqw; }
+
+/* --- Área do jogo: ocupa o espaço que sobra, sempre sem deformar --- */
+.game-canvas-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+}
+#game-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;           /* mostra o jogo inteiro, sem esticar */
+}
+/* No quiz (com os botões embaixo) a área da foto fica mais baixa: a foto preenche
+   a área sem deformar, alinhada ao topo (a barra de tempo continua visível). */
+.game-panel:has(.especies-opcoes[style*="grid"]) #game-canvas {
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* --- Tela de início / fim de jogo (por cima do jogo) --- */
+.game-screen {
+  gap: 1.3cqw;
+  padding: 3cqw;
+}
+.game-screen h2 {
+  font-size: max(18px, 2.6cqw);
+}
+.game-screen p {
+  font-size: max(11px, 1.44cqw);
+  max-width: 44cqw;
+}
+.btn-start-game {
+  padding: 1.2cqw 3.3cqw;
+  font-size: max(12px, 1.4cqw);
+}
+
+/* --- Botões de resposta do quiz --- */
+.especies-opcoes {
+  flex: 0 0 auto;
+  gap: 2.6cqw;
+  padding: 1.9cqw 2.5cqw;
+  background: transparent;
+  border-top: 1.5px solid var(--ouro);
+}
+.especie-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.3cqw;
+  padding: 1.4cqw 1cqw;
+  font-family: var(--fonte-titulo);
+  font-size: max(11px, 1.75cqw);
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--verde);
+  background: var(--creme-claro);
+  border: 2px solid var(--ouro);
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+.especie-btn::before {
+  content: "🐾";
+  font-size: 1.05em;
+  filter: sepia(1) saturate(2.5) brightness(0.95); /* pata dourada */
+}
+.especie-btn:hover {
+  background: #FFF9E9;
+  border-color: #A67F2E;
+  transform: translateY(-1px);
+}
+.especie-btn.correct {
+  background: rgba(47, 125, 79, 0.18);
+  border-color: #2F7D4F;
+  color: #1F6B3F;
+}
+.especie-btn.wrong {
+  background: rgba(192, 57, 43, 0.14);
+  border-color: #C0392B;
+  color: #A93226;
+}
+
+/* --- Faixa de dica embaixo (verde escura) --- */
+.game-tip {
+  flex: 0 0 auto;
+  padding: 1.3cqw 2cqw;
+  background: var(--verde);
+  color: var(--cor-texto-claro);
+  border-top: 1.5px solid var(--ouro);
+  font-family: var(--fonte-titulo);
+  font-size: max(9px, 1.22cqw);
+  letter-spacing: 0.05em;
+}
+.game-tip::before,
+.game-tip::after {
+  content: "🐾";
+  margin: 0 1.3cqw;
+  filter: sepia(1) saturate(2.5) brightness(0.95);
+}
+
+/* ===== Tipografia dos cards aplicada a toda a página de jogos ===== */
+/* Formato 1: título */
+.pagina-jogos .game-title,
+.pagina-jogos .games-menu-title,
+.pagina-jogos .game-screen h2,
+.pagina-jogos .btn-start-game,
+.pagina-jogos .btn-back,
+.pagina-jogos .game-close,
+.pagina-jogos .especie-btn,
+.pagina-jogos .hit-popup {
+  font-family: var(--fonte-corpo);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+/* Formato 2: eyebrow */
+.pagina-jogos .game-screen p,
+.pagina-jogos .game-hud,
+.pagina-jogos .game-tip {
+  font-family: var(--fonte-corpo);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* Sem emojis decorativos (o ⬢ dos pontos continua) */
+.pagina-jogos .hud-level::before,
+.pagina-jogos .especie-btn::before,
+.pagina-jogos .game-tip::before,
+.pagina-jogos .game-tip::after { content: none; }

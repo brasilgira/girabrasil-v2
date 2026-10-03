@@ -23,13 +23,16 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.55;
+  object-position: center;
+  /* Antes: opacity:0.55 + gradiente quase opaco por cima lavavam a foto
+     inteira. A imagem agora aparece de verdade; só a faixa de baixo (onde
+     fica o texto) recebe sombra, pelo ::after abaixo. */
 }
 .auth-imagem::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(10,20,15,0.95) 0%, rgba(10,20,15,0.35) 100%);
+  background: linear-gradient(0deg, rgba(8,16,12,0.92) 0%, rgba(8,16,12,0.55) 32%, rgba(8,16,12,0) 62%);
 }
 .auth-imagem-conteudo {
   position: relative;
@@ -134,19 +137,198 @@
   color: var(--cor-texto-suave);
 }
 
-.auth-aviso-prototipo {
-  margin-top: 32px;
-  padding: 14px 16px;
-  border: 1px dashed var(--cor-borda);
-  border-radius: var(--raio-pequeno);
-  background: var(--cor-fundo-alt);
+/* ==========================================================================
+   Campo de senha com botão mostrar/ocultar
+   ========================================================================== */
+.auth-campo-senha { position: relative; }
+.auth-campo-senha input { padding-right: 44px; }
+.auth-toggle-senha {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  margin-top: 13px; /* alinha com o input, abaixo do label */
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cor-texto-suave);
+  padding: 6px;
+  display: flex;
+  border-radius: 6px;
+}
+.auth-toggle-senha:hover { color: var(--cor-texto); }
+.auth-toggle-senha:focus-visible { outline: 2px solid var(--cor-destaque); outline-offset: 1px; }
+
+.auth-regra-senha {
+  margin-top: 8px;
   font-size: 0.78rem;
   color: var(--cor-texto-suave);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.auth-regra-senha[data-ok="true"] { color: #3C6B4A; }
+.auth-regra-senha svg { flex: none; }
+
+/* ==========================================================================
+   Estado de erro/sucesso dos campos
+   ========================================================================== */
+.auth-campo input[aria-invalid="true"] { border-color: var(--cor-alerta); }
+.auth-campo-mensagem {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  min-height: 1em;
+}
+.auth-campo-mensagem--erro { color: var(--cor-alerta); }
+.auth-campo-mensagem--ok { color: #3C6B4A; }
+.auth-campo-mensagem--checando { color: var(--cor-texto-suave); }
+
+.auth-erro {
+  font-size: 0.86rem;
+  color: var(--cor-alerta);
+  background: rgba(181, 101, 46, 0.1);
+  border: 1px solid rgba(181, 101, 46, 0.25);
+  border-radius: var(--raio-pequeno);
+  padding: 10px 14px;
   line-height: 1.5;
+}
+
+/* ==========================================================================
+   Botão com estado de carregamento
+   ========================================================================== */
+.auth-form button[type="submit"] {
+  width: 100%;
+  justify-content: center;
+  padding: 13px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.auth-form button[type="submit"]:disabled { opacity: 0.75; cursor: not-allowed; }
+.auth-spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: currentColor;
+  animation: auth-girar 0.7s linear infinite;
+  display: none;
+}
+button[data-carregando="true"] .auth-spinner { display: inline-block; }
+button[data-carregando="true"] .auth-rotulo-botao { opacity: 0.85; }
+@keyframes auth-girar { to { transform: rotate(360deg); } }
+
+/* ==========================================================================
+   Seleção de avatar no cadastro — reaproveita o mesmo mecanismo do
+   perfil (avatar_url + fotos de espécies já existentes no projeto),
+   com a opção extra de enviar uma foto própria (Supabase Storage).
+   ========================================================================== */
+.auth-avatar-etapa { display: flex; flex-direction: column; gap: 12px; margin-bottom: 6px; }
+.auth-avatar-linha { display: flex; align-items: center; gap: 16px; }
+
+.auth-avatar-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--cor-fundo-alt);
+  border: 1.5px dashed var(--cor-borda);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-texto-suave);
+}
+.auth-avatar-preview img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.auth-avatar-preview.tem-foto { border-style: solid; border-color: var(--cor-destaque); }
+
+.auth-avatar-acoes { display: flex; flex-direction: column; gap: 6px; }
+.auth-avatar-botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.auth-avatar-botao-secundario {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cor-destaque);
+  background: none;
+  border: 1px solid var(--cor-borda);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.auth-avatar-botao-secundario:hover { border-color: var(--cor-destaque); background: var(--cor-fundo-alt); }
+.auth-avatar-ajuda { font-size: 0.76rem; color: var(--cor-texto-suave); }
+
+.auth-avatar-grid {
+  display: none;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+.auth-avatar-grid.is-aberto { display: grid; }
+.auth-avatar-opcao {
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: var(--cor-borda);
+}
+.auth-avatar-opcao img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.auth-avatar-opcao:hover { border-color: var(--cor-borda-escura); }
+.auth-avatar-opcao.selecionado { border-color: var(--cor-destaque); }
+
+/* ==========================================================================
+   Toast — notificação flutuante (toast.js)
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 32px));
+}
+.toast-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--cor-floresta);
+  color: var(--cor-texto-claro);
+  padding: 13px 14px;
+  border-radius: var(--raio-pequeno);
+  box-shadow: 0 8px 24px rgba(10,20,15,0.22);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toast-item.is-visivel { opacity: 1; transform: translateY(0); }
+.toast-item__icone { flex: none; margin-top: 1px; }
+.toast-item__texto { font-size: 0.86rem; line-height: 1.45; flex: 1; }
+.toast-item__fechar {
+  background: none; border: none; color: inherit; opacity: 0.7; cursor: pointer;
+  font-size: 1.1rem; line-height: 1; padding: 0 2px; flex: none;
+}
+.toast-item__fechar:hover { opacity: 1; }
+.toast-item--sucesso { background: #1F3A28; }
+.toast-item--erro { background: #4A2A1C; }
+.toast-item--aviso { background: var(--cor-floresta); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item, .auth-spinner, .auth-toggle-senha { transition: none; animation: none; }
 }
 
 @media (max-width: 900px) {
   .auth-grid { grid-template-columns: 1fr; }
-  .auth-imagem { min-height: 260px; }
+  .auth-imagem { min-height: 220px; }
   .auth-campos-duplos { grid-template-columns: 1fr; }
+  .auth-avatar-grid { grid-template-columns: repeat(5, 1fr); }
+  .toast-container { left: 12px; right: 12px; max-width: none; }
+}
+
+@media (max-width: 420px) {
+  .auth-avatar-grid { grid-template-columns: repeat(4, 1fr); }
 }

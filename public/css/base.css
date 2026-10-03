@@ -353,6 +353,15 @@ h1, h2, h3 {
   font-weight: 700;
   letter-spacing: 0.02em;
   flex-shrink: 0;
+  overflow: hidden;
+}
+.perfil-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 50%;
 }
 
 .perfil-nome {
@@ -376,4 +385,57 @@ h1, h2, h3 {
     background-image: url('../assets/logo/logov.svg');
     background-size: auto 220%;
   }
+}
+/* Indicador animado do menu — vale para todas as páginas */
+.nav-site {
+  position: relative;
+}
+.nav-site a {
+  position: relative;
+  z-index: 2;
+}
+/* O link ativo tem a cor normal; o branco só aparece sob a pílula */
+.nav-site a.ativo {
+  background-color: transparent !important;
+  color: var(--cor-texto-suave);
+}
+.nav-site .indicador-verde {
+  position: absolute;
+  z-index: 3;              /* por cima dos links, pra cobrir o texto escuro */
+  overflow: hidden;        /* recorta o texto branco no formato da pílula */
+  border-radius: 999px;
+  background: var(--cor-floresta, #16281f);
+  pointer-events: none;
+  opacity: 0;
+}
+/* Cópia do menu em branco, que fica dentro da pílula (criada pelo script) */
+.indicador-texto {
+  position: absolute;
+  display: flex;
+  width: max-content;
+  pointer-events: none;
+}
+.indicador-texto a {
+  color: #fff !important;
+  background: transparent !important;
+  transition: none;
+}
+/* Troca de página suave: o header fica parado e o resto faz um fade */
+@view-transition {
+  navigation: auto;
+}
+.header-site {
+  view-transition-name: header-site;
+}
+::view-transition-old(header-site) {
+  display: none;               /* não mostra o header antigo... */
+}
+::view-transition-new(header-site) {
+  animation: none;             /* ...só o novo, sem fade: parece que nunca saiu */
+}
+::view-transition-group(root) {
+  animation-duration: 0.3s;    /* velocidade do fade do conteúdo */
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
 }

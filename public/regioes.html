@@ -30,35 +30,58 @@
   </div>
 </header>
 
-<div class="pagina-titulo">
-  <div class="eyebrow">GEOGRAFIA E BIOMAS</div>
-  <h1>O Brasil visto por suas regiões.</h1>
-  <p>Selecione uma região para conhecer seus estados, biomas predominantes, biodiversidade e os temas ambientais em pauta.</p>
-</div>
-
-<section class="secao-regioes">
-  <div class="grid-regioes">
-
-    <div class="mapa-card">
-      <!-- Mapa do Brasil em SVG (5 regiões). Preenchido via JS a partir de
-           window.MAPA_BRASIL_SVG (js/mapa-brasil-svg.js) — o mesmo mapa usado
-           nas páginas de bioma. Clicar em uma região tem o mesmo efeito que
-           clicar no botão correspondente abaixo. -->
-      <div class="mapa-regioes-wrap" id="mapa-regioes-wrap"></div>
-
-      <div class="region-pills">
-        <button class="pill-regiao ativo" data-regiao="norte">Norte</button>
-        <button class="pill-regiao" data-regiao="nordeste">Nordeste</button>
-        <button class="pill-regiao" data-regiao="centro-oeste">Centro-Oeste</button>
-        <button class="pill-regiao" data-regiao="sudeste">Sudeste</button>
-        <button class="pill-regiao" data-regiao="sul">Sul</button>
-      </div>
+<section class="regioes-hero">
+  <div class="regioes-hero-inner">
+    <div class="regioes-hero-texto">
+      <div class="eyebrow claro">ATLAS DO TERRITÓRIO BRASILEIRO</div>
+      <h1>O Brasil é maior quando você olha de perto.</h1>
+      <p class="dek">Cinco regiões, seis biomas, um mesmo país — cada uma com sua própria geografia, seus próprios desafios ambientais e suas próprias histórias em pauta. Explore abaixo.</p>
     </div>
 
-    <!-- Preenchido dinamicamente por js/regioes.js -->
-    <div class="painel-regiao"></div>
-
+    <div class="regioes-hero-mapa">
+      <!-- Mapa do Brasil em SVG (5 regiões), preenchido via JS a partir de
+           window.MAPA_BRASIL_SVG (js/mapa-brasil-svg.js) — o mesmo mapa usado
+           nas páginas de bioma. Aqui é só um elemento gráfico do hero: hover
+           e foco destacam uma região, e clicar leva direto pra página dela,
+           mas a navegação principal da tela é o atlas editorial abaixo. -->
+      <div class="mapa-regioes-wrap" id="mapa-regioes-wrap" aria-hidden="true"></div>
+      <p class="mapa-hero-legenda" id="mapa-hero-legenda">Passe o mouse ou navegue pelo teclado para destacar uma região do mapa.</p>
+    </div>
   </div>
+</section>
+
+<section class="secao-atlas-regioes" aria-labelledby="titulo-atlas-regioes">
+  <div class="secao-cabecalho">
+    <div class="eyebrow">EXPLORE POR REGIÃO</div>
+    <h2 id="titulo-atlas-regioes">Cinco regiões, cinco portas de entrada</h2>
+  </div>
+
+  <!-- Preenchido dinamicamente por js/regioes.js — cada bloco é um link
+       real para public/regioes/<chave>.html -->
+  <div class="atlas-regioes-grade" id="atlas-regioes-grade"></div>
+</section>
+
+<section class="secao-atlas-biomas" aria-labelledby="titulo-atlas-biomas">
+  <div class="secao-cabecalho">
+    <div class="eyebrow">REGIÃO ≠ BIOMA</div>
+    <h2 id="titulo-atlas-biomas">Um Brasil, muitos biomas</h2>
+    <p class="secao-descricao">Região é uma divisão política; bioma é uma divisão ambiental — e elas não coincidem. A Mata Atlântica, por exemplo, atravessa Sudeste, Sul e Nordeste ao mesmo tempo.</p>
+  </div>
+
+  <!-- Preenchido dinamicamente por js/regioes.js a partir de window.BIOMAS -->
+  <div class="atlas-biomas-grade" id="atlas-biomas-grade"></div>
+</section>
+
+<section class="secao-empauta" id="secao-empauta" aria-labelledby="titulo-empauta">
+  <div class="secao-cabecalho">
+    <div class="eyebrow">ATUALIDADES</div>
+    <h2 id="titulo-empauta">Em pauta pelo Brasil</h2>
+  </div>
+
+  <!-- Preenchido dinamicamente por js/regioes.js a partir de /api/noticias.
+       Se não houver notícia regional real disponível, a seção inteira é
+       removida via JS — nunca mostramos notícia inventada. -->
+  <div class="empauta-trilho" id="empauta-trilho"></div>
 </section>
 
 <footer class="footer-site">
@@ -72,7 +95,7 @@
       <ul>
         <li><a href="index.html">Início</a></li>
         <li><a href="noticias.html">Notícias</a></li>
-        <li><a href="regioes.html">Regiões</a></li>
+        <li><a href="regioes.html" class="ativo">Regiões</a></li>
         <li><a href="jogos.html">Jogos</a></li>
         <li><a href="girabot.html">Gira-Bot</a></li>
         <li><a href="sobre.html">Sobre</a></li>
@@ -93,6 +116,7 @@
 
 <script src="js/mapa-brasil-svg.js"></script>
 <script src="js/regioes-data.js"></script>
+<script src="js/biomas-data.js"></script>
 <script src="js/regioes.js" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {

@@ -50,11 +50,14 @@
       <form class="auth-form" id="formLogin">
         <div class="auth-campo">
           <label for="email">E-mail</label>
-          <input type="email" id="email" placeholder="seu@email.com" required>
+          <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
         </div>
-        <div class="auth-campo">
+        <div class="auth-campo auth-campo-senha">
           <label for="senha">Senha</label>
-          <input type="password" id="senha" placeholder="••••••••" required>
+          <input type="password" id="senha" name="current-password" placeholder="••••••••" autocomplete="current-password" required>
+          <button type="button" class="auth-toggle-senha" data-alvo="senha" aria-label="Mostrar senha">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
         </div>
 
         <div class="auth-opcoes">
@@ -71,10 +74,6 @@
       </form>
 
       <p class="auth-rodape-link">Não tem uma conta? <a href="cadastro.html" class="auth-link">Crie uma.</a></p>
-
-      <p class="auth-aviso-prototipo">
-        Protótipo: o acesso é demonstrativo e não envia dados a nenhum servidor.
-      </p>
     </div>
   </div>
 
@@ -83,23 +82,41 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
+<script src="js/toast.js"></script>
 <script>
   // Se já tiver "logado" (localStorage), não faz sentido ver essa tela de novo
   redirecionarSeJaLogado();
 
-  document.getElementById('formLogin').addEventListener('submit', async (evento) => {
+  document.querySelectorAll('.auth-toggle-senha').forEach((botao) => {
+    botao.addEventListener('click', () => {
+      const campo = document.getElementById(botao.dataset.alvo);
+      const mostrando = campo.type === 'text';
+      campo.type = mostrando ? 'password' : 'text';
+      botao.setAttribute('aria-label', mostrando ? 'Mostrar senha' : 'Ocultar senha');
+    });
+  });
+
+  const form = document.getElementById('formLogin');
+  const botaoSubmit = form.querySelector('button[type="submit"]');
+
+  form.addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const email = document.getElementById('email').value.trim();
     const senha = document.getElementById('senha').value;
     const erro = document.getElementById('authErro');
     erro.style.display = 'none';
 
+    botaoSubmit.disabled = true;
+
     try {
       await logarUsuario({ email, senha });
+      mostrarToast('Login realizado com sucesso!', 'sucesso');
       window.location.href = obterRedirectDaUrl() || 'index.html';
     } catch (e) {
       erro.textContent = e.message || 'Não foi possível entrar. Verifique seus dados.';
       erro.style.display = 'block';
+      mostrarToast(e.message || 'Não foi possível entrar.', 'erro');
+      botaoSubmit.disabled = false;
     }
   });
 </script>
