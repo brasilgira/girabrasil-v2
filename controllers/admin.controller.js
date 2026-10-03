@@ -1,5 +1,8 @@
 // controllers/admin.controller.js
 const adminModel = require("../models/admin.model");
+const obterClienteSupabaseAdmin = require("../config/supabaseAdmin");
+
+const REGEX_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function listarNoticias(req, res) {
   try {
@@ -164,13 +167,66 @@ async function apagarComentario(req, res) {
   }
 }
 
+// Lista só quem ainda tem conta de verdade no Supabase Auth (ver comentário
+// em models/admin.model.js#listarUsuariosPorIds) — assim, uma conta cujo
+// acesso foi removido por excluirAcessoUsuario() some daqui automaticamente,
+// sem precisar de nenhuma coluna nova em `perfil`.
 async function listarUsuarios(req, res) {
   try {
-    const usuarios = await adminModel.listarUsuarios();
+    const cliente = obterClienteSupabaseAdmin();
+    const idsAtivos = [];
+
+    // auth.admin.listUsers() é paginado; 1000 por página é o teto do
+    // Supabase, então isto cobre qualquer quantidade razoável de usuários
+    // em poucas chamadas.
+    for (let pagina = 1; pagina <= 20; pagina++) {
+      const { data, error } = await cliente.auth.admin.listUsers({ page: pagina, perPage: 1000 });
+      if (error) throw error;
+      const lote = (data && data.users) || [];
+      idsAtivos.push(...lote.map((u) => u.id));
+      if (lote.length < 1000) break;
+    }
+
+    const usuarios = await adminModel.listarUsuariosPorIds(idsAtivos);
     res.status(200).json(usuarios);
   } catch (erro) {
-    console.error("Erro ao listar usuários (admin):", erro);
+    console.error("Erro ao listar usuários (admin):", erro.message || erro);
     res.status(500).json({ erro: "Erro ao listar usuários." });
+  }
+}
+
+// Remove o ACESSO da conta (Supabase Auth), não os dados dela. Segue
+// exatamente o mesmo mecanismo de controllers/conta.controller.js#excluirConta
+// (auth.admin.deleteUser, service role só no backend) — a diferença é que
+// aqui é o administrador agindo sobre a conta de outra pessoa, por isso a
+// checagem extra de "não pode ser a própria conta do admin logado".
+async function excluirAcessoUsuario(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (!REGEX_UUID.test(id || "")) {
+      return res.status(400).json({ erro: "ID de usuário inválido." });
+    }
+
+    // Defesa em profundidade: o botão já vem desabilitado no frontend pra
+    // própria conta do admin, mas a verificação que realmente importa é
+    // esta aqui — nunca confiar só em esconder/desabilitar algo na tela.
+    if (req.usuarioAdmin && req.usuarioAdmin.id === id) {
+      return res.status(400).json({ erro: "Você não pode remover o acesso da própria conta administrativa." });
+    }
+
+    const cliente = obterClienteSupabaseAdmin();
+    const { error } = await cliente.auth.admin.deleteUser(id);
+
+    if (error) {
+      console.error("Erro ao remover acesso de usuário (admin):", error.message);
+      return res.status(500).json({ erro: "Não foi possível remover o acesso desta conta." });
+    }
+
+    res.status(200).json({ mensagem: "Acesso da conta removido." });
+  } catch (erro) {
+    console.error("Erro ao remover acesso de usuário (admin):", erro.message || erro);
+    res.status(500).json({ erro: "Não foi possível remover o acesso desta conta." });
   }
 }
 
@@ -216,5 +272,6 @@ module.exports = {
   editarComentario,
   apagarComentario,
   listarUsuarios,
+  excluirAcessoUsuario,
   obterMetricas,
 };

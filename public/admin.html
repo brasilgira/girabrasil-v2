@@ -35,67 +35,59 @@
     </div>
   </header>
 
-  <div class="admin-shell">
-    <div class="admin-corpo">
+<div class="admin-shell">
 
-      <aside class="admin-menu" aria-label="Seções do painel">
-        <div class="admin-menu__cabecalho">
-          <span class="admin-menu__marca">Painel</span>
-          <span class="admin-menu__selo">ADMINISTRATIVO</span>
+    <nav class="admin-abas" role="tablist" aria-label="Seções do painel administrativo">
+      <button role="tab" id="aba-visao-geral" aria-controls="painel-visao-geral" aria-selected="true" tabindex="0" class="admin-aba is-ativa" data-secao="visao-geral" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/>
+          <rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
+        </svg>
+        <span>Visão geral</span>
+      </button>
+      <button role="tab" id="aba-noticias" aria-controls="painel-noticias" aria-selected="false" tabindex="-1" class="admin-aba" data-secao="noticias" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/>
+        </svg>
+        <span>Notícias</span>
+      </button>
+      <button role="tab" id="aba-comentarios" aria-controls="painel-comentarios" aria-selected="false" tabindex="-1" class="admin-aba" data-secao="comentarios" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 9 9 0 0 1-3.9-1L3 20l1.2-5.1a8.4 8.4 0 1 1 16.8-3.4Z"/>
+        </svg>
+        <span>Comentários</span>
+      </button>
+      <button role="tab" id="aba-usuarios" aria-controls="painel-usuarios" aria-selected="false" tabindex="-1" class="admin-aba" data-secao="usuarios" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Usuários</span>
+      </button>
+
+      <a href="index.html" class="admin-abas__voltar">← Voltar ao site</a>
+    </nav>
+
+    <main id="conteudo-principal" class="admin-conteudo">
+
+      <section class="admin-intro" aria-labelledby="titulo-painel">
+        <div>
+          <div class="eyebrow">GESTÃO DO GIRABRASIL</div>
+          <h1 id="titulo-painel">Painel Administrativo</h1>
+          <p>Acompanhe os principais dados da plataforma, gerencie notícias e modere os comentários da comunidade.</p>
         </div>
 
-        <button class="admin-menu__item is-ativo" data-secao="visao-geral" type="button">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/>
-            <rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
-          </svg>
-          <span>Visão geral</span>
-        </button>
-
-        <button class="admin-menu__item" data-secao="noticias" type="button">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/>
-          </svg>
-          <span>Notícias</span>
-        </button>
-
-        <button class="admin-menu__item" data-secao="comentarios" type="button">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 9 9 0 0 1-3.9-1L3 20l1.2-5.1a8.4 8.4 0 1 1 16.8-3.4Z"/>
-          </svg>
-          <span>Comentários</span>
-        </button>
-
-        <button class="admin-menu__item" data-secao="usuarios" type="button">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span>Usuários</span>
-        </button>
-
-        <div class="admin-menu__rodape">
-          <a href="index.html" class="admin-menu__voltar">← Voltar ao site</a>
-        </div>
-      </aside>
-
-      <main id="conteudo-principal" class="admin-conteudo">
-
-        <section class="admin-intro" aria-labelledby="titulo-painel">
+        <div class="admin-usuario">
+          <div class="admin-usuario__avatar" data-admin-iniciais>A</div>
           <div>
-            <div class="eyebrow">GESTÃO DO GIRABRASIL</div>
-            <h1 id="titulo-painel">Painel Administrativo</h1>
-            <p>Acompanhe os principais dados da plataforma, gerencie notícias e modere os comentários da comunidade.</p>
+            <strong data-admin-nome>Administrador</strong>
+            <span>Acesso administrativo</span>
           </div>
+        </div>
+      </section>
 
-          <div class="admin-usuario">
-            <div class="admin-usuario__avatar" data-admin-iniciais>A</div>
-            <div>
-              <strong data-admin-nome>Administrador</strong>
-              <span>Acesso administrativo</span>
-            </div>
-          </div>
-        </section>
+      <!-- ===================== VISÃO GERAL ===================== -->
+      <section id="painel-visao-geral" class="admin-painel" role="tabpanel" aria-labelledby="aba-visao-geral" tabindex="0">
 
         <section class="admin-metricas" aria-label="Métricas gerais">
           <article class="metrica">
@@ -139,102 +131,106 @@
           </article>
         </section>
 
-        <section class="admin-bloco admin-grafico" aria-label="Cadastros ao longo do tempo">
+        <!-- Recolhido por padrão (não é essencial pro dia a dia) — <details> nativo,
+             acessível por teclado/leitor de tela sem JS extra. -->
+        <details class="admin-bloco admin-grafico">
+          <summary>Cadastros ao longo do tempo</summary>
+          <div class="admin-grafico__corpo">
+            <p class="admin-bloco__legenda" style="margin-bottom: 14px;">Novos usuários por mês nos últimos 12 meses</p>
+            <div class="grafico-area">
+              <div class="grafico-eixo-y" data-grafico-eixo aria-hidden="true"></div>
+              <div class="grafico-barras" data-grafico-cadastros role="img" aria-label="Gráfico de barras de cadastros mensais"></div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- ===================== NOTÍCIAS ===================== -->
+      <section id="painel-noticias" class="admin-painel" role="tabpanel" aria-labelledby="aba-noticias" tabindex="0" hidden>
+        <section class="admin-bloco bloco-tabela" aria-label="Gerenciador de notícias">
           <div class="admin-bloco__cabecalho">
             <div>
-              <div class="admin-secao-kicker">CRESCIMENTO</div>
-              <h2>Cadastros ao longo do tempo</h2>
-              <p class="admin-bloco__legenda">Novos usuários por mês nos últimos 12 meses</p>
+              <div class="admin-secao-kicker">CONTEÚDO</div>
+              <h2>Gerenciador de notícias</h2>
             </div>
-            <div class="grafico-legenda"><span></span> Novos usuários</div>
+            <button class="botao botao--primario" type="button" data-abrir-modal="nova-noticia">
+              + Nova notícia
+            </button>
           </div>
 
-          <div class="grafico-area">
-            <div class="grafico-eixo-y" data-grafico-eixo aria-hidden="true"></div>
-            <div class="grafico-barras" data-grafico-cadastros role="img" aria-label="Gráfico de barras de cadastros mensais"></div>
+          <div class="tabela-wrapper">
+            <table class="tabela-admin">
+              <thead>
+                <tr>
+                  <th scope="col">Título</th>
+                  <th scope="col">Região</th>
+                  <th scope="col">Publicada em</th>
+                  <th scope="col">Ações</th>
+                </tr>
+              </thead>
+              <tbody data-tabela="noticias"></tbody>
+            </table>
           </div>
         </section>
+      </section>
 
-        <div class="admin-duas-colunas">
-
-          <section id="noticias" class="admin-bloco bloco-tabela" aria-label="Gerenciador de notícias">
-            <div class="admin-bloco__cabecalho">
-              <div>
-                <div class="admin-secao-kicker">CONTEÚDO</div>
-                <h2>Gerenciador de notícias</h2>
-              </div>
-              <button class="botao botao--primario" type="button" data-abrir-modal="nova-noticia">
-                + Nova notícia
-              </button>
+      <!-- ===================== COMENTÁRIOS ===================== -->
+      <section id="painel-comentarios" class="admin-painel" role="tabpanel" aria-labelledby="aba-comentarios" tabindex="0" hidden>
+        <section class="admin-bloco bloco-tabela" aria-label="Moderação de comentários">
+          <div class="admin-bloco__cabecalho">
+            <div>
+              <div class="admin-secao-kicker">COMUNIDADE</div>
+              <h2>Moderação de comentários</h2>
             </div>
+            <span class="admin-contador">Recentes</span>
+          </div>
 
-            <div class="tabela-wrapper">
-              <table class="tabela-admin">
-                <thead>
-                  <tr>
-                    <th scope="col">Título</th>
-                    <th scope="col">Região</th>
-                    <th scope="col">Publicada em</th>
-                    <th scope="col">Ações</th>
-                  </tr>
-                </thead>
-                <tbody data-tabela="noticias"></tbody>
-              </table>
+          <div class="tabela-wrapper">
+            <table class="tabela-admin">
+              <thead>
+                <tr>
+                  <th scope="col">Autor</th>
+                  <th scope="col">Notícia</th>
+                  <th scope="col">Comentário</th>
+                  <th scope="col">Ações</th>
+                </tr>
+              </thead>
+              <tbody data-tabela="comentarios"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ===================== USUÁRIOS ===================== -->
+      <section id="painel-usuarios" class="admin-painel" role="tabpanel" aria-labelledby="aba-usuarios" tabindex="0" hidden>
+        <section class="admin-bloco bloco-tabela" aria-label="Usuários cadastrados">
+          <div class="admin-bloco__cabecalho">
+            <div>
+              <div class="admin-secao-kicker">COMUNIDADE</div>
+              <h2>Usuários cadastrados</h2>
             </div>
-          </section>
+            <span class="admin-contador" data-contador="usuarios"></span>
+          </div>
 
-          <section id="comentarios" class="admin-bloco bloco-tabela" aria-label="Moderação de comentários">
-            <div class="admin-bloco__cabecalho">
-              <div>
-                <div class="admin-secao-kicker">COMUNIDADE</div>
-                <h2>Moderação de comentários</h2>
-              </div>
-              <span class="admin-contador">Recentes</span>
-            </div>
+          <div class="tabela-wrapper">
+            <table class="tabela-admin">
+              <thead>
+                <tr>
+                  <th scope="col">Nome</th>
+                  <th scope="col">Cadastrado em</th>
+                  <th scope="col">Ações</th>
+                </tr>
+              </thead>
+              <tbody data-tabela="usuarios"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
 
-            <div class="tabela-wrapper">
-              <table class="tabela-admin">
-                <thead>
-                  <tr>
-                    <th scope="col">Autor</th>
-                    <th scope="col">Notícia</th>
-                    <th scope="col">Comentário</th>
-                    <th scope="col">Ações</th>
-                  </tr>
-                </thead>
-                <tbody data-tabela="comentarios"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section id="usuarios" class="admin-bloco bloco-tabela" aria-label="Usuários cadastrados">
-            <div class="admin-bloco__cabecalho">
-              <div>
-                <div class="admin-secao-kicker">COMUNIDADE</div>
-                <h2>Usuários cadastrados</h2>
-              </div>
-              <span class="admin-contador" data-contador="usuarios"></span>
-            </div>
-
-            <div class="tabela-wrapper">
-              <table class="tabela-admin">
-                <thead>
-                  <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">Cadastrado em</th>
-                  </tr>
-                </thead>
-                <tbody data-tabela="usuarios"></tbody>
-              </table>
-            </div>
-          </section>
-
-        </div>
-      </main>
-    </div>
+    </main>
   </div>
 
-  <footer class="footer-site">
+<footer class="footer-site">
     <div class="footer-inner">
       <div class="footer-marca">
         <div class="logo-site">Gira-Brasil</div>

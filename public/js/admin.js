@@ -24,6 +24,7 @@ const estado = {
   noticias: [],
   comentarios: [],
   regioes: [],
+  adminId: null,
 };
 
 /* ---------------------------------------------------------------------- */
@@ -42,9 +43,10 @@ async function iniciarPainel() {
     return;
   }
 
+  estado.adminId = usuario.id || null;
   preencherCabecalhoAdmin(usuario);
 
-  configurarMenuLateral();
+  configurarAbas();
   configurarModais();
   configurarFormularioNoticia();
   configurarFormularioComentario();
@@ -239,7 +241,6 @@ function renderizarNoticias(lista) {
   lista.forEach((noticia) => {
     const linha = document.createElement("tr");
     linha.dataset.linhaNoticia = noticia.id;
-    if (!noticia.ativo) linha.classList.add("esta-desativado");
 
     const tdTitulo = document.createElement("td");
     tdTitulo.className = "celula-truncada";
@@ -305,7 +306,6 @@ function renderizarComentarios(lista) {
   lista.forEach((comentario) => {
     const linha = document.createElement("tr");
     linha.dataset.linhaComentario = comentario.id;
-    if (!comentario.ativo) linha.classList.add("esta-desativado");
 
     const tdAutor = document.createElement("td");
     tdAutor.textContent = comentario.autor_nome || "—";
@@ -365,12 +365,13 @@ function renderizarUsuarios(lista) {
   corpo.innerHTML = "";
 
   if (!lista.length) {
-    corpo.appendChild(linhaVazia(2, "Nenhum usuário cadastrado ainda."));
+    corpo.appendChild(linhaVazia(3, "Nenhum usuário cadastrado ainda."));
     return;
   }
 
   lista.forEach((usuario) => {
     const linha = document.createElement("tr");
+    linha.dataset.linhaUsuario = usuario.id;
 
     const tdNome = document.createElement("td");
     tdNome.textContent = usuario.nome || "—";
@@ -378,7 +379,27 @@ function renderizarUsuarios(lista) {
     const tdData = document.createElement("td");
     tdData.textContent = formatarDataBr(usuario.criado_em);
 
-    linha.append(tdNome, tdData);
+    const souEuMesmo = Boolean(estado.adminId) && usuario.id === estado.adminId;
+
+    const tdAcoes = document.createElement("td");
+    tdAcoes.appendChild(
+      celulaAcoes([
+        {
+          texto: "Remover acesso",
+          perigo: true,
+          desabilitado: souEuMesmo,
+          titulo: souEuMesmo ? "Você não pode remover o acesso da própria conta administrativa." : undefined,
+          onClick: () =>
+            pedirConfirmacaoExclusao({
+              tipo: "usuario",
+              id: usuario.id,
+              descricao: `o acesso de "${usuario.nome || "este usuário"}" à conta`,
+            }),
+        },
+      ])
+    );
+
+    linha.append(tdNome, tdData, tdAcoes);
     corpo.appendChild(linha);
   });
 }
@@ -400,12 +421,17 @@ function linhaVazia(colspan, mensagem) {
 function celulaAcoes(acoes) {
   const container = document.createElement("div");
   container.className = "acoes-linha";
-  acoes.forEach(({ texto, perigo, onClick }) => {
+  acoes.forEach(({ texto, perigo, onClick, desabilitado, titulo }) => {
     const botao = document.createElement("button");
     botao.type = "button";
     botao.className = perigo ? "botao-acao botao-acao--perigo" : "botao-acao";
     botao.textContent = texto;
-    botao.addEventListener("click", onClick);
+    if (desabilitado) {
+      botao.disabled = true;
+    } else {
+      botao.addEventListener("click", onClick);
+    }
+    if (titulo) botao.title = titulo;
     container.appendChild(botao);
   });
   return container;
@@ -422,24 +448,58 @@ function formatarDataBr(isoString) {
 /* Menu lateral (troca de seção)                                          */
 /* ---------------------------------------------------------------------- */
 
-function configurarMenuLateral() {
-  const itens = document.querySelectorAll(".admin-menu__item");
+// Navegação real por abas (padrão ARIA tabs): só o painel selecionado fica
+// no DOM visível ([hidden] nos outros) — nada de "scroll até a âncora" com
+// tudo renderizado ao mesmo tempo. Os dados de cada seção já foram
+// carregados uma vez em iniciarPainel(); abrir/fechar aba nunca refaz a
+// requisição. A seção ativa fica guardada no hash da URL (#noticias etc.),
+// então dá pra recarregar a página ou mandar o link direto pra uma seção.
+function configurarAbas() {
+  const abas = Array.from(document.querySelectorAll(".admin-aba"));
+  const lista = document.querySelector(".admin-abas");
+  if (!abas.length || !lista) return;
 
-  itens.forEach((item) => {
-    item.addEventListener("click", () => {
-      itens.forEach((i) => i.classList.remove("is-ativo"));
-      item.classList.add("is-ativo");
-
-      const secaoAlvo = item.getAttribute("data-secao");
-
-      if (secaoAlvo === "visao-geral") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-
-      document.getElementById(secaoAlvo)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function ativarSecao(secao, { atualizarHash = true } = {}) {
+    abas.forEach((aba) => {
+      const ativa = aba.dataset.secao === secao;
+      aba.classList.toggle("is-ativa", ativa);
+      aba.setAttribute("aria-selected", String(ativa));
+      aba.tabIndex = ativa ? 0 : -1;
     });
+    document.querySelectorAll(".admin-painel").forEach((painel) => {
+      painel.hidden = painel.id !== `painel-${secao}`;
+    });
+    if (atualizarHash && window.location.hash.slice(1) !== secao) {
+      history.replaceState(null, "", `#${secao}`);
+    }
+  }
+
+  abas.forEach((aba) => {
+    aba.addEventListener("click", () => ativarSecao(aba.dataset.secao));
   });
+
+  // Setas esquerda/direita movem o foco entre abas, como o padrão ARIA de
+  // tabs espera (Home/End também, pra quem usa teclado com frequência).
+  lista.addEventListener("keydown", (evento) => {
+    const atual = abas.indexOf(document.activeElement);
+    if (atual === -1) return;
+
+    let alvo = null;
+    if (evento.key === "ArrowRight") alvo = abas[(atual + 1) % abas.length];
+    else if (evento.key === "ArrowLeft") alvo = abas[(atual - 1 + abas.length) % abas.length];
+    else if (evento.key === "Home") alvo = abas[0];
+    else if (evento.key === "End") alvo = abas[abas.length - 1];
+    if (!alvo) return;
+
+    evento.preventDefault();
+    alvo.focus();
+    ativarSecao(alvo.dataset.secao);
+  });
+
+  const secoesValidas = abas.map((a) => a.dataset.secao);
+  const secaoNaUrl = window.location.hash.slice(1);
+  const secaoInicial = secoesValidas.includes(secaoNaUrl) ? secaoNaUrl : "visao-geral";
+  ativarSecao(secaoInicial, { atualizarHash: false });
 }
 
 /* ---------------------------------------------------------------------- */
@@ -710,14 +770,56 @@ function configurarExclusao() {
   });
 }
 
-let pendenteExclusao = null; // { tipo: "noticia" | "comentario", id, descricao }
+let pendenteExclusao = null; // { tipo: "noticia" | "comentario" | "usuario", id, descricao }
+
+// Configuração por tipo: onde bate a API, o atributo de linha a remover da
+// tabela, qual tabela "revalidar" (mostrar estado vazio se zerou) e qual
+// aviso mostrar no modal de confirmação. Centralizar isso aqui é o que evita
+// o bug do "item fantasma": a linha só é removida (de verdade, com
+// .remove(), nunca só esmaecida) depois que o DELETE responde com sucesso.
+const CONFIG_EXCLUSAO = {
+  noticia: {
+    caminho: (id) => `/api/admin/noticias/${id}`,
+    seletorLinha: (id) => `[data-linha-noticia="${id}"]`,
+    colspanVazio: 4,
+    mensagemVazio: "Nenhuma notícia cadastrada ainda.",
+    corpoTabela: '[data-tabela="noticias"]',
+    mensagemAviso: (descricao) =>
+      `Tem certeza que quer apagar ${descricao}? A notícia some imediatamente da lista e da parte pública do site.`,
+    mensagemSucesso: "Notícia excluída.",
+  },
+  comentario: {
+    caminho: (id) => `/api/admin/comentarios/${id}`,
+    seletorLinha: (id) => `[data-linha-comentario="${id}"]`,
+    colspanVazio: 4,
+    mensagemVazio: "Nenhum comentário por aqui.",
+    corpoTabela: '[data-tabela="comentarios"]',
+    mensagemAviso: (descricao) =>
+      `Tem certeza que quer apagar ${descricao}? O comentário some imediatamente da lista e da parte pública do site.`,
+    mensagemSucesso: "Comentário excluído.",
+  },
+  usuario: {
+    caminho: (id) => `/api/admin/usuarios/${id}`,
+    seletorLinha: (id) => `[data-linha-usuario="${id}"]`,
+    colspanVazio: 3,
+    mensagemVazio: "Nenhum usuário cadastrado ainda.",
+    corpoTabela: '[data-tabela="usuarios"]',
+    // Importante (decisão explícita): isto remove só o ACESSO da conta no
+    // Supabase Auth. Não é uma exclusão completa — notícias, comentários,
+    // curtidas e notícias salvas dessa pessoa continuam no site exatamente
+    // como estão, e o registro de perfil permanece no banco. Por isso o
+    // aviso abaixo nunca fala em "apagar dados", só em remover o acesso.
+    mensagemAviso: (descricao) =>
+      `Tem certeza que quer remover ${descricao}? A pessoa perde o acesso ao login imediatamente. Notícias, comentários, curtidas e notícias salvas dela continuam no site normalmente — nenhum conteúdo é apagado.`,
+    mensagemSucesso: "Acesso da conta removido.",
+  },
+};
 
 function pedirConfirmacaoExclusao({ tipo, id, descricao }) {
   pendenteExclusao = { tipo, id, descricao };
 
   const modal = document.querySelector('[data-modal="confirmar-exclusao"]');
-  modal.querySelector("[data-texto-exclusao]").textContent =
-    `Tem certeza que quer apagar ${descricao}? Essa ação usa soft delete — o item continua aqui na lista, marcado como desativado, mas some da parte pública do site.`;
+  modal.querySelector("[data-texto-exclusao]").textContent = CONFIG_EXCLUSAO[tipo].mensagemAviso(descricao);
 
   abrirModal("confirmar-exclusao");
 }
@@ -725,22 +827,33 @@ function pedirConfirmacaoExclusao({ tipo, id, descricao }) {
 async function executarExclusaoPendente() {
   if (!pendenteExclusao) return;
   const { tipo, id } = pendenteExclusao;
-  const caminho = tipo === "noticia" ? `/api/admin/noticias/${id}` : `/api/admin/comentarios/${id}`;
+  const config = CONFIG_EXCLUSAO[tipo];
+  const botaoConfirmar = document.querySelector("[data-confirmar-exclusao]");
+
+  // Impede duplo clique/duplo envio enquanto a exclusão está em andamento.
+  if (botaoConfirmar) botaoConfirmar.disabled = true;
 
   try {
-    await chamarApiAdmin(caminho, { method: "DELETE" });
+    await chamarApiAdmin(config.caminho(id), { method: "DELETE" });
 
-    const linha = document.querySelector(
-      tipo === "noticia" ? `[data-linha-noticia="${id}"]` : `[data-linha-comentario="${id}"]`
-    );
-    linha?.classList.add("esta-desativado");
+    // Só mexe na interface DEPOIS da confirmação de sucesso do servidor —
+    // remove a linha de verdade (nunca deixa "fantasma" esmaecido) e, se a
+    // tabela ficou vazia, mostra o estado vazio em vez de nada.
+    document.querySelector(config.seletorLinha(id))?.remove();
+    const corpoTabela = document.querySelector(config.corpoTabela);
+    if (corpoTabela && corpoTabela.children.length === 0) {
+      corpoTabela.appendChild(linhaVazia(config.colspanVazio, config.mensagemVazio));
+    }
 
-    mostrarToast("Item apagado (soft delete) com sucesso.");
+    mostrarToast(config.mensagemSucesso);
     await carregarMetricas();
   } catch (erro) {
-    console.error("Erro ao apagar item:", erro);
-    mostrarToast(`Não foi possível apagar: ${erro.message}`);
+    // Se falhar, o item nunca foi removido do DOM — continua visível como
+    // estava, só com um aviso amigável (sem jargão técnico/SQL/stacktrace).
+    console.error(`Erro ao excluir (${tipo}):`, erro);
+    mostrarToast(`Não foi possível concluir a exclusão. ${erro.message}`);
   } finally {
+    if (botaoConfirmar) botaoConfirmar.disabled = false;
     fecharModal(document.querySelector('[data-modal="confirmar-exclusao"]'));
     pendenteExclusao = null;
   }

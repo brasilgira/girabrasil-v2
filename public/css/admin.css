@@ -78,133 +78,123 @@ a { color: inherit; }
   z-index: 30;
 }
 
+/* --------------------------------------------------------------------------
+   ESTRUTURA DA PÁGINA
+   body/.admin-shell em coluna flex de altura mínima = tela inteira, então o
+   rodapé (.footer-site, fora deste arquivo) nunca fica "no meio da tela" em
+   conteúdo curto, nem precisa de min-height arbitrário pra empurrar as
+   coisas pra baixo — e nunca sobrepõe nada, porque não há position:absolute
+   envolvido.
+   -------------------------------------------------------------------------- */
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .admin-shell {
-  min-height: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background: var(--admin-fundo);
 }
 
-.admin-corpo {
-  display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
-  min-height: 720px;
-  border-bottom: 1px solid var(--admin-borda);
-}
+.footer-site { flex-shrink: 0; }
 
 /* --------------------------------------------------------------------------
-   SIDEBAR
+   BARRA DE ABAS (substitui a sidebar grande)
+   Navegação compacta e horizontal: cada aba controla um <section
+   role="tabpanel">, só uma fica visível por vez (ver js/admin.js). Segue o
+   padrão ARIA de abas (role=tablist/tab/tabpanel, aria-selected, setas do
+   teclado) — não é só visual.
    -------------------------------------------------------------------------- */
 
-.admin-menu {
+.admin-abas {
   position: sticky;
   top: 0;
-  align-self: start;
-  min-height: 720px;
-  background: var(--admin-verde);
-  color: var(--admin-creme);
-  padding: 24px 14px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-right: 1px solid rgba(255,255,255,.07);
-}
-
-.admin-menu::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 180px;
-  opacity: .14;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at 15% 100%, transparent 0 25%, #9db59e 26% 27%, transparent 28%),
-    radial-gradient(ellipse at 65% 100%, transparent 0 30%, #9db59e 31% 32%, transparent 33%);
-}
-
-.admin-menu__cabecalho {
-  padding: 4px 12px 22px;
-  border-bottom: 1px solid rgba(251,249,241,.12);
-  margin-bottom: 8px;
-  position: relative;
-  z-index: 1;
-}
-
-.admin-menu__marca {
-  display: block;
-  font-family: var(--fonte-titulo);
-  font-size: 1.15rem;
-  font-weight: 500;
-}
-
-.admin-menu__selo {
-  display: block;
-  margin-top: 3px;
-  font-size: .63rem;
-  font-weight: 600;
-  letter-spacing: .12em;
-  color: rgba(251,249,241,.58);
-}
-
-.admin-menu__item {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  min-height: 44px;
+  z-index: 15;
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 13px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: rgba(251,249,241,.67);
-  text-align: left;
-  cursor: pointer;
-  transition: background .18s ease, color .18s ease, transform .18s ease;
+  gap: 4px;
+  max-width: 1380px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 38px;
+  background: var(--admin-fundo);
+  border-bottom: 1px solid var(--admin-borda);
+  overflow-x: auto;
 }
 
-.admin-menu__item svg { flex: 0 0 auto; opacity: .82; }
-
-.admin-menu__item:hover,
-.admin-menu__item:focus-visible {
-  color: var(--admin-creme);
-  background: rgba(251,249,241,.09);
-}
-
-.admin-menu__item.is-ativo {
-  color: var(--admin-creme);
-  background: rgba(251,249,241,.13);
-  box-shadow: inset 3px 0 0 var(--admin-amarelo);
-}
-
-.admin-menu__item.is-ativo svg { opacity: 1; }
-
-.admin-menu__rodape {
-  margin-top: auto;
+.admin-aba {
   position: relative;
-  z-index: 1;
-  padding: 18px 10px 2px;
-  border-top: 1px solid rgba(251,249,241,.10);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--admin-suave);
+  font-family: var(--fonte-corpo);
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .15s ease;
+}
+.admin-aba svg { flex: 0 0 auto; opacity: .75; }
+
+.admin-aba::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+  transition: background .15s ease;
 }
 
-.admin-menu__voltar {
-  color: rgba(251,249,241,.63);
-  font-size: .78rem;
-  text-decoration: none;
+.admin-aba:hover { color: var(--admin-texto); }
+.admin-aba:focus-visible { outline: 2px solid var(--admin-verde-3); outline-offset: -2px; border-radius: 4px; }
+
+.admin-aba.is-ativa {
+  color: var(--admin-verde);
 }
-.admin-menu__voltar:hover { color: var(--admin-creme); }
+.admin-aba.is-ativa svg { opacity: 1; }
+.admin-aba.is-ativa::after { background: var(--admin-amarelo); }
+
+.admin-abas__voltar {
+  margin-left: auto;
+  padding: 8px 12px;
+  color: var(--admin-suave);
+  font-size: .8rem;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+.admin-abas__voltar:hover { color: var(--admin-texto); background: var(--admin-borda); }
 
 /* --------------------------------------------------------------------------
-   CONTEÚDO
+   CONTEÚDO / PAINÉIS
+   Cada .admin-painel é uma seção inteira (Visão geral / Notícias /
+   Comentários / Usuários). js/admin.js alterna o atributo [hidden] — as
+   não-selecionadas nem ficam no fluxo da página, então não tem o que rolar.
    -------------------------------------------------------------------------- */
 
 .admin-conteudo {
+  flex: 1;
   width: 100%;
   max-width: 1380px;
   margin: 0 auto;
-  padding: 34px 38px 58px;
+  padding: 28px 38px 58px;
 }
+
+.admin-painel[hidden] { display: none; }
+
+/* --------------------------------------------------------------------------
+   DUAS COLUNAS / TABELAS
+   -------------------------------------------------------------------------- */
 
 .admin-intro {
   display: flex;
@@ -361,7 +351,35 @@ a { color: inherit; }
   box-shadow: var(--admin-sombra);
 }
 
-.admin-grafico { padding: 22px 24px 19px; }
+.admin-grafico { padding: 0; overflow: hidden; }
+
+/* O gráfico vive dentro de um <details> — fica fechado por padrão (não é
+   essencial pro dia a dia do admin) e abre com um clique; o <details>
+   nativo já é acessível por teclado e leitor de tela, sem JS extra. */
+.admin-grafico > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  cursor: pointer;
+  font-family: var(--fonte-titulo);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+.admin-grafico > summary::-webkit-details-marker { display: none; }
+.admin-grafico > summary::after {
+  content: "Ver crescimento \2193";
+  font-family: var(--fonte-corpo);
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--admin-verde-3);
+  white-space: nowrap;
+}
+.admin-grafico[open] > summary::after { content: "Ocultar \2191"; }
+.admin-grafico[open] > summary { border-bottom: 1px solid var(--admin-borda); }
+.admin-grafico__corpo { padding: 18px 24px 19px; }
 
 .admin-bloco__cabecalho {
   display: flex;
@@ -470,19 +488,6 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-/* --------------------------------------------------------------------------
-   DUAS COLUNAS / TABELAS
-   -------------------------------------------------------------------------- */
-
-.admin-duas-colunas {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: 20px;
-}
-
-.admin-duas-colunas > #usuarios {
-  grid-column: 1 / -1;
-}
 
 .bloco-tabela {
   min-width: 0;
@@ -607,7 +612,6 @@ a { color: inherit; }
   border-color: #e2c0b8;
 }
 
-.tabela-admin tbody tr.esta-desativado td { opacity: .4; }
 
 .estado-vazio td {
   padding: 32px 10px;
@@ -875,36 +879,17 @@ a { color: inherit; }
    -------------------------------------------------------------------------- */
 
 @media (max-width: 1180px) {
-  .admin-corpo { grid-template-columns: 205px minmax(0, 1fr); }
+  .admin-abas { padding: 0 26px; }
   .admin-conteudo { padding-left: 26px; padding-right: 26px; }
-  .admin-duas-colunas { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 900px) {
-  .admin-corpo { grid-template-columns: 1fr; }
-
-  .admin-menu {
-    position: sticky;
-    top: 0;
-    min-height: auto;
-    padding: 10px 14px;
-    flex-direction: row;
-    align-items: center;
-    overflow-x: auto;
-    z-index: 15;
-  }
-
-  .admin-menu::before,
-  .admin-menu__cabecalho,
-  .admin-menu__rodape { display: none; }
-
-  .admin-menu__item {
-    width: auto;
-    min-width: max-content;
-  }
-
-  .admin-menu__item.is-ativo { box-shadow: inset 0 -3px 0 var(--admin-amarelo); }
-
+  /* Texto continua visível (clareza > economia de espaço); a barra de abas
+     já rola horizontalmente (.admin-abas tem overflow-x:auto), então ela só
+     fica mais compacta aqui em vez de quebrar ou esconder rótulos. */
+  .admin-abas { padding: 0 20px; gap: 0; }
+  .admin-aba { padding: 12px 12px; font-size: .82rem; }
+  .admin-abas__voltar { display: none; } /* "← Voltar ao site" some; o link do logo no header já cumpre esse papel */
   .admin-conteudo { padding: 25px 20px 48px; }
 }
 
@@ -946,9 +931,9 @@ a { color: inherit; }
 
   .admin-intro h1 { font-size: 2rem; }
 
-  .admin-menu { padding-left: 9px; padding-right: 9px; }
+  .admin-abas { padding-left: 9px; padding-right: 9px; }
 
-  .admin-menu__item { padding: 9px 11px; font-size: .78rem; }
+  .admin-aba { padding: 9px 10px; font-size: .76rem; }
 
   .tabela-admin { min-width: 650px; }
 

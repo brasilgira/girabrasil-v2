@@ -13,6 +13,7 @@ async function listarNoticias() {
      FROM noticias n
      LEFT JOIN perfil p ON p.id = n.usuario_id
      LEFT JOIN regiao r ON r.id = n.regiao_id
+     WHERE n.ativo = true
      ORDER BY n.criado_em DESC`
   );
   return resultado.rows;
@@ -94,6 +95,7 @@ async function listarComentarios() {
     `SELECT c.*, c.usuario_nome AS autor_nome, n.titulo AS noticia_titulo
      FROM comentario c
      LEFT JOIN noticias n ON n.id = c.noticia_id
+     WHERE c.ativo = true
      ORDER BY c.criado_em DESC`
   );
   return resultado.rows;
@@ -120,9 +122,18 @@ async function apagarComentario(id) {
 // ---------- Usuários ----------
 // Só o que a Fase 4 pede: consulta, sem e-mail e sem desativação (não há
 // coluna `ativo` em `perfil`, e não vamos criar uma nesta fase).
-async function listarUsuarios() {
+// Recebe os ids de quem AINDA tem conta ativa no Supabase Auth (o
+// controller busca isso via auth.admin.listUsers() antes de chamar aqui) e
+// devolve os dados de perfil só dessas pessoas. É assim — e não com uma
+// coluna nova em `perfil` — que uma conta cujo acesso foi removido some da
+// lista: a linha de perfil continua existindo no banco (decisão explícita,
+// ver controllers/admin.controller.js), só não aparece mais aqui porque o
+// id dela não está mais entre os ids informados.
+async function listarUsuariosPorIds(ids) {
+  if (!ids.length) return [];
   const resultado = await pool.query(
-    `SELECT id, nome, avatar_url, criado_em FROM perfil ORDER BY criado_em DESC`
+    `SELECT id, nome, avatar_url, criado_em FROM perfil WHERE id = ANY($1::uuid[]) ORDER BY criado_em DESC`,
+    [ids]
   );
   return resultado.rows;
 }
@@ -161,7 +172,7 @@ module.exports = {
   listarComentarios,
   editarComentario,
   apagarComentario,
-  listarUsuarios,
+  listarUsuariosPorIds,
   obterTotais,
   obterCadastrosPorMes,
 };
