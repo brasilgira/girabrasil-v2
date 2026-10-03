@@ -103,16 +103,12 @@ async function montarNoticiasRegiao() {
   let categoriasDisponiveis = [];
 
   function criarCardNoticia(n) {
-  const card = document.createElement(n.link ? 'a' : 'div');
+  const card = document.createElement(n.id ? 'a' : 'div');
 
   card.className = 'card-noticia card-noticia-placeholder';
 
-  const linkSeguro = urlExternaSegura(n.link);
-
-  if (n.link && linkSeguro) {
-    card.href = linkSeguro;
-    card.target = '_blank';
-    card.rel = 'noopener noreferrer';
+  if (n.id) {
+    card.href = `noticia-regiao.html?regiao=${chave}&id=${n.id}`;
   }
 
   const caminhoImagem = normalizarUrlImagem(n.imagem);
@@ -323,7 +319,8 @@ async function montarNoticiasRegiao() {
       imagem: n.imagem_url,
       categoria: n.categoria,
       data: formatarDataSimples(n.criado_em),
-      link: n.link_fonte,
+      id: n.id,
+      linkFonte: n.link_fonte,
     }));
 
     // Filtros gerados a partir das categorias REAIS presentes nas
