@@ -860,8 +860,8 @@ body.pagina-jogos .header-site {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 700;
-  font-size: 1.1rem;
-  line-height: 1.2;
-  color: var(--cor-destaque);
+  font-size: clamp(1.6rem, 4.5vh, 2.8rem);   /* grande, mas encolhe em telas baixas pra não gerar scroll */
+  line-height: 1.1;
+  color: var(--cor-floresta);   /* verde do menu do site */
   margin: 0;
 }

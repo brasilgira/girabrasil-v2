@@ -590,6 +590,7 @@ function initMico() {
     const PTS_PAR = 100, PTS_COMBO = 50, PTS_VITORIA = 1000, TEMPO_BONUS_MS = 300000, RODADAS_BONUS = 40;
     let parJog = 0, combo = 0, rodadas = 0, t0 = 0;
     let nivel = 1, proxNivel = 1, novoJogo = true;
+        let paresAcum = 0;   // pares formados nas rodadas anteriores (zera quando perde ou recomeça)
     let score = 0, running = false, fase = 'fim', hl = null, hover = -1, timers = [];
 
     const shuffle = a => [...a].sort(() => Math.random() - 0.5);
@@ -615,7 +616,7 @@ function initMico() {
     /* HUD: pontos | nível (= rodada) | pares formados (no lugar das vidas) */
     function hud() {
       updateHUD(score, nivel, 3, true, true);
-      livesEl.textContent = (descarte.length / 2) + (PARES.length ? '/' + PARES.length : '');
+      livesEl.textContent = paresAcum + descarte.length / 2;   // pares formados desde o início do jogo, somando todas as rodadas
     }
 
     /* tira os pares de uma mão; devolve quantos pares saíram */
@@ -877,7 +878,8 @@ function initMico() {
     function start() {
       timers.forEach(clearTimeout); timers = [];
       nivel = proxNivel;
-      if (novoJogo) { score = 0; novoJogo = false; }
+      if (novoJogo) { score = 0; paresAcum = 0; novoJogo = false; }
+      else paresAcum += descarte.length / 2;   // continuou: soma os pares da rodada que acabou
       distribuir(CARTAS_POR_RODADA[nivel - 1]);
       parJog = 0; combo = 0; rodadas = 0; t0 = agora();
       hl = null; hover = -1; running = true;

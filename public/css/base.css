@@ -7,8 +7,6 @@
 /* --- Fontes --- */
 /* Fraunces: serifada com personalidade, usada em títulos.
    Inter: sans-serif limpa, usada no corpo do texto e navegação. */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap');
-
 :root {
   /* Cores principais — creme como base, verde-floresta para contraste */
   --cor-fundo: #F7F4EC;         /* creme claro, fundo padrão das páginas */
@@ -434,7 +432,7 @@ h1, h2, h3 {
   animation: none;             /* ...só o novo, sem fade: parece que nunca saiu */
 }
 ::view-transition-group(root) {
-  animation-duration: 0.3s;    /* velocidade do fade do conteúdo */
+  animation-duration: 0.15s;   /* velocidade do fade do conteúdo */
 }
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }

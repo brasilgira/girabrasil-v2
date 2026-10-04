@@ -11,9 +11,9 @@
 
   // --- AJUSTES (mexa aqui) ------------------------------------------------
   // O tempo depende de QUANTOS links do menu a pílula atravessa.
-  const DURACAO_1_PASSO = 600;     // ms — quando anda 1 link (quanto maior, mais lento)
-  const ADICIONAL_POR_PASSO = 150; // ms — somado a cada link a mais
-  //   1 passo = 600ms | 2 = 750ms | 3 = 900ms | 4 = 1050ms | 5 = 1200ms
+  const DURACAO_1_PASSO = 260;     // ms — quando anda 1 link (quanto maior, mais lento)
+  const ADICIONAL_POR_PASSO = 60;  // ms — somado a cada link a mais
+  //   1 passo = 260ms | 2 = 320ms | 3 = 380ms | 4 = 440ms | 5 = 500ms
   const SUAVIDADE = 'cubic-bezier(0.65, 0, 0.35, 1)'; // começa e termina devagar
   const JANELA_MS = 20000;  // tempo máximo entre sair de uma página e carregar a outra
 

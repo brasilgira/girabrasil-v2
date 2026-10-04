@@ -4,15 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Notícia — Gira-Brasil</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link rel="stylesheet" href="css/base.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/noticia.css">
 <link rel="stylesheet" href="css/gate.css">
+<link rel="stylesheet" href="css/dialogos.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/auth.js"></script>
 <script src="js/gate.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/dialogos.js"></script>
 
 <!-- FASE 2: os dados agora vêm da API (/api/noticias/:id), não mais deste
      arquivo — js/noticias-data.js continua existindo no projeto, só não
@@ -640,7 +645,7 @@ function App() {
       })
       .catch((erro) => {
         console.error('Erro ao enviar comentário:', erro);
-        alert('Não foi possível publicar seu comentário. Tente novamente.');
+        mostrarToast('Não foi possível publicar seu comentário. Tente novamente.', 'erro');
       })
       .finally(() => setEnviandoComentario(false));
   }
@@ -651,22 +656,31 @@ function App() {
     const comentarioAnterior = comentarios.find((c) => c.id === id);
     if (!comentarioAnterior) return;
 
-    if (!confirm('Excluir este comentário?')) return;
+    confirmarAcao({
+      titulo: 'Excluir comentário?',
+      mensagem: 'Seu comentário será removido desta notícia. Essa ação não pode ser desfeita.',
+      confirmar: 'Excluir',
+      cancelar: 'Manter',
+      perigo: true,
+    }).then((confirmado) => {
+      if (!confirmado) return;
 
-    setComentarios((lista) => lista.filter((c) => c.id !== id));
+      setComentarios((lista) => lista.filter((c) => c.id !== id));
 
-    fetchAutenticado(`/api/comentarios/${id}`, { method: 'DELETE' })
-      .then((resposta) => {
-        if (!resposta.ok) throw new Error('Erro ao excluir comentário');
-      })
-      .catch((erro) => {
-        console.error('Erro ao excluir comentário:', erro);
-        alert('Não foi possível excluir o comentário. Tente novamente.');
-        // devolve o comentário pro lugar de origem, ordenado por data
-        setComentarios((lista) =>
-          [...lista, comentarioAnterior].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em))
-        );
-      });
+      fetchAutenticado(`/api/comentarios/${id}`, { method: 'DELETE' })
+        .then((resposta) => {
+          if (!resposta.ok) throw new Error('Erro ao excluir comentário');
+          mostrarToast('Comentário excluído.', 'sucesso');
+        })
+        .catch((erro) => {
+          console.error('Erro ao excluir comentário:', erro);
+          mostrarToast('Não foi possível excluir o comentário. Tente novamente.', 'erro');
+          // devolve o comentário pro lugar de origem, ordenado por data
+          setComentarios((lista) =>
+            [...lista, comentarioAnterior].sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em))
+          );
+        });
+    });
   }
 
   // Enquanto a notícia ainda não chegou (ou não existe / a API falhou),

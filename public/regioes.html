@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Regiões — Gira-Brasil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/regioes.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -118,58 +122,7 @@
 <script src="js/regioes-data.js"></script>
 <script src="js/biomas-data.js"></script>
 <script src="js/regioes.js" defer></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Agora capturamos os links do menu E o logótipo
-    const linksMenu = document.querySelectorAll('.nav-site a, .logo-site');
-    const indicador = document.getElementById('indicador');
-    
-    if (!indicador) return; 
-
-    function moverIndicador(elemento) {
-      if (!elemento) return;
-      indicador.style.width = `${elemento.offsetWidth}px`;
-      indicador.style.height = `${elemento.offsetHeight}px`;
-      indicador.style.left = `${elemento.offsetLeft}px`;
-      indicador.style.top = `${elemento.offsetTop}px`;
-      indicador.style.opacity = '1';
-    }
-
-    const itemAtivo = document.querySelector('.nav-site a.ativo');
-    if(itemAtivo) {
-      moverIndicador(itemAtivo);
-      setTimeout(() => {
-        indicador.classList.add('animando');
-      }, 50);
-    }
-
-    linksMenu.forEach(link => {
-      link.addEventListener('click', function(e) {
-        if (this.classList.contains('ativo')) return;
-        
-        e.preventDefault(); 
-        
-        // Se o clique for no logótipo, a barra corre para a primeira opção do menu ("Início")
-        if (this.classList.contains('logo-site')) {
-          const linkInicio = document.querySelector('.nav-site a:first-of-type');
-          moverIndicador(linkInicio);
-        } else {
-          // Lógica normal para os links dentro do menu
-          document.querySelectorAll('.nav-site a').forEach(l => l.classList.remove('ativo'));
-          this.classList.add('ativo');
-          moverIndicador(this);
-        }
-        
-        const destino = this.getAttribute('href');
-        
-        // 250ms garante a velocidade que querias sem parecer um erro
-        setTimeout(() => {
-          window.location.href = destino;
-        }, 250); 
-      });
-    });
-  });
-</script>
+<script src="js/nav-indicador.js"></script>
 <script src="js/scrollbar.js"></script>
 
 </body>
