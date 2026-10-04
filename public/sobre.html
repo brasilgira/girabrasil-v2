@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sobre — GiraBrasil</title>
+<title>Sobre — Gira-Brasil</title>
+<meta name="description" content="O Gira-Brasil reúne notícias ambientais, páginas sobre os biomas, mapas das regiões, jogos educativos e um assistente de conversa para conhecer a natureza brasileira.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Gloock&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/sobre.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -29,82 +33,191 @@
   </div>
 </header>
 
-<div class="pagina-titulo">
-  <div class="eyebrow">SOBRE O PROJETO</div>
-  <h1>Tecnologia a serviço da natureza brasileira.</h1>
-  <p>O Gira Brasil é uma plataforma digital de jornalismo e educação ambiental sobre as florestas, os biomas e a biodiversidade do Brasil.</p>
-</div>
+<main class="sobre" id="conteudo">
 
-<section class="secao-sobre-grid">
-  <div class="sobre-texto">
-    <h2>O que é o Gira Brasil?</h2>
-    <p>É um espaço onde informação ambiental, educação e tecnologia se encontram. Reunimos reportagens sobre meio ambiente, conteúdos didáticos sobre os seis biomas brasileiros, jogos educativos e um assistente de inteligência artificial focado em temas ambientais do país.</p>
-
-    <h2>Por que foi criado?</h2>
-    <p>Informação ambiental de qualidade existe, mas raramente chega a estudantes em uma linguagem acessível e envolvente. O Gira Brasil enfrenta esse problema aproximando o jornalismo ambiental da sala de aula, com conteúdo confiável e experiências interativas.</p>
-
-    <h2>Tecnologia e educação ambiental</h2>
-    <p>A tecnologia entra como ferramenta pedagógica: mapas navegáveis, jogos que ensinam cadeias alimentares e biomas, e um assistente de IA que responde dúvidas sobre fauna, flora e preservação. O projeto foi desenvolvido por estudantes de um curso técnico de informática, unindo desenvolvimento web, design e pesquisa ambiental.</p>
-  </div>
-
-  <div class="sobre-imagem">
-    <div class="doacao-cta-inner doacao-cta-compacta">
-      <div class="eyebrow">FAÇA PARTE DA PRESERVAÇÃO</div>
-      <h2>Ajude o Gira Brasil a continuar.</h2>
-      <p>Mantemos o site no ar, as notícias atualizadas e o GiraBot funcionando com o apoio de quem acredita no que estamos construindo. Se o Gira Brasil já te ajudou a entender melhor a natureza brasileira, você também pode ajudar a mantê-lo — e a levá-lo mais longe.</p>
-      <a href="doacao.html" class="botao botao-primario">Apoiar o Gira Brasil →</a>
-    </div>
-    <img src="assets/noticias/news-educacao.jpg" alt="Crianças plantando mudas de árvores em atividade de educação ambiental">
-  </div>
-</section>
-
-<section class="secao-evolucao">
-  <div class="evolucao-inner">
-    <div class="eyebrow claro">EVOLUÇÃO DO PROJETO</div>
-    <h2>Gira Brasil 2025 → Gira Brasil 2026</h2>
-    <p>A primeira versão era um site informativo. A nova versão é uma plataforma ambiental interativa, com jornalismo, jogos e inteligência artificial.</p>
-
-    <div class="grid-evolucao">
-      <div class="card-evolucao">
-        <div class="card-evolucao-titulo">
-          <span class="card-evolucao-ano">2025</span>
-          <span class="card-evolucao-rotulo">SITE INFORMATIVO</span>
-        </div>
-        <ul>
-          <li>Conteúdo informativo sobre natureza brasileira</li>
-          <li>Exploração por regiões do país</li>
-          <li>Experiência de navegação básica</li>
-          <li>Foco em texto e imagens estáticas</li>
+  <!-- ABERTURA -->
+  <section class="s-abertura" aria-labelledby="s-titulo">
+    <div class="s-wrap s-abertura__grade">
+      <div class="s-abertura__texto">
+        <p class="s-rotulo">Sobre o Gira-Brasil</p>
+        <h1 id="s-titulo">Para conhecer o Brasil, comece pela sua <em>natureza</em>.</h1>
+        <p class="s-lede">O Gira-Brasil é uma plataforma sobre as florestas, os biomas e a biodiversidade do país. Reúne notícias ambientais, páginas sobre cada bioma, mapas das regiões, jogos educativos e um assistente de conversa, tudo no mesmo lugar e pensado para quem está começando a explorar o assunto.</p>
+        <ul class="s-fatos" aria-label="O Gira-Brasil em resumo">
+          <li><b>5</b> regiões</li>
+          <li><b>6</b> biomas</li>
+          <li><b>4</b> jogos</li>
+          <li><b>1</b> assistente</li>
         </ul>
       </div>
+      <figure class="s-abertura__foto">
+        <img src="assets/biomas/bioma-pantanal.jpg" width="1024" height="1280" fetchpriority="high"
+             alt="Pantanal ao entardecer: aves caminham em águas rasas sob um céu alaranjado, com o sol baixo no horizonte">
+        <figcaption><span>Pantanal, ao entardecer</span> <a href="biomas/pantanal.html">Conhecer o bioma</a></figcaption>
+      </figure>
+    </div>
+  </section>
 
-      <div class="card-evolucao card-evolucao-destaque">
-        <div class="card-evolucao-titulo">
-          <span class="card-evolucao-ano">2026</span>
-          <span class="card-evolucao-rotulo">PLATAFORMA INTERATIVA</span>
-        </div>
-        <ul>
-          <li>Nova identidade visual editorial</li>
-          <li>Jornalismo ambiental com filtros e categorias</li>
-          <li>GiraBot: assistente de IA ambiental</li>
-          <li>Quatro jogos educativos</li>
-          <li>Experiências interativas para crianças e jovens</li>
-          <li>Design responsivo e UX aprimorada</li>
-        </ul>
+  <!-- PROPÓSITO -->
+  <section class="s-bloco s-proposito" id="proposito" aria-labelledby="s-t-proposito">
+    <div class="s-wrap s-proposito__grade">
+      <p class="s-rotulo s-rotulo--num"><span>01</span> Propósito</p>
+      <h2 id="s-t-proposito" class="s-titulo">Falar de natureza é fácil. Entender o que está em jogo, nem tanto.</h2>
+      <div class="s-proposito__texto">
+        <p>Notícias sobre desmatamento, queimadas, água e biodiversidade aparecem o tempo todo, mas quase sempre soltas, sem contexto. Que bioma é esse? Quem vive nele? Por que importa para quem mora longe dali?</p>
+        <p>O Gira-Brasil existe para juntar essas peças. Notícias, páginas de biomas e mapas de regiões ficam lado a lado, para que cada assunto tenha um lugar no mapa e uma explicação ao alcance.</p>
+        <p class="s-origem">O projeto é feito por estudantes de um curso técnico de informática, que combinam desenvolvimento web, design e pesquisa ambiental.</p>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="secao-cta-final">
-  
-  <h2>Comece a explorar</h2>
-  <p>Navegue pelas regiões, leia as reportagens, jogue e converse com o GiraBot.</p>
-  <div class="cta-final-botoes">
-    <a href="regioes.html" class="botao botao-primario">Explorar o Brasil →</a>
-    <a href="jogos.html" class="botao botao-secundario">Ver os jogos →</a>
-  </div>
-</section>
+  <!-- O QUE VOCÊ ENCONTRA -->
+  <section class="s-bloco s-achados" id="o-que-encontrar" aria-labelledby="s-t-achados">
+    <div class="s-wrap">
+      <header class="s-cab">
+        <p class="s-rotulo s-rotulo--num"><span>02</span> O que você encontra</p>
+        <h2 id="s-t-achados" class="s-titulo">O que dá para fazer por aqui</h2>
+      </header>
+      <ol class="s-lista">
+        <li class="s-item">
+          <span class="s-item__n" aria-hidden="true">01</span>
+          <h3><a href="regioes.html">Regiões</a></h3>
+          <p>Um mapa do Brasil dividido em cinco regiões. Escolha uma para ver seus estados, o bioma que mais a marca e os temas ambientais em pauta.</p>
+        </li>
+        <li class="s-item">
+          <span class="s-item__n" aria-hidden="true">02</span>
+          <h3><a href="index.html#biomas">Biomas</a></h3>
+          <p>Uma página para cada um dos seis biomas: como surgiu, quem vive nele, o que o ameaça e como protegê-lo. Algumas até têm som ambiente.</p>
+        </li>
+        <li class="s-item">
+          <span class="s-item__n" aria-hidden="true">03</span>
+          <h3><a href="noticias.html">Notícias</a></h3>
+          <p>Reportagens ambientais com busca por palavra-chave e filtros por bioma e tema. Com uma conta, você pode curtir, comentar e guardar as que quiser no seu perfil.</p>
+        </li>
+        <li class="s-item">
+          <span class="s-item__n" aria-hidden="true">04</span>
+          <h3><a href="jogos.html">Jogos</a></h3>
+          <p>Quatro jogos para aprender brincando: reconhecer animais da fauna brasileira, proteger a floresta, guiar uma onça-pintada e defender um rio.</p>
+        </li>
+        <li class="s-item">
+          <span class="s-item__n" aria-hidden="true">05</span>
+          <h3><a href="girabot.html">Gira-Bot</a></h3>
+          <p>Um assistente de conversa para tirar dúvidas sobre a natureza e o meio ambiente do Brasil. Ele não sai desse tema, de propósito. E, como toda IA, pode errar: use as respostas como ponto de partida.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- BRASIL EM PERSPECTIVA -->
+  <section class="s-bloco s-perspectiva" id="perspectiva" aria-labelledby="s-t-persp">
+    <div class="s-wrap">
+      <header class="s-cab s-cab--lado">
+        <p class="s-rotulo s-rotulo--num"><span>03</span> Brasil em perspectiva</p>
+        <h2 id="s-t-persp" class="s-titulo">Região e bioma não são a mesma coisa.</h2>
+        <p class="s-texto-cab">Região é uma divisão por estados. Bioma é uma divisão por vegetação, clima e vida. Os dois mapas se cruzam: um bioma pode atravessar várias regiões, e uma região pode abrigar mais de um bioma. Por isso o Gira-Brasil tem os dois caminhos.</p>
+      </header>
+
+      <div class="s-duas">
+        <div class="s-col s-col--regioes">
+          <h3><span>5</span> regiões <small>por estados</small></h3>
+          <ul>
+            <li><a href="regioes/norte.html">Norte</a></li>
+            <li><a href="regioes/nordeste.html">Nordeste</a></li>
+            <li><a href="regioes/centro-oeste.html">Centro-Oeste</a></li>
+            <li><a href="regioes/sudeste.html">Sudeste</a></li>
+            <li><a href="regioes/sul.html">Sul</a></li>
+          </ul>
+        </div>
+        <div class="s-col s-col--biomas">
+          <h3><span>6</span> biomas <small>por natureza</small></h3>
+          <ul class="s-biomas">
+            <li><a href="biomas/amazonia.html"><img src="assets/biomas/bioma-amazonia.jpg" width="1024" height="1280" loading="lazy" alt="">Amazônia</a></li>
+            <li><a href="biomas/cerrado.html"><img src="assets/biomas/bioma-cerrado.jpg" width="1024" height="1280" loading="lazy" alt="">Cerrado</a></li>
+            <li><a href="biomas/caatinga.html"><img src="assets/biomas/bioma-caatinga.jpg" width="1024" height="1280" loading="lazy" alt="">Caatinga</a></li>
+            <li><a href="biomas/mata-atlantica.html"><img src="assets/biomas/bioma-mata-atlantica.jpg" width="1024" height="1280" loading="lazy" alt="">Mata Atlântica</a></li>
+            <li><a href="biomas/pantanal.html"><img src="assets/biomas/bioma-pantanal.jpg" width="1024" height="1280" loading="lazy" alt="">Pantanal</a></li>
+            <li><a href="biomas/pampa.html"><img src="assets/biomas/bioma-pampa.jpg" width="1024" height="1280" loading="lazy" alt="">Pampa</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APRENDER EXPLORANDO -->
+  <section class="s-bloco s-aprender" id="aprender" aria-labelledby="s-t-aprender">
+    <div class="s-wrap">
+      <header class="s-cab s-cab--lado">
+        <p class="s-rotulo s-rotulo--num"><span>04</span> Aprender explorando</p>
+        <h2 id="s-t-aprender" class="s-titulo">Aqui, aprender começa pela curiosidade.</h2>
+        <p class="s-texto-cab">A aposta do projeto é simples: conhecer de perto é o primeiro passo para valorizar e proteger a biodiversidade brasileira. Não há uma ordem obrigatória, mas um caminho possível é este:</p>
+      </header>
+      <ol class="s-passos">
+        <li><b>Escolha um lugar.</b> Comece por uma região ou por um bioma e descubra o que o torna único.</li>
+        <li><b>Veja o que está acontecendo.</b> Procure notícias sobre o tema e perceba como ele aparece no dia a dia.</li>
+        <li><b>Teste o que entendeu.</b> Os jogos transformam o que você leu em desafio.</li>
+        <li><b>Pergunte.</b> Ficou com dúvida? O Gira-Bot está aí para conversar.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- EVOLUÇÃO -->
+  <section class="s-bloco s-evolucao" id="evolucao" aria-labelledby="s-t-evolucao">
+    <div class="s-wrap">
+      <header class="s-cab s-cab--lado">
+        <p class="s-rotulo s-rotulo--num"><span>05</span> Evolução</p>
+        <h2 id="s-t-evolucao" class="s-titulo">De um ano para o outro, o projeto mudou de tamanho.</h2>
+        <p class="s-texto-cab">A primeira versão, de 2025, era um site informativo. A de 2026 virou uma plataforma interativa, com jornalismo, jogos e um assistente de conversa.</p>
+      </header>
+
+      <div class="s-anos">
+        <article class="s-ano s-ano--antes" aria-labelledby="s-ano-2025">
+          <header>
+            <h3 id="s-ano-2025">2025</h3>
+            <p>Site informativo</p>
+          </header>
+          <ul>
+            <li>Conteúdo informativo sobre a natureza brasileira</li>
+            <li>Exploração por regiões do país</li>
+            <li>Navegação básica</li>
+            <li>Foco em texto e imagens estáticas</li>
+          </ul>
+        </article>
+
+        <span class="s-anos__seta" aria-hidden="true">→</span>
+
+        <article class="s-ano s-ano--agora" aria-labelledby="s-ano-2026">
+          <header>
+            <h3 id="s-ano-2026">2026</h3>
+            <p>Plataforma interativa</p>
+          </header>
+          <ul>
+            <li>Nova identidade visual, de estilo editorial</li>
+            <li>Jornalismo ambiental com filtros e categorias</li>
+            <li>Gira-Bot, assistente de conversa sobre o meio ambiente</li>
+            <li>Quatro jogos educativos</li>
+            <li>Experiências interativas para crianças e jovens</li>
+            <li>Design responsivo e navegação aprimorada</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENCERRAMENTO -->
+  <section class="s-fim" aria-labelledby="s-t-fim">
+    <div class="s-wrap s-fim__in">
+      <h2 id="s-t-fim">O mapa já está aberto. <em>Por onde você começa?</em></h2>
+      <div class="s-fim__lado">
+        <p>O Gira-Brasil segue em desenvolvimento, e há conteúdos e recursos ainda sendo ampliados. O que já está no ar é para ser explorado.</p>
+        <div class="s-fim__acoes">
+          <a href="regioes.html" class="s-btn s-btn--ouro">Explorar as regiões <span aria-hidden="true">→</span></a>
+          <a href="noticias.html" class="s-btn s-btn--linha">Ler as notícias <span aria-hidden="true">→</span></a>
+        </div>
+        <a class="s-link" href="girabot.html">Ou tire uma dúvida com o Gira-Bot <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+</main>
 
 <footer class="footer-site">
   <div class="footer-inner">
@@ -134,8 +247,54 @@
     <span>Gira Brasil © 2026</span>
     <span>Natureza • Informação • Educação • Tecnologia</span>
   </div>
-</footer>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const linksMenu = document.querySelectorAll('.nav-site a');
+    const indicador = document.getElementById('indicador');
+    
+    if (!indicador) return; 
 
-<script src="js/nav-indicador.js"></script>
+    function moverIndicador(elemento) {
+      if (!elemento) return;
+      indicador.style.width = `${elemento.offsetWidth}px`;
+      indicador.style.height = `${elemento.offsetHeight}px`;
+      indicador.style.left = `${elemento.offsetLeft}px`;
+      indicador.style.top = `${elemento.offsetTop}px`;
+      indicador.style.opacity = '1';
+    }
+
+    // 1. A página carrega e a barra vai para o lugar INSTANTANEAMENTE (sem classe de animação)
+    const itemAtivo = document.querySelector('.nav-site a.ativo');
+    if(itemAtivo) {
+      moverIndicador(itemAtivo);
+      
+      // 2. Só depois de posicionar, ativamos a classe que faz ela correr nos cliques
+      setTimeout(() => {
+        indicador.classList.add('animando');
+      }, 50);
+    }
+
+    // 3. Ação do clique (agora vai correr para os dois lados perfeitamente)
+    linksMenu.forEach(link => {
+      link.addEventListener('click', function(e) {
+        if (this.classList.contains('ativo')) return;
+        
+        e.preventDefault(); 
+        
+        linksMenu.forEach(l => l.classList.remove('ativo'));
+        this.classList.add('ativo');
+        
+        moverIndicador(this);
+        
+        const destino = this.getAttribute('href');
+        
+        setTimeout(() => {
+          window.location.href = destino;
+        }, 200); 
+      });
+    });
+  });
+</script>
+</footer>
 </body>
 </html>

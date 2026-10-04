@@ -46,30 +46,16 @@
       <button class="botao-fechar-sidebar" id="botaoFecharSidebar" aria-label="Fechar menu">✕</button>
     </div>
 
-    <button class="botao-nova-conversa">+ Nova conversa</button>
+    <button class="botao-nova-conversa" id="botaoNovaConversa" type="button">+ Nova conversa</button>
 
-    <!-- ATENÇÃO: lista de exemplo (placeholder). O GiraBot ainda não tem
-         backend/persistência de conversas — quando existir, isso deve
-         vir de uma consulta real (API ou localStorage), não fixo no HTML. -->
+    <!-- Preenchido dinamicamente por js/girabot.js a partir de
+         GET /api/girabot/conversas — nunca fixo no HTML. -->
     <div class="sidebar-historico">
-  <span class="sidebar-secao-titulo">Recentes</span>
-
-  <button class="item-historico ativo">
-    <span class="item-texto"><span class="item-titulo">Qual bioma é mais ameaçado?</span><span class="item-data">Hoje, 10:24</span></span>
-  </button>
-  <button class="item-historico">
-    <span class="item-texto"><span class="item-titulo">Animais em extinção na Amazônia</span><span class="item-data">Ontem, 16:40</span></span>
-  </button>
-  <button class="item-historico">
-    <span class="item-texto"><span class="item-titulo">O que são rios voadores?</span><span class="item-data">24 de abr., 11:32</span></span>
-  </button>
-  <button class="item-historico">
-    <span class="item-texto"><span class="item-titulo">Povos indígenas e a floresta</span><span class="item-data">27 de abr., 09:15</span></span>
-  </button>
-  <button class="item-historico">
-    <span class="item-texto"><span class="item-titulo">Diferenças entre os biomas</span><span class="item-data">20 de abr., 14:37</span></span>
-  </button>
-</div>
+      <span class="sidebar-secao-titulo">Suas conversas</span>
+      <div id="listaHistorico">
+        <p class="sidebar-historico-vazio">Carregando…</p>
+      </div>
+    </div>
   </aside>
 
   <main class="girabot-main">
@@ -119,6 +105,18 @@
 
   </main>
 </div>
+<!-- Modal de confirmação de exclusão de conversa (nunca confirm() nativo) -->
+<div class="modal-fundo" id="modalExcluirConversa" hidden>
+  <div class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="tituloExcluirConversa">
+    <h3 id="tituloExcluirConversa">Excluir conversa</h3>
+    <p data-texto-exclusao-conversa></p>
+    <div class="modal-acoes">
+      <button type="button" class="botao botao-secundario" data-fechar-modal>Cancelar</button>
+      <button type="button" class="botao botao-perigo" id="botaoConfirmarExclusaoConversa">Excluir</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/nav-indicador.js"></script>
 
 </body>

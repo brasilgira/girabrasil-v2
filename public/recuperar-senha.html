@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recuperar senha — Gira-Brasil</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/auth.css">
+</head>
+<body class="auth-body">
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira-Brasil</a>
+    <nav class="nav-site">
+      <a href="index.html">Início</a>
+      <a href="noticias.html">Notícias</a>
+      <a href="regioes.html">Regiões</a>
+      <a href="jogos.html">Jogos</a>
+      <a href="girabot.html">Gira-Bot</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
+    <div class="header-acoes">
+      <a href="login.html" class="link-entrar">Entrar</a>
+      <a href="cadastro.html" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<div class="auth-grid">
+  <div class="auth-imagem">
+    <img src="assets/biomas/bioma-cerrado.jpg" alt="Paisagem do Cerrado brasileiro">
+    <div class="auth-imagem-conteudo">
+      <span class="marca"></span>
+      <h2>Vamos recuperar seu acesso.</h2>
+      <p>Enviamos um link seguro para o seu e-mail — é só clicar e escolher uma nova senha.</p>
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-form-inner" id="etapaPedido">
+      <div class="eyebrow">RECUPERAR ACESSO</div>
+      <h1>Esqueceu a senha?</h1>
+      <p class="auth-descricao">Digite o e-mail da sua conta. Se ele existir, enviamos um link para criar uma nova senha.</p>
+
+      <form class="auth-form" id="formRecuperar" novalidate>
+        <div class="auth-campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" required>
+        </div>
+
+        <p class="auth-erro" id="authErro" role="alert" style="display:none;"></p>
+
+        <button type="submit" class="botao botao-primario" id="btnEnviar">
+          <span class="auth-spinner"></span>
+          <span class="auth-rotulo-botao">Enviar link</span>
+        </button>
+      </form>
+
+      <p class="auth-rodape-link"><a href="login.html" class="auth-link">Voltar para o login</a></p>
+    </div>
+
+    <div class="auth-form-inner" id="etapaConfirmacao" hidden>
+      <div class="eyebrow">QUASE LÁ</div>
+      <h1>Confira seu e-mail</h1>
+      <p class="auth-descricao">Se existir uma conta com esse e-mail, um link de recuperação foi enviado. Ele é válido por um tempo limitado.</p>
+      <p class="auth-rodape-link"><a href="login.html" class="auth-link">Voltar para o login</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/toast.js"></script>
+<script>
+  redirecionarSeJaLogado();
+
+  const form = document.getElementById('formRecuperar');
+  const botao = document.getElementById('btnEnviar');
+  const erroEl = document.getElementById('authErro');
+
+  form.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    erroEl.style.display = 'none';
+    const email = document.getElementById('email').value.trim();
+    if (!email) return;
+
+    botao.disabled = true;
+    botao.dataset.carregando = 'true';
+
+    try {
+      await enviarEmailRecuperacao(email);
+    } catch (erro) {
+      // Por segurança, não revelamos se o e-mail existe ou não — mesmo
+      // numa falha de envio, mostramos a mesma confirmação neutra.
+      console.error('Erro ao enviar recuperação:', erro);
+    } finally {
+      document.getElementById('etapaPedido').hidden = true;
+      document.getElementById('etapaConfirmacao').hidden = false;
+      botao.disabled = false;
+      botao.dataset.carregando = 'false';
+    }
+  });
+</script>
+
+</body>
+</html>

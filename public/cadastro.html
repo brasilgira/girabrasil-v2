@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
 </head>
-<body>
+<body class="auth-body">
 
 <header class="header-site">
   <div class="header-inner">
@@ -54,14 +54,12 @@
             </div>
             <div class="auth-avatar-acoes">
               <div class="auth-avatar-botoes">
-                <button type="button" class="auth-avatar-botao-secundario" id="btnEscolherEspecie">Escolher espécie</button>
-                <button type="button" class="auth-avatar-botao-secundario" id="btnEnviarFoto">Enviar minha foto</button>
+                <button type="button" class="auth-avatar-botao-secundario" id="btnEscolherEspecie">Escolher foto</button>
                 <button type="button" class="auth-avatar-botao-secundario" id="btnRemoverAvatar" hidden>Remover</button>
               </div>
-              <span class="auth-avatar-ajuda">Opcional — você também pode escolher depois, no seu perfil. JPG, PNG ou WEBP até 3&nbsp;MB.</span>
+              <span class="auth-avatar-ajuda">Opcional — escolha uma espécie da fauna brasileira. Dá pra trocar depois no seu perfil.</span>
             </div>
           </div>
-          <input type="file" id="inputArquivoAvatar" accept="image/jpeg,image/png,image/webp" hidden>
           <div class="auth-avatar-grid" id="gridEspecies"></div>
         </div>
 
@@ -133,8 +131,7 @@
     { nome: 'Anta', url: 'assets/games/species/anta.jpg' },
   ];
 
-  let avatarEscolhidoUrl = null; // string (espécie) quando a origem é o grid
-  let arquivoAvatarPendente = null; // File quando a origem é upload
+  let avatarEscolhidoUrl = null; // string (espécie escolhida), ou null
 
   const previewEl = document.getElementById('avatarPreview');
   const gridEl = document.getElementById('gridEspecies');
@@ -152,7 +149,6 @@
       img.loading = 'lazy';
       botao.appendChild(img);
       botao.addEventListener('click', () => {
-        arquivoAvatarPendente = null;
         avatarEscolhidoUrl = a.url;
         gridEl.querySelectorAll('.auth-avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
         botao.classList.add('selecionado');
@@ -183,31 +179,8 @@
     gridEl.classList.toggle('is-aberto');
   });
 
-  document.getElementById('btnEnviarFoto').addEventListener('click', () => {
-    document.getElementById('inputArquivoAvatar').click();
-  });
-
-  document.getElementById('inputArquivoAvatar').addEventListener('change', (evento) => {
-    const arquivo = evento.target.files[0];
-    if (!arquivo) return;
-    try {
-      validarArquivoAvatar(arquivo);
-    } catch (erro) {
-      mostrarToast(erro.message, 'erro');
-      evento.target.value = '';
-      return;
-    }
-    avatarEscolhidoUrl = null;
-    arquivoAvatarPendente = arquivo;
-    gridEl.querySelectorAll('.auth-avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
-    gridEl.classList.remove('is-aberto');
-    atualizarPreview(URL.createObjectURL(arquivo));
-  });
-
   btnRemover.addEventListener('click', () => {
     avatarEscolhidoUrl = null;
-    arquivoAvatarPendente = null;
-    document.getElementById('inputArquivoAvatar').value = '';
     gridEl.querySelectorAll('.auth-avatar-opcao').forEach((el) => el.classList.remove('selecionado'));
     atualizarPreview(null);
   });
@@ -307,23 +280,6 @@
 
     try {
       const resultado = await cadastrarUsuario({ nome, email, senha, avatarUrl: avatarEscolhidoUrl });
-
-      // Upload de arquivo (se houver) só é possível depois de existir
-      // sessão — ver auth.js. Tenta aqui, mas não bloqueia o cadastro se
-      // falhar: a conta já existe e a pessoa pode trocar a foto depois.
-      if (arquivoAvatarPendente && resultado.usuario && !resultado.precisaConfirmarEmail) {
-        try {
-          const url = await enviarAvatarArquivo(arquivoAvatarPendente, resultado.usuario.id);
-          await fetchAutenticado(`/api/perfil/${encodeURIComponent(resultado.usuario.id)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ avatarUrl: url }),
-          });
-          atualizarCamposUsuarioLogado({ avatar_url: url });
-        } catch (erroFoto) {
-          mostrarToast(erroFoto.message || 'Não foi possível enviar sua foto — você pode adicionar depois no seu perfil.', 'aviso');
-        }
-      }
 
       if (resultado.precisaConfirmarEmail) {
         mostrarToast('Conta criada! Confirme seu e-mail para entrar.', 'sucesso', { duracao: 6000 });

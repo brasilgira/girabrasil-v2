@@ -4,10 +4,15 @@
    Importa base.css — usa as mesmas variáveis de cor/tipografia do site.
    ========================================================================== */
 
+/* Página parada: sem rolagem, cabe tudo numa tela só. */
+html { height: 100%; }
+body.auth-body { height: 100%; overflow: hidden; }
+
 .auth-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: calc(100vh - 74px); /* 74px ≈ altura do header-site fixo */
+  height: calc(100vh - 74px); /* 74px ≈ altura do header-site fixo */
+  overflow: hidden;
 }
 
 /* --- Lado da imagem --- */
@@ -62,7 +67,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 64px 24px;
+  padding: 36px 24px;
+  /* Página inteira não rola; se o formulário não couber numa tela baixa,
+     só esta coluna ganha rolagem interna, nunca o body todo. */
+  height: 100%;
+  overflow-y: auto;
 }
 .auth-form-inner {
   width: 100%;
@@ -257,7 +266,7 @@ button[data-carregando="true"] .auth-rotulo-botao { opacity: 0.85; }
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .auth-avatar-botao-secundario:hover { border-color: var(--cor-destaque); background: var(--cor-fundo-alt); }
-.auth-avatar-ajuda { font-size: 0.76rem; color: var(--cor-texto-suave); }
+.auth-avatar-ajuda { font-size: 0.76rem; color: var(--cor-texto-suave); line-height: 1.4; }
 
 .auth-avatar-grid {
   display: none;
@@ -322,8 +331,13 @@ button[data-carregando="true"] .auth-rotulo-botao { opacity: 0.85; }
 }
 
 @media (max-width: 900px) {
-  .auth-grid { grid-template-columns: 1fr; }
-  .auth-imagem { min-height: 220px; }
+  /* Empilhado (imagem em cima, formulário embaixo) não cabe sem rolar —
+     aqui a rolagem normal da página volta a valer, só no desktop/tablet
+     largo que a tela fica "parada". */
+  html, body.auth-body { height: auto; overflow: visible; }
+  .auth-grid { grid-template-columns: 1fr; height: auto; overflow: visible; }
+  .auth-imagem { min-height: 200px; }
+  .auth-form-wrap { height: auto; overflow: visible; padding: 32px 20px 48px; }
   .auth-campos-duplos { grid-template-columns: 1fr; }
   .auth-avatar-grid { grid-template-columns: repeat(5, 1fr); }
   .toast-container { left: 12px; right: 12px; max-width: none; }

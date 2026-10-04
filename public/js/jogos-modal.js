@@ -34,7 +34,63 @@
   let raf = null;
 
   if (!overlay) return;
+  /* ════════════════════════════════════
+     PAUSA + CONFIRMAÇÃO AO FECHAR (X da moldura / Esc)
+     Todos os jogos usam o requestAnimationFrame daqui: quando pausado, o
+     quadro fica "guardado" e o tempo parado é descontado (agora()).
+  ════════════════════════════════════ */
+  let paused = false, pauseStart = 0, pauseTotal = 0, parked = [];
+  const agora = () => performance.now() - pauseTotal;
+  const requestAnimationFrame = cb => window.requestAnimationFrame(ts => {
+    if (paused) { parked.push(cb); return; }
+    cb(ts - pauseTotal);
+  });
+  /* setTimeout que espera a pausa acabar antes de executar */
+  const setTimeoutP = (fn, ms) => setTimeout(function esperar() {
+    if (paused) { setTimeout(esperar, 100); return; }
+    fn();
+  }, ms);
 
+  const confirmEl = document.createElement('div');
+  confirmEl.className = 'game-confirm';
+  confirmEl.style.display = 'none';
+  confirmEl.innerHTML =
+    '<div class="game-confirm-box">' +
+      '<h3>Jogo pausado</h3>' +
+      '<p>Deseja realmente fechar o jogo?</p>' +
+      '<div class="game-confirm-btns">' +
+        '<button type="button" class="btn-start-game" id="btn-confirm-continue">Continuar jogando</button>' +
+        '<button type="button" class="btn-start-game btn-fechar-jogo" id="btn-confirm-close">Fechar</button>' +
+      '</div>' +
+    '</div>';
+  panelEl.appendChild(confirmEl);
+
+  function pausar() { if (paused) return; paused = true; pauseStart = performance.now(); }
+  function retomar() {
+    if (!paused) return;
+    pauseTotal += performance.now() - pauseStart;
+    paused = false;
+    parked.splice(0).forEach(cb => requestAnimationFrame(cb));
+  }
+  function resetPausa() {
+    if (paused) pauseTotal += performance.now() - pauseStart;
+    paused = false; parked = [];
+    confirmEl.style.display = 'none';
+  }
+  function pedirFechar() {
+    if (confirmEl.style.display !== 'none') return;
+    /* tela de início / fim de jogo visível = nada rodando: fecha direto, sem pausa */
+    if (screenEl.style.display !== 'none' && !confirmaNaTela) { closeOverlay(); return; }
+    pausar();
+    confirmEl.style.display = 'flex';
+    document.getElementById('btn-confirm-continue').focus();
+  }
+  function cancelarFechar() {
+    confirmEl.style.display = 'none';
+    retomar();
+  }
+  document.getElementById('btn-confirm-continue').addEventListener('click', cancelarFechar);
+  document.getElementById('btn-confirm-close').addEventListener('click', () => closeOverlay());
   /* ════════════════════════════════════
      NAVEGAÇÃO MENU ↔ JOGO
   ════════════════════════════════════ */
@@ -44,6 +100,7 @@
     showMenu();
   }
   function closeOverlay() {
+    resetPausa();
     overlay.classList.remove('active');
     document.body.style.overflow = '';
     stopCurrentGame();
@@ -69,14 +126,14 @@
   const btnOpenGames = document.getElementById('btn-open-games');
   if (btnOpenGames) btnOpenGames.addEventListener('click', openOverlay);
   document.getElementById('btn-close-games').addEventListener('click', closeOverlay);
-  document.getElementById('btn-close-game').addEventListener('click', closeOverlay);
-  /* Nesta página os jogos são abertos direto pelos cards do seletor
-     (não existe um menu interno no modal), então "← Jogos" apenas
-     fecha o modal e volta pro seletor de cards da página. */
-  document.getElementById('btn-back').addEventListener('click', closeOverlay);
-  // O jogo só deve ser fechado pelos controles explícitos (X, "← Jogos"
-  // ou Esc). Clicar fora do painel não interrompe a partida.
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('active')) closeOverlay(); });
+  document.getElementById('btn-close-game').addEventListener('click', pedirFechar);
+
+  // O jogo só deve ser fechado pelos controles explícitos (X, ou Esc). Clicar fora do painel não interrompe a partida.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !overlay.classList.contains('active')) return;
+    if (panelEl.style.display === 'none') { closeOverlay(); return; }   // menu antigo (sem jogo rodando)
+    if (confirmEl.style.display === 'none') pedirFechar(); else cancelarFechar();
+  });
 
   /* Botões "Jogar" dentro de cada card (.jogo-card) abrem o jogo
      correspondente ao data-jogo do card pai. Feito assim (e não no
@@ -134,10 +191,19 @@
     hudLevel.style.display = showLevel ? '' : 'none';
     hudLives.style.display = showLives ? '' : 'none';
   }
-  function showScreen(title, desc, btnTxt='Começar!') {
+  /* botão "Fechar" das telas de fim de jogo / entre rodadas */
+  const fecharBtn = document.createElement('button');
+  fecharBtn.type = 'button';
+  fecharBtn.className = 'btn-start-game btn-fechar-jogo';
+  fecharBtn.textContent = 'Fechar';
+fecharBtn.onclick = () => pedirFechar();   // fecha direto, exceto entre rodadas do mico (aí pergunta)
+  let confirmaNaTela = false;   // true = com esta tela aberta, X/Esc ainda pedem confirmação (ex.: entre rodadas do mico)
+  function showScreen(title, desc, btnTxt='Começar!', comFechar=false) {
+    confirmaNaTela = false;
     screenTitle.textContent = title;
     screenDesc.innerHTML = desc;
     startBtn.textContent = btnTxt;
+    if (comFechar) screenEl.appendChild(fecharBtn); else fecharBtn.remove();
     screenEl.style.display = 'flex';
   }
   function hideScreen() { screenEl.style.display = 'none'; }
@@ -195,6 +261,8 @@
   function loadGame(id) {
     stopCurrentGame();
         scoreEmMetros = false;
+            hudLives.firstChild.nodeValue = 'Vidas: ';
+    hudLevel.firstChild.nodeValue = 'Nível ';
     const extra = document.getElementById('especies-opcoes');
     if (extra) extra.remove();
     switch(id) {
@@ -424,7 +492,7 @@ function buildQueue() {
     running = false;
     cancelAnimationFrame(raf);
     opcoesEl.style.display = 'none';
-    showScreen('Fim do Quiz!', `Espécies identificadas: <strong>${correct}</strong><br>Pontuação: <strong>${score}</strong>`, 'Jogar de novo');
+    showScreen('Fim do Quiz!', `Espécies identificadas: <strong>${correct}</strong><br>Pontuação: <strong>${score}</strong>`, 'Tentar novamente', true);
   }
 
       function start() {
@@ -470,15 +538,18 @@ function buildQueue() {
   /* ════════════════════════════════════
      JOGO — JOGO DO MICO (VS 1 BOT)
   ════════════════════════════════════ */
-  function initMico() {
+function initMico() {
     titleEl.textContent = 'Jogo do Mico';
     tipEl.textContent   = 'Clique numa carta do oponente · Forme pares · Quem ficar com o Mico perde';
-    updateHUD(0, '', 3, false, false);
+    hudLives.firstChild.nodeValue = 'Pares: ';   // no Mico, o lugar das vidas mostra os pares formados
+    hudLevel.firstChild.nodeValue = 'Rodada ';   // e o nível vira rodada
     showScreen('Jogo do Mico',
-      'Pegue uma carta do oponente e forme <strong>pares</strong>.<br>Quem ficar com o <strong>Mico</strong> no final perde!<br>Pontos por pares, combos, rapidez e poucas rodadas.');
+      'Pegue uma carta do oponente e forme <strong>pares</strong>.<br>Quem ficar com o <strong>Mico</strong> no final perde!<br>São <strong>5 rodadas</strong>, cada uma com mais cartas que a anterior.');
 
     /* ── CONFIG ── */
-    const NUM_PARES = 13;   // fixo: 13 pares + 1 mico = 27 cartas por jogo (máx. 19 com as imagens atuais)
+    /* total de cartas de cada rodada (sempre ímpar: pares + 1 mico). Troque os números à vontade. */
+    const CARTAS_POR_RODADA = [7, 9, 11, 13, 17];
+    const TOTAL_RODADAS = CARTAS_POR_RODADA.length;
     const FUNDO_SRC = 'assets/games/fundomico.png';
     const S = 'assets/games/species/';
     /* Troque só img/nome aqui depois (por imagens de animais) */
@@ -503,25 +574,49 @@ function buildQueue() {
       { id: 'teiu',       nome: 'Teiú',         img: S + 'teiu.jpg' },
       { id: 'tuiuiu',     nome: 'Tuiuiú',       img: S + 'tui.webp' }
     ];
-    const PARES = TODAS.slice(0, Math.min(NUM_PARES, TODAS.length));
     const MICO = { id: 'mico', nome: 'MICO', img: 'assets/games/species/mico.webp', mico: true };
 
     const imagens = {};
-    [...PARES, MICO].forEach(c => { const i = new Image(); i.src = c.img; imagens[c.id] = i; });
+    [...TODAS, MICO].forEach(c => { const i = new Image(); i.src = c.img; imagens[c.id] = i; });
     const fundoImg = new Image(); fundoImg.src = FUNDO_SRC;
 
     /* tamanho base da carta (todo o desenho é feito nessa escala) */
     const CW = 80, CH = 104, MAO_W = W - 60, TOP_Y = 14, BOT_Y = H - 14 - CH;
-    let player = [], bot = [], descarte = [];
+    let player = [], bot = [], descarte = [], PARES = [];
     /* PONTUAÇÃO (feita pra ranking, quase nunca empata):
-       100 por par · +50 por combo (pares seguidos em rodadas seguidas)
-       vitória: +1000, +1 a cada 0,1 s abaixo de 5 min, +25 por rodada abaixo de 40 */
+       100 por par · +50 por combo (pares seguidos em turnos seguidos)
+       vitória na rodada: +1000, +1 a cada 0,1 s abaixo de 5 min, +25 por turno abaixo de 40.
+       A pontuação soma de rodada em rodada e começa do zero. */
     const PTS_PAR = 100, PTS_COMBO = 50, PTS_VITORIA = 1000, TEMPO_BONUS_MS = 300000, RODADAS_BONUS = 40;
     let parJog = 0, combo = 0, rodadas = 0, t0 = 0;
-    let score = 0, running = false, fase = 'fim', msg = '', hl = null, hover = -1, timers = [];
+    let nivel = 1, proxNivel = 1, novoJogo = true;
+    let score = 0, running = false, fase = 'fim', hl = null, hover = -1, timers = [];
 
     const shuffle = a => [...a].sort(() => Math.random() - 0.5);
-    const later = (fn, ms) => { const t = setTimeout(() => { if (running) fn(); }, ms); timers.push(t); };
+    /* timers do jogo: respeitam a pausa (X / Esc) */
+    const later = (fn, ms) => {
+      const t = setTimeout(function esperar() {
+        if (!running) return;
+        if (paused) { timers.push(setTimeout(esperar, 100)); return; }
+        fn();
+      }, ms);
+      timers.push(t);
+    };
+
+    /* texto de status no centro (HTML, por isso fica nítido) */
+    const statusEl = document.createElement('div');
+    statusEl.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;display:none;'
+      + 'padding:0.7cqw 2.2cqw;border-radius:999px;background:rgba(0,0,0,0.6);color:#f6edd4;'
+      + 'font-family:Inter,sans-serif;font-weight:700;font-size:max(13px,1.9cqw);letter-spacing:0.04em;'
+      + 'text-transform:uppercase;text-align:center;white-space:nowrap;pointer-events:none;';
+    canvasWrap.appendChild(statusEl);
+    function setMsg(t) { statusEl.textContent = t; statusEl.style.display = t ? '' : 'none'; }
+
+    /* HUD: pontos | nível (= rodada) | pares formados (no lugar das vidas) */
+    function hud() {
+      updateHUD(score, nivel, 3, true, true);
+      livesEl.textContent = (descarte.length / 2) + (PARES.length ? '/' + PARES.length : '');
+    }
 
     /* tira os pares de uma mão; devolve quantos pares saíram */
     function tirarPares(mao) {
@@ -540,6 +635,16 @@ function buildQueue() {
         }
       }
       return n;
+    }
+
+    /* distribui as cartas da rodada: cada mão recebe UMA de cada animal,
+       então ninguém começa com par; o mico vai pra um dos lados */
+    function distribuir(totalCartas) {
+      const nPares = (totalCartas - 1) / 2;
+      PARES = shuffle(TODAS).slice(0, nPares);
+      player = [...PARES]; bot = [...PARES]; descarte = [];
+      (Math.random() < 0.5 ? player : bot).push(MICO);
+      player = shuffle(player); bot = shuffle(bot);
     }
 
     /* mão em leque: se não couber, as cartas se sobrepõem */
@@ -662,23 +767,6 @@ function buildQueue() {
         drawCard(p.x, p.y - (dest ? 8 : 0), 1, p.c, true, dest);
       });
 
-      /* mensagem central */
-      const msgU = msg.toUpperCase();
-      ctx.font = '700 17px Inter, sans-serif';
-      const tw = ctx.measureText(msgU).width + 36;
-      rr((W - tw) / 2, 150, tw, 38, 19); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill();
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#f6edd4'; ctx.fillText(msgU, W / 2, 170);
-      ctx.fillStyle = 'rgba(246,237,212,0.85)'; ctx.font = '700 11px Inter, sans-serif';
-      ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
-      ctx.fillText(`OPONENTE: ${bot.length} CARTAS · VOCÊ: ${player.length} CARTAS · PARES: ${descarte.length / 2}/${PARES.length}`, W / 2, 210);
-      ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
-
-      /* pares já descartados (cartas pequenas) */
-      const k = 0.42, mw = CW * k, mg = 6, nd = descarte.length / 2;
-      const x0 = (W - (nd * mw + (nd - 1) * mg)) / 2;
-      for (let i = 0; i < nd; i++) drawCard(x0 + i * (mw + mg), 232, k, descarte[i * 2], true, null);
-
       raf = requestAnimationFrame(loop);
     }
 
@@ -690,12 +778,12 @@ function buildQueue() {
 
     function turnoPlayer() {
       fase = 'player'; hl = null;
-      msg = 'Sua vez: escolha uma carta do oponente';
+      setMsg('Sua vez: escolha uma carta do oponente');
     }
 
     function turnoBot() {
       fase = 'bot'; hl = null;
-      msg = 'Oponente está escolhendo...';
+      setMsg('Oponente está escolhendo...');
       later(() => {
         const alvo = player[Math.floor(Math.random() * player.length)];
         hl = { lado: 'player', card: alvo };
@@ -704,7 +792,8 @@ function buildQueue() {
           bot.push(alvo);
           hl = null;
           const n = tirarPares(bot);
-          msg = n ? 'Oponente formou um par!' : 'Oponente pegou uma carta sua';
+          setMsg(n ? 'Oponente formou um par!' : 'Oponente pegou uma carta sua');
+          hud();
           bot = shuffle(bot);
           later(() => { if (!checarFim()) turnoPlayer(); }, 600);
         }, 550);
@@ -716,19 +805,19 @@ function buildQueue() {
       const carta = bot.splice(i, 1)[0];
       player.push(carta);
       hl = { lado: 'verde', card: carta };
-      msg = carta.mico ? 'Ops... você pegou o MICO!' : 'Você pegou ' + carta.nome;
+      setMsg(carta.mico ? 'Ops... você pegou o MICO!' : 'Você pegou ' + carta.nome);
       later(() => {
         const n = tirarPares(player);
         hl = null; rodadas++;
         if (n) {
           combo++; parJog += n;
           const pts = PTS_PAR * n + PTS_COMBO * (combo - 1);
-          score += pts; updateHUD(score, '', 3, false, false);
-          popup(W / 2, 170, '#22c55e', '+' + pts + (combo > 1 ? ' combo x' + combo : ''));
-          msg = combo > 1 ? 'Combo x' + combo + '!' : 'Par formado!';
+          score += pts; hud();
+          popup(W / 2, H / 2 - 50, '#22c55e', '+' + pts + (combo > 1 ? ' combo x' + combo : ''));
+          setMsg(combo > 1 ? 'Combo x' + combo + '!' : 'Par formado!');
         } else {
           combo = 0;
-          if (!carta.mico) msg = 'Sem par...';
+          if (!carta.mico) setMsg('Sem par...');
         }
         later(() => { if (!checarFim()) turnoBot(); }, 650);
       }, 550);
@@ -749,7 +838,7 @@ function buildQueue() {
     }
     canvas.onmousemove = e => { hover = running && fase === 'player' ? indiceBot(posCanvas(e)) : -1; canvas.style.cursor = hover >= 0 ? 'pointer' : ''; };
     canvas.onclick = e => {
-      if (!running || fase !== 'player') return;
+      if (!running || paused || fase !== 'player') return;
       const i = indiceBot(posCanvas(e));
       if (i >= 0) pegar(i);
     };
@@ -758,7 +847,8 @@ function buildQueue() {
       running = false; fase = 'fim';
       cancelAnimationFrame(raf);
       canvas.style.cursor = '';
-      const ms = performance.now() - t0;
+      setMsg('');
+      const ms = agora() - t0;
       let bonus = 0;
       if (ganhou) {
         bonus = PTS_VITORIA
@@ -766,34 +856,40 @@ function buildQueue() {
               + Math.max(0, RODADAS_BONUS - rodadas) * 25;
       }
       score += bonus;
-      updateHUD(score, '', 3, false, false);
+      hud();
       const tempo = (ms / 1000).toFixed(1).replace('.', ',') + ' s';
-      showScreen(ganhou ? 'Você venceu!' : 'Você ficou com o Mico!',
-        `Pontuação: <strong>${score}</strong><br>Pares: <strong>${parJog}</strong> · Tempo: <strong>${tempo}</strong> · Rodadas: <strong>${rodadas}</strong>`,
-        'Jogar de novo');
+      const resumo = `Pontuação: <strong>${score}</strong><br>Pares: <strong>${parJog}</strong> · Tempo: <strong>${tempo}</strong> · Turnos: <strong>${rodadas}</strong>`;
+      if (ganhou && nivel < TOTAL_RODADAS) {
+        proxNivel = nivel + 1;
+        showScreen('Rodada ' + nivel + ' vencida!',
+          resumo + '<br>Próxima rodada: <strong>' + CARTAS_POR_RODADA[nivel] + ' cartas</strong>',
+          'Continuar jogando', true);
+          confirmaNaTela = true;   // entre rodadas: X/Esc abrem a pergunta de confirmação
+      } else if (ganhou) {
+        proxNivel = 1; novoJogo = true;
+        showScreen('Você venceu todas as rodadas!', resumo, 'Jogar de novo', true);
+      } else {
+        proxNivel = 1; novoJogo = true;   // perdeu: recomeça da rodada 1 com pontuação zerada
+        showScreen('Você ficou com o Mico!', resumo + '<br>Você volta para a rodada 1, com a pontuação zerada.', 'Tentar de novo', true);
+      }
     }
 
     function start() {
       timers.forEach(clearTimeout); timers = [];
-      /* baralho fixo (pares + mico), re-sorteia se alguma mão já começar vazia */
-      do {
-        const deck = shuffle([...PARES, ...PARES, MICO]);
-        const metade = Math.ceil(deck.length / 2);
-        player = deck.slice(0, metade); bot = deck.slice(metade);
-        descarte = [];
-        parJog = tirarPares(player); tirarPares(bot);
-      } while (player.length === 0 || bot.length === 0);
-      player = shuffle(player); bot = shuffle(bot);
-      score = parJog * PTS_PAR; combo = 0; rodadas = 0; t0 = performance.now();
+      nivel = proxNivel;
+      if (novoJogo) { score = 0; novoJogo = false; }
+      distribuir(CARTAS_POR_RODADA[nivel - 1]);
+      parJog = 0; combo = 0; rodadas = 0; t0 = agora();
       hl = null; hover = -1; running = true;
       hideScreen();
-      updateHUD(score, '', 3, false, false);
+      hud();
       turnoPlayer();
       raf = requestAnimationFrame(loop);
     }
 
     startBtn.onclick = start;
-    activeGame = { cleanup: () => { running = false; timers.forEach(clearTimeout); timers = []; canvas.onclick = null; canvas.onmousemove = null; canvas.style.cursor = ''; } };
+    hud();
+    activeGame = { cleanup: () => { running = false; timers.forEach(clearTimeout); timers = []; canvas.onclick = null; canvas.onmousemove = null; canvas.style.cursor = ''; statusEl.remove(); } };
   }
   /* ════════════════════════════════════
      JOGO — FUGA DO DESMATAMENTO
@@ -801,10 +897,11 @@ function buildQueue() {
   function initFuga() {
     titleEl.textContent = 'Fuga pela Floresta';
     scoreEmMetros = true;
-    tipEl.textContent   = 'Espaço (ou toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
-    updateHUD(0,1,3,true,true);
+    tipEl.textContent   = 'Espaço (ou clique/toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
+    updateHUD(0,'1,0x',3,true,true);
+    hudLevel.firstChild.nodeValue = 'Velocidade ';
     showScreen('Fuga pela Floresta',
-      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço ou toque na tela</strong>.');
+      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço, clique ou toque na tela</strong>.');
 
     const GH=H; const GROUND=GH-50;
     const OBSTACLE_SINK = 12;
@@ -812,15 +909,20 @@ function buildQueue() {
     const VIEW_W = W / ZOOM;   // largura do mundo que aparece na tela
     const ONCA_RENDER_WIDTH = 104;
     const ONCA_RENDER_HEIGHT = 65;
+    const ONCA_FOOT_DROP = 14;   // desce a onça até as patas tocarem o chão (maior = onça mais baixa)
 const FIRE_VISIBLE_HEIGHT = 80;   // altura que o fogo aparece na tela (aumente para ficar maior)
-const FIRE_SRC_VISIBLE_H = 980;   // altura útil do fogo dentro do PNG
-const FIRE_SRC_BOTTOM = 1012;     // linha do PNG onde a chama termina
-const FIRE_SCALE = FIRE_VISIBLE_HEIGHT / FIRE_SRC_VISIBLE_H;
-const FIRE_RENDER_WIDTH = 1920 * FIRE_SCALE;
-const FIRE_RENDER_HEIGHT = 1080 * FIRE_SCALE;
+const FIRE_SRC_W = 250;           // largura de cada frame do fogo (PNG)
+const FIRE_SRC_H = 380;           // altura de cada frame do fogo (PNG)
+const FIRE_SRC_BOTTOM = 380;      // linha do PNG onde a chama termina (base)
+const FIRE_FRAMES = 10;           // quantidade de frames (1F.png ... 10F.png)
+const FIRE_FRAME_TICKS = 6;       // ticks por frame (maior = fogo mais lento)
+const FIRE_SCALE = FIRE_VISIBLE_HEIGHT / FIRE_SRC_H;
+const FIRE_RENDER_WIDTH = FIRE_SRC_W * FIRE_SCALE;
+const FIRE_RENDER_HEIGHT = FIRE_SRC_H * FIRE_SCALE;
     let score=0,lives=3,level=1,running=false,dist=0;
     let onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
     let obstacles=[],powerups=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
+    const velTxt = () => (speed/5.2).toFixed(1).replace('.', ',') + 'x';   // 1,0x no começo, sobe a cada 0,4 de velocidade
     let groundX = 0; 
     const JUMP_V=-11.5, GRAVITY=0.55;
     let jumpTime = 0;
@@ -879,26 +981,71 @@ const imgJump5 = new Image();
 imgJump5.src = 'assets/games/onca6.png';
 
 //FOGO
-const fireImg1 = new Image();
+const fireImgs = [];      // frames do fogo (o que aparece na tela)
+const fireHitImgs = [];   // mesmos frames só com o corpo do fogo (sem faíscas), usado na colisão
 
+function makeFireBodyCanvas(img) {
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
 
-fireImg1.src = 'assets/games/1F.png';
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
 
-const fireImg2 = new Image();
-fireImg2.src = 'assets/games/2F.png';
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.drawImage(img, 0, 0);
 
-const fireImg3 = new Image();
-fireImg3.src = 'assets/games/3F.png';
+  const data = cx.getImageData(0, 0, w, h);
+  const px = data.data;
 
-const fireImg4 = new Image();
-fireImg4.src = 'assets/games/4F.png';
+  const label = new Int32Array(w * h);   // 0 = pixel ainda não visitado
+  const stack = new Int32Array(w * h);
+  let nextLabel = 0, bestLabel = 0, bestSize = 0;
 
-const fireImg5 = new Image();
-fireImg5.src = 'assets/games/5F.png';
+  // agrupa os pixels visíveis que estão encostados uns nos outros
+  for (let start = 0; start < w * h; start++) {
+    if (label[start] !== 0 || px[start * 4 + 3] === 0) continue;
 
-const fireImg6 = new Image();
-fireImg6.src = 'assets/games/6F.png';
+    nextLabel++;
+    let size = 0, sp = 0;
+    stack[sp++] = start;
+    label[start] = nextLabel;
 
+    while (sp > 0) {
+      const p = stack[--sp];
+      size++;
+      const x = p % w;
+      const y = (p - x) / w;
+
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          const n = ny * w + nx;
+          if (label[n] !== 0 || px[n * 4 + 3] === 0) continue;
+          label[n] = nextLabel;
+          stack[sp++] = n;
+        }
+      }
+    }
+
+    if (size > bestSize) { bestSize = size; bestLabel = nextLabel; }
+  }
+
+  // apaga tudo que não for o maior pedaço (as faíscas soltas)
+  for (let i = 0; i < w * h; i++) {
+    if (label[i] !== bestLabel) px[i * 4 + 3] = 0;
+  }
+  cx.putImageData(data, 0, 0);
+  return c;
+}
+
+for (let i = 1; i <= FIRE_FRAMES; i++) {
+  const img = new Image();
+  img.onload = () => { fireHitImgs[i - 1] = makeFireBodyCanvas(img); };
+  img.src = `assets/games/${i}F.png`;
+  fireImgs.push(img);
+}
 // ÁRVORE
 const treeImg = new Image();
 treeImg.src = 'assets/games/arvore.png';
@@ -909,7 +1056,12 @@ groundImg.src = 'assets/games/chao.png';
 
 //FUNDO
 const fundoImg = new Image();
-fundoImg.src = 'assets/games/fundofloresta.jpg';
+fundoImg.src = 'assets/games/fundoonca.png';
+let fundoX = 0;
+
+//CÉU (imagem parada, fica atrás do fundo)
+const ceuImg = new Image();
+ceuImg.src = 'assets/games/ceuonca.png';
 
 /*
  * Guarda as máscaras de transparência já calculadas.
@@ -1007,7 +1159,7 @@ function getAlphaMask(sprite) {
    * Desenha o sprite no tamanho em que ele aparece no jogo.
    */
   maskContext.drawImage(
-    sprite.img,
+    sprite.hitImg || sprite.img,
     0,
     0,
     width,
@@ -1288,7 +1440,7 @@ function updateOncaSprite() {
    * onca.y representa a posição dos pés.
    * Por isso desenhamos a imagem acima de onca.y.
    */
-  const py = onca.y - h;
+  const py = onca.y - h + ONCA_FOOT_DROP;
 
   /*
    * Esta é a representação usada pela colisão por pixels.
@@ -1399,6 +1551,7 @@ const OBS_TYPES=[
     let holdingJump = false;
 
     const keyH=e=>{
+      if(paused)return;
       if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();holdingJump=true;jump();}
     };
     const keyU=e=>{
@@ -1407,27 +1560,18 @@ const OBS_TYPES=[
     document.addEventListener('keydown',keyH);
     document.addEventListener('keyup',keyU);
 
-    /* só o toque (celular) pula; clique de mouse não faz nada */
+    /* clique do mouse e toque na tela também pulam (segurar = pulo mais alto) */
     canvas.style.touchAction='none';
-    canvas.onpointerdown=e=>{ if(e.pointerType!=='touch')return; holdingJump=true; jump(); };
-    canvas.onpointerup=e=>{ if(e.pointerType!=='touch')return; holdingJump=false; releaseJump(); };
+    canvas.onpointerdown=e=>{ if(paused)return; try{canvas.setPointerCapture(e.pointerId);}catch(_){} holdingJump=true; jump(); };
+    canvas.onpointerup=e=>{ holdingJump=false; releaseJump(); };
     canvas.onpointercancel=()=>{ holdingJump=false; releaseJump(); };
 
 function drawFire(ob) {
-  let img;
-
   /*
    * Escolhe o frame atual da animação do fogo.
    */
-  const frame = Math.floor(tick / 6) % 6;
-
-  if (frame === 0) img = fireImg1;
-  else if (frame === 1) img = fireImg2;
-  else if (frame === 2) img = fireImg3;
-  else if (frame === 3) img = fireImg4;
-  else if (frame === 4) img = fireImg5;
-  else img = fireImg6;
-
+  const frame = Math.floor(tick / FIRE_FRAME_TICKS) % FIRE_FRAMES;
+  const img = fireImgs[frame];
    /*
    * Desenha a imagem inteira (1920x1080) reduzida pela escala do fogo.
    * A base da chama (linha 1012 do PNG) fica exatamente no chão.
@@ -1448,6 +1592,7 @@ function drawFire(ob) {
    */
   ob.sprite = {
     img,
+    hitImg: fireHitImgs[frame],
     x: ob.x,
     y,
     w,
@@ -1742,45 +1887,41 @@ if (t.type === 'tree') {
       tick+=dt;
       dist+=speed*dt; score=~~(dist/6);
       speed=4.8+level*0.4; if(dist>level*1700)level++;
-      updateHUD(score,level,lives);
+      updateHUD(score,velTxt(),lives);
       clrCanvas();
             ctx.save();
       ctx.translate(0, H * (1 - ZOOM));
       ctx.scale(ZOOM, ZOOM);
 
-      /* fundo */
-      if (fundoImg.complete && fundoImg.naturalWidth > 0) {
-        const fsc = Math.max(W / fundoImg.naturalWidth, GH / fundoImg.naturalHeight);
-        const fw = fundoImg.naturalWidth * fsc;
-        const fh = fundoImg.naturalHeight * fsc;
-        ctx.drawImage(fundoImg, (W - fw) / 2, (GH - fh) / 2, fw, fh);
-      } else {
-        const sky=ctx.createLinearGradient(0,0,0,GH);
-        sky.addColorStop(0,'#04100a'); sky.addColorStop(1,'#0d2e16');
-        ctx.fillStyle=sky; ctx.fillRect(0,0,W,GH);
+            /* fundo contínuo: a imagem alterna normal/espelhada, então a emenda nunca aparece */
+      ctx.fillStyle = '#5CE1E6'; ctx.fillRect(0, 0, VIEW_W, GH);
+
+            /* céu parado: preenche a parte visível da tela (com o zoom, o topo do mundo fica cortado) */
+      if (ceuImg.complete && ceuImg.naturalWidth > 0) {
+        const ceuTopo = GH * (ZOOM - 1) / ZOOM;      // y do mundo que fica no topo da tela
+        const ceuAlt = GH - ceuTopo;                 // altura visível
+        const cs = Math.max(VIEW_W / ceuImg.naturalWidth, ceuAlt / ceuImg.naturalHeight);
+        const cw = ceuImg.naturalWidth * cs, ch = ceuImg.naturalHeight * cs;
+        ctx.drawImage(ceuImg, (VIEW_W - cw) / 2, ceuTopo + (ceuAlt - ch) / 2, cw, ch);
       }
-
-      /* árvores pixel art de fundo (paralaxe) */
-      bgX -= speed * 0.3 * dt;
-      if(bgX < -W) bgX = 0;
- if (treeBgImg.complete && treeBgImg.naturalWidth > 0) {
-  [0, W].forEach(ox => {
-    BG_TREES.forEach(t => {
-      const tx = t.x + ox + bgX;
-      const sc = t.scale;
-      const dw = BG_TREE_WIDTH * sc;
-      const dh = BG_TREE_HEIGHT * sc;
-
-      ctx.drawImage(
-        treeBgImg,
-        tx - dw / 2,
-        GROUND - dh,
-        dw,
-        dh
-      );
-    });
-  });
-}
+      if (fundoImg.complete && fundoImg.naturalWidth > 0) {
+        const fh = 400;                      // altura da imagem no jogo (maior = floresta maior)
+        const fy = (GROUND + 20) - fh;       // base da floresta fica escondida atrás do chão
+        const fw = Math.round(fh * fundoImg.naturalWidth / fundoImg.naturalHeight);
+        const srcH = fundoImg.naturalHeight - 2;   // corta a linha clara do último pixel da imagem
+        fundoX -= speed * 0.25 * dt;         // paralaxe: mais lento que o chão
+        if (fundoX <= -2 * fw) fundoX += 2 * fw;
+        for (let k = 0; fundoX + k * fw < VIEW_W + fw; k++) {
+          const x = Math.round(fundoX + k * fw);
+          if (k % 2) {
+            ctx.save(); ctx.translate(x + fw + 1, 0); ctx.scale(-1, 1);
+            ctx.drawImage(fundoImg, 0, 0, fundoImg.naturalWidth, srcH, 0, fy, fw + 1, fh);
+            ctx.restore();
+          } else {
+            ctx.drawImage(fundoImg, 0, 0, fundoImg.naturalWidth, srcH, x, fy, fw + 1, fh);
+          }
+        }
+      }
 
 /* 🆕 CHÃO COM IMAGEM AJUSTADO */
 const groundHeight = 320;
@@ -1915,7 +2056,7 @@ else {
     onca.x + onca.w * 0.3;
 
   const oy2 =
-    onca.y - oh;
+    onca.y - oh + ONCA_FOOT_DROP;
 
   const obRight =
     ob.x + ob.w;
@@ -1939,7 +2080,7 @@ else {
 
     updateHUD(
       score,
-      level,
+      velTxt(),
       lives
     );
 
@@ -1975,9 +2116,6 @@ ctx.restore();
       /* spawn obs */
       obsTick+=dt; if(obsTick>=obsInterval){obsTick=0;obsInterval=Math.max(55,110-level*8);spawnObs();}
 
-      /* score display */
-      ctx.fillStyle='rgba(34,197,94,0.35)'; ctx.font='bold 12px monospace';
-      ctx.textAlign='right'; ctx.fillText(`${~~(dist/6)} m`,W-14,22);
 
       raf=requestAnimationFrame(loop);
     }
@@ -1986,11 +2124,11 @@ ctx.restore();
       running=false;cancelAnimationFrame(raf);
       showScreen(won?'🐆 Onça Salva!':'💀 A onça foi capturada...',
         `Distância percorrida: <strong>${~~(dist/6)} m</strong><br>${won?'A onça escapou para a reserva!':'Tente de novo!'}`,
-        'Correr de novo');
+        'Correr de novo', true);
     }
     function start(){holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
       obstacles=[];powerups=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
-      running=true;hideScreen();updateHUD(0,1,3);delta.reset();raf=requestAnimationFrame(loop);}
+      running=true;hideScreen();updateHUD(0,'1,0x',3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
     activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onpointerdown=null;canvas.onpointerup=null;canvas.onpointercancel=null;canvas.style.touchAction='';}};
   }
@@ -2126,7 +2264,7 @@ ctx.restore();
       running=false;cancelAnimationFrame(raf);
       showScreen(won?'🌊 Rio Limpo!':'☠️ Rio destruído...',
         `Poluentes bloqueados: <strong>${score}</strong><br>Qualidade final da água: <strong>${~~waterQuality}%</strong><br>${won?'O ecossistema aquático foi salvo!':'Tente de novo!'}`,
-        'Jogar de novo');
+        won?'Jogar de novo':'Tentar novamente', true);
     }
     function start(){score=0;lives=3;level=1;tick=0;spawnAccum=0;waterQuality=100;particles=[];filters=[];running=true;hideScreen();updateHUD(0,1,3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;

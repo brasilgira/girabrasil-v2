@@ -201,48 +201,26 @@ function traduzirErroSupabase(error, contexto) {
     : 'Não foi possível entrar. Tente novamente.';
 }
 
-// ---- Upload de foto própria (Supabase Storage) ----------------------------
-// Complementa o seletor de espécies (que já existia e continua sendo a
-// opção garantida/sem dependência externa). Isso aqui só funciona se o
-// bucket 'avatars' existir no Supabase com uma política permitindo o
-// usuário autenticado escrever no próprio caminho (<uid>/...) — ver
-// instruções no relatório final. Lança Error com mensagem amigável se o
-// bucket não existir ou a política não permitir, pra quem chamar poder
-// orientar a pessoa a usar o seletor de espécies em vez disso.
-const AVATAR_BUCKET = 'avatars';
-const AVATAR_TAMANHO_MAX = 3 * 1024 * 1024; // 3 MB
-const AVATAR_TIPOS_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
-
-function validarArquivoAvatar(arquivo) {
-  if (!AVATAR_TIPOS_ACEITOS.includes(arquivo.type)) {
-    throw new Error('Use uma imagem JPG, PNG ou WEBP.');
-  }
-  if (arquivo.size > AVATAR_TAMANHO_MAX) {
-    throw new Error('A imagem precisa ter até 3 MB.');
+// ---- Recuperação de senha (via e-mail, pelo próprio Supabase Auth) -------
+// Não cria nenhum mecanismo paralelo: usa o fluxo nativo do Supabase.
+// 1) enviarEmailRecuperacao: dispara o e-mail com um link mágico.
+// 2) O link leva a pessoa pra redirectTo (redefinir-senha.html) já com uma
+//    sessão temporária de recuperação criada pelo próprio Supabase.
+// 3) redefinirSenha: troca a senha nessa sessão temporária.
+async function enviarEmailRecuperacao(email) {
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/redefinir-senha.html`,
+  });
+  if (error) {
+    throw new Error('Não foi possível enviar o e-mail agora. Tente novamente em instantes.');
   }
 }
 
-async function enviarAvatarArquivo(arquivo, usuarioId) {
-  validarArquivoAvatar(arquivo);
-
-  const extensao = (arquivo.name.split('.').pop() || 'jpg').toLowerCase();
-  const caminho = `${usuarioId}/avatar-${Date.now()}.${extensao}`;
-
-  const { error: erroUpload } = await supabaseClient.storage
-    .from(AVATAR_BUCKET)
-    .upload(caminho, arquivo, { upsert: true, contentType: arquivo.type });
-
-  if (erroUpload) {
-    const semBucket = /bucket not found/i.test(erroUpload.message || '');
-    throw new Error(
-      semBucket
-        ? 'Envio de foto própria ainda não está disponível — escolha uma das espécies abaixo.'
-        : 'Não foi possível enviar sua foto agora. Tente de novo ou escolha uma das espécies abaixo.'
-    );
+async function redefinirSenha(novaSenha) {
+  const { error } = await supabaseClient.auth.updateUser({ password: novaSenha });
+  if (error) {
+    throw new Error(traduzirErroSupabase(error, 'cadastro'));
   }
-
-  const { data } = supabaseClient.storage.from(AVATAR_BUCKET).getPublicUrl(caminho);
-  return data.publicUrl;
 }
 
 // ---- Header (Entrar/Criar conta -> nome + avatar) -------------------------
