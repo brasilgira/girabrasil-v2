@@ -2,19 +2,7 @@
 // js/noticias-regiao.js
 //
 // Monta a tela de NOTÍCIAS de UMA região (public/regioes/norte.html, etc.),
-// a partir de window.REGIOES (js/regioes-data.js) pros textos/visual da
-// região, e da API (/api/noticias?regiao=ID) pras notícias de verdade.
-//
-// FASE 2: antes lia window.REGIAO_NOTICIAS (js/regiao-noticias-data.js);
-// agora busca da API. Esse arquivo JS antigo continua no projeto, só não
-// é mais lido aqui.
-//
-// IMPORTANTE: o `id` dentro de window.REGIOES (ex: norte.id = 1) é só um
-// rótulo visual antigo, não é necessariamente o id real da tabela `regiao`
-// no banco — por isso resolvemos o id de verdade buscando por NOME em
-// /api/regioes antes de buscar as notícias. NUNCA usamos `bioma` pra
-// descobrir a região — são conceitos diferentes no banco.
-// ============================================================================
+
 
 function normalizarTexto(texto) {
   return (texto || '')

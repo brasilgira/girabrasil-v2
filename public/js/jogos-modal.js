@@ -1,9 +1,9 @@
 /* =============================================
    GIRABRASIL — JOGOS.JS
-   Jogos importados do protótipo Gira3:
+   Jogos importados do protótipo Gira:
    Quiz de Espécies, Guarda da Floresta,
    Fuga do Desmatamento, Volta ao Rio
-   ============================================= */
+    ============================================= */  
 (function () {
 
   /* ── elementos base ── */

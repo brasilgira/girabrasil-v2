@@ -1,22 +1,7 @@
 // ============================================================================
 // public/js/regioes.js — página de exploração das regiões (regioes.html)
 //
-// Redesign: o mapa (js/mapa-brasil-svg.js) deixou de ser o mecanismo
-// principal de navegação — agora é um elemento gráfico do hero, com hover
-// sutil, mas o clique nele continua levando direto pra página da região.
-// A navegação principal passou a ser o "atlas editorial" abaixo do hero.
-//
-// Fontes de dados:
-//   - window.REGIOES  (js/regioes-data.js)  — estático, autoral do projeto
-//   - window.BIOMAS   (js/biomas-data.js)   — estático, autoral do projeto
-//   - /api/regioes e /api/noticias          — dados reais do banco
-//
-// SEGURANÇA: nada vindo da API vai por innerHTML/template string — só
-// createElement/textContent (mesmo padrão de noticias-regiao.js). Os dados
-// estáticos (REGIOES/BIOMAS) são escritos pelo time do projeto, não por
-// usuário/admin, mas mesmo assim a montagem abaixo evita template strings
-// com HTML por consistência e facilidade de manutenção.
-// ============================================================================
+
 
 const REGIOES_ORDEM = ['norte', 'nordeste', 'centro-oeste', 'sudeste', 'sul'];
 const dadosRegioes = window.REGIOES || {};

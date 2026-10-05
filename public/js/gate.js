@@ -1,11 +1,6 @@
-// ==========================================================================
+
 // GiraBrasil — Aviso "é preciso ter conta" (soft-gate)
-// Componente genérico e reaproveitável. Qualquer página que precise pedir
-// conta antes de liberar uma ação (jogar, conversar com o GiraBot,
-// curtir/salvar/comentar) só precisa chamar abrirAvisoConta(mensagem).
-//
-// Depende de js/auth.js estar carregado antes dele (usa obterUsuarioLogado()).
-// ==========================================================================
+
 
 function usuarioEstaLogado() {
   return !!obterUsuarioLogado();

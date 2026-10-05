@@ -1,9 +1,4 @@
-// ==========================================================================
-// GiraBrasil — Dados dos biomas
-// Fonte única de conteúdo para a página /biomas/<slug>.html.
-// Cada objeto aqui alimenta o mesmo template (js/biomas.js), então adicionar
-// ou editar um bioma não exige criar HTML novo — só editar os dados abaixo.
-// ==========================================================================
+
 
 const BIOMAS = {
 

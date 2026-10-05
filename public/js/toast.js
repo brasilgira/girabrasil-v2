@@ -1,14 +1,7 @@
 // ==========================================================================
 // toast.js — notificação visual compartilhada (sucesso/erro/aviso)
 //
-// Um único componente reaproveitado em todas as páginas que precisam
-// avisar o usuário sem usar alert()/confirm() nativos: cadastro, login,
-// logout, e qualquer outra tela que já usava seu próprio toast (perfil,
-// admin) pode migrar pra este sem duplicar a mesma lógica de novo.
-//
-// Uso: mostrarToast('Conta criada com sucesso!', 'sucesso')
-// Tipos: 'sucesso' | 'erro' | 'aviso' (default: 'aviso')
-// ==========================================================================
+
 
 (function () {
   let container = null;

@@ -1,10 +1,6 @@
 // ============================================================================
 // Gira-Brasil — leitura de notícia regional
-//
-// Este é o único molde React usado pelas páginas individuais regionais.
-// A URL fornece apenas a região e o id; todos os dados da matéria continuam
-// vindo da API. O componente preserva os dados próprios de cada notícia.
-// ============================================================================
+// =  ===========================================================================
 
 const { useEffect, useState } = React;
 

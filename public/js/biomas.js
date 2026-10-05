@@ -1,10 +1,6 @@
-// ==========================================================================
+
 // GiraBrasil — Motor da página de biomas
-// Lê qual bioma renderizar a partir de document.body.dataset.bioma e monta
-// a página inteira com base no objeto BIOMAS (js/biomas-data.js).
-// Isso evita duplicar HTML/CSS/JS seis vezes: cada arquivo public/biomas/*.html
-// é só uma casca fina que aponta para um bioma; todo o conteúdo real vive aqui.
-// ==========================================================================
+
 
 (function () {
   const slug = document.body.dataset.bioma;

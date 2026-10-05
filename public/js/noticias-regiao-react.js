@@ -1,16 +1,7 @@
 // ============================================================================
 // js/noticias-regiao-react.js
 //
-// Versão em React de js/noticias-regiao.js — monta a tela de NOTÍCIAS de
-// UMA região (public/regioes/norte.html, etc.), a partir de window.REGIOES
-// (js/regioes-data.js) e window.REGIAO_NOTICIAS (js/regiao-noticias-data.js).
-//
-// Mesmo padrão usado em noticias.html/noticia.html: React via CDN (sem
-// build), lendo os arrays de dados que já existem.
-//
-// Compartilhado pelas 5 páginas de região; cada uma se diferencia pelo
-// atributo data-regiao do <body> (ex: <body data-regiao="norte">).
-// ============================================================================
+
 
 const { useState, useEffect, useRef } = React;
 

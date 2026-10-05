@@ -1,13 +1,7 @@
-// ==========================================================================
+
 // GiraBrasil — Motor da página de biomas (versão React)
-// Lê qual bioma renderizar a partir de document.body.dataset.bioma e monta
-// a página inteira com base no objeto window.BIOMAS (js/biomas-data.js),
-// que continua sendo a mesma fonte única de dados de antes.
-//
-// Isso substitui o antigo js/biomas.js (manipulação direta do DOM) por
-// componentes React, seguindo o mesmo padrão já usado em noticia.html:
-// React + ReactDOM + Babel Standalone via CDN, sem build/Vite.
-// ==========================================================================
+
+
 
 const { useState, useEffect, useRef } = React;
 

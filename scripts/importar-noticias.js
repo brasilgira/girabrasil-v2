@@ -2,22 +2,7 @@
 // scripts/importar-noticias.js
 //
 // FASE 1 da migração de conteúdo: lê as 72 notícias que hoje vivem nos
-// arquivos JS do front (public/js/noticias-data.js e
-// public/js/regiao-noticias-data.js) e insere elas na tabela `noticias`
-// do PostgreSQL/Supabase.
-//
-// COMO RODAR:
-//   node scripts/importar-noticias.js
-//
-// É SEGURO RODAR MAIS DE UMA VEZ: cada notícia recebe um `slug_origem`
-// estável (ex: 'geral-1', 'regiao-norte-03') e o script faz
-// INSERT ... ON CONFLICT (slug_origem) DO UPDATE — ou seja, rodar de novo
-// depois de editar o conteúdo nos arquivos JS ATUALIZA a notícia no banco
-// em vez de duplicar.
-//
-// NÃO mexe no server.js, app.js, config/db.js nem nas rotas existentes —
-// só lê os dois arquivos JS e escreve na tabela `noticias`.
-// ============================================================================
+
 
 const fs = require('fs');
 const path = require('path');

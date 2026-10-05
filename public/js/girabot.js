@@ -1,8 +1,6 @@
-// ==========================================================================
-// GiraBot — histórico persistente por conta (antes: array em memória, se
-// perdia ao recarregar). Toda chamada à API usa fetchAutenticado (js/auth.js)
-// — exige login de verdade, o backend confere dono em cada conversa.
-// ==========================================================================
+
+// GiraBot — histórico persistente por conta 
+
 
 const sidebar = document.getElementById('girabotSidebar');
 const overlay = document.getElementById('girabotOverlay');

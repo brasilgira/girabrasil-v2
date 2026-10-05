@@ -1,18 +1,4 @@
-/* ==========================================================================
-   admin.js — Painel Administrativo (Gira Brasil)
 
-   FASE 4: conectado de verdade ao backend (/api/admin/*), usando o token
-   do Supabase (via fetchAutenticado(), de js/auth.js) e a mesma sessão que
-   o resto do site já usa. Nada de mock aqui — o que falhar aparece como
-   erro de verdade (toast / mensagem no formulário), não como sucesso fingido.
-
-   Segurança: esta checagem no front é só conveniência de UX (evita que um
-   usuário comum veja o painel piscar antes de ser expulso). A autorização
-   de verdade está no backend — toda rota /api/admin/* passa por
-   middleware/verificarAdmin.js, que valida o token no Supabase Auth e olha
-   app_metadata.is_admin. Mesmo que alguém pule esta checagem no navegador,
-   as chamadas à API continuam recusadas.
-   ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   iniciarPainel();

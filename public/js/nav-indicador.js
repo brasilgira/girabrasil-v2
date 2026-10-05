@@ -1,11 +1,6 @@
 /* ==========================================================================
    GiraBrasil — Indicador animado do menu (header)
-   Funciona em TODAS as páginas que têm <nav class="nav-site">.
-   - A "pílula" desliza da posição em que ESTAVA (mesmo no meio de uma animação)
-     até o link da nova página.
-   - O texto fica branco SÓ onde a pílula passa por cima (se ela estiver no meio
-     de uma palavra, metade fica branca e metade normal).
-   ========================================================================== */
+    ========================================================================== */
 (function () {
   const CHAVE = 'giraNavOrigem';
 

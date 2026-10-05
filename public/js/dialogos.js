@@ -1,19 +1,6 @@
-// ==========================================================================
+
 // dialogos.js — caixa de confirmação do Gira-Brasil (substitui window.confirm)
-//
-// Uso (retorna Promise<boolean>):
-//   const ok = await confirmarAcao({
-//     titulo: 'Excluir comentário',
-//     mensagem: 'Essa ação não pode ser desfeita.',
-//     confirmar: 'Excluir',   // texto do botão principal (opcional)
-//     cancelar: 'Cancelar',   // opcional
-//     perigo: true,           // botão em destaque de alerta (opcional)
-//   });
-//
-// Avisos simples (substituem window.alert) continuam no toast.js:
-//   mostrarToast('Mensagem', 'sucesso' | 'erro' | 'aviso')
-// Acessível: role="dialog", foco preso, Esc cancela, devolve o foco.
-// ==========================================================================
+
 (function () {
   window.confirmarAcao = function confirmarAcao(opcoes) {
     const o = Object.assign({ titulo: 'Confirmar', mensagem: '', confirmar: 'Confirmar', cancelar: 'Cancelar', perigo: false }, opcoes || {});

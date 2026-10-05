@@ -2,22 +2,7 @@
 // js/regioes-data.js
 //
 // Fonte única de dados das 5 regiões geográficas do Brasil — mesmo padrão
-// que já usamos em js/biomas-data.js (window.BIOMAS) e js/noticias-data.js
-// (window.NOTICIAS). Aqui é window.REGIOES.
-//
-// Usado em dois lugares:
-//   1) regioes.html — o painel interativo com mapa + pílulas (js/regioes.js)
-//   2) public/regioes/*.html — as páginas dedicadas de notícias de cada
-//      região (js/noticias-regiao.js), uma tela cheia por região
-//
-// `bioma` aqui é a chave que liga a região ao filtro de bioma que já existe
-// em noticias.html (window.NOTICIAS[].bioma) — é o que faz o botão
-// "Explorar notícias" abrir a lista já filtrada pela região certa.
-//
-// ⚠️ `noticias` abaixo ainda é conteúdo de exemplo/placeholder (só usado
-// pelo painel interativo de regioes.html). As páginas dedicadas novas não
-// mostram essa lista — ainda não temos as notícias reais de cada região.
-// ============================================================================
+
 
 window.REGIOES = {
   norte: {

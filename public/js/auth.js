@@ -1,19 +1,4 @@
-// ==========================================================================
-// GiraBrasil — Autenticação com Supabase (login.html e cadastro.html)
-//
-// IMPORTANTE: este arquivo usa EXCLUSIVAMENTE o Supabase Auth
-// (supabaseClient.auth.signUp / signInWithPassword). Não existe mais
-// nenhum caminho alternativo via fetch('/api/auth/cadastro') — se essa
-// rota ainda existir no backend, ela não é mais chamada por este arquivo,
-// porque ter dois sistemas de conta ao mesmo tempo é exatamente o que
-// estava causando o login não reconhecer contas criadas pelo outro caminho.
-//
-// O restante do site (Jogos, GiraBot, Notícia) continua lendo o "usuário
-// logado" do localStorage — guardamos os dados básicos lá depois que o
-// Supabase confirma o login/cadastro. Isso agora inclui is_admin, lido do
-// app_metadata do Supabase (o único lugar em que essa permissão pode ser
-// setada — nunca pelo navegador).
-// ==========================================================================
+
 
 const CHAVE_USUARIO = 'girabrasil_usuario';
 const SUPABASE_URL = 'https://tybkeihuwpelsmfdmzhj.supabase.co';

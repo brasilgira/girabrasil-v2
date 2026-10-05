@@ -1,21 +1,4 @@
--- ============================================================================
--- Migração: perfil de usuário, notícias completas, curtir/salvar notícia
---
--- CONTEXTO: hoje o login é 100% Supabase Auth (auth.users), e a tabela
--- `usuario` antiga (ID numérico) não é mais usada por ninguém — é por
--- isso que "usuario_id" em `comentario` já é TEXT (guarda o UUID do
--- Supabase Auth direto). Esta migração estende essa mesma lógica pro
--- resto do site: perfil público, notícias com todos os campos, curtir
--- notícia inteira, salvar notícia, e uma flag simples de admin.
---
--- COMO RODAR: cole no SQL Editor do Supabase e rode uma vez. Os comandos
--- verificam antes de aplicar, então é seguro rodar de novo se precisar.
--- ============================================================================
 
--- 1) PERFIL — um perfil público por usuário do Supabase Auth.
---    O id AQUI é o MESMO UUID do Supabase Auth (auth.users.id), não um
---    id novo gerado à toa — assim um comentario.usuario_id sempre aponta
---    pra uma linha real aqui.
 CREATE TABLE IF NOT EXISTS perfil (
   id UUID PRIMARY KEY,               -- = auth.users.id do Supabase
   nome TEXT NOT NULL,
