@@ -230,40 +230,53 @@ async function montarNoticiasRegiao() {
     pillsEl.appendChild(botao);
   });
 }
+  // Lista editorial numerada (não cartões com ícone+seta) — mesmo espírito
+  // do .s-lista da tela Sobre, adaptado aqui com identidade própria.
   const destaquesHtml = regiao.destaques
-    .map((texto) => `
-      <a href="../noticias.html" class="destaque-regiao-item">
-        <span class="destaque-regiao-icone">${ICONES.folha}</span>
-        <span>${texto}</span>
-        <span class="destaque-regiao-seta">${ICONES.seta}</span>
-      </a>
+    .map((texto, indice) => `
+      <li class="regiao-indice-item">
+        <span class="regiao-indice-num">${String(indice + 1).padStart(2, '0')}</span>
+        <a href="../noticias.html">${texto}</a>
+      </li>
     `)
     .join('');
 
-  // Desenha a "casca" da página (hero, mapa, estatísticas, sobre) na hora —
-  // isso não depende da API, só de window.REGIOES. O grid de notícias
-  // começa como "carregando" e é preenchido assim que a API responder.
+  // `temas` nunca tinha sido usado nas páginas dedicadas — é dado real já
+  // existente em regioes-data.js. Vira uma régua de temas em pauta logo
+  // abaixo do hero, o "assunto" daquela região numa linha só.
+  const temasHtml = (regiao.temas || [])
+    .map((tema) => `<span>${tema}</span>`)
+    .join('');
+
+  // Desenha a "casca" da página (hero, régua de temas, mapa, estatísticas)
+  // na hora — isso não depende da API, só de window.REGIOES. O grid de
+  // notícias começa como "carregando" e é preenchido assim que a API
+  // responder.
   raiz.innerHTML = `
-    <section class="regiao-hero" style="background-image: linear-gradient(100deg, rgba(10,18,13,0.94) 0%, rgba(10,18,13,0.6) 45%, rgba(10,18,13,0.15) 100%), linear-gradient(0deg, rgba(10,18,13,0.35) 0%, rgba(10,18,13,0) 55%), url('../${regiao.imagem}');">
+    <section class="regiao-hero" style="background-image: linear-gradient(100deg, rgba(10,18,13,0.95) 0%, rgba(10,18,13,0.62) 48%, rgba(10,18,13,0.18) 100%), linear-gradient(0deg, rgba(10,18,13,0.5) 0%, rgba(10,18,13,0) 60%), url('${normalizarUrlImagem(regiao.imagem)}');">
       <div class="regiao-hero-conteudo">
-        <div class="regiao-hero-tag">${ICONES.folha} REGIÃO ${regiao.nome.toUpperCase()}</div>
+        <div class="regiao-hero-tag">${ICONES.folha} Região ${regiao.nome} — ${regiao.apelido}</div>
         <h1 class="regiao-hero-titulo">
           ${regiao.heroLinha1}<br>
           <span class="regiao-hero-destaque">${regiao.heroLinha2}</span>
         </h1>
-        <p class="regiao-hero-texto">${regiao.descricao}</p>
       </div>
 
-      <div class="destaques-regiao-card">
-        <h4>${ICONES.folha} Destaques da região</h4>
-        ${destaquesHtml}
-      </div>
+      <blockquote class="regiao-hero-citacao">
+        <p>“${regiao.frase}”</p>
+      </blockquote>
     </section>
+
+    <div class="regiao-temas-regua" aria-label="Temas em pauta nesta região">
+      <span class="regiao-temas-rotulo">Em pauta</span>
+      <div class="regiao-temas-lista">${temasHtml}</div>
+    </div>
 
     <div class="regiao-layout">
       <main class="regiao-noticias-centro">
         <div class="regiao-noticias-cabecalho-lista">
           <h2>Notícias da Região ${regiao.nome}</h2>
+          <p>${regiao.descricao}</p>
         </div>
 
         <div class="pills-tema-regiao" id="regiao-pills">
@@ -275,19 +288,18 @@ async function montarNoticiasRegiao() {
       </main>
 
       <aside class="regiao-lateral">
-        <div class="regiao-mini-mapa-card">
-          <h4>${ICONES.folha} Região ${regiao.nome}</h4>
+        <div class="regiao-painel-territorio">
           <div class="regiao-mini-mapa" id="regiao-mini-mapa"></div>
-          <ul class="regiao-stats">
-            <li>${ICONES.arvore} <div><strong>${regiao.area}</strong><span>Área aproximada</span></div></li>
-            <li>${ICONES.pessoas} <div><strong>${regiao.populacao}</strong><span>População</span></div></li>
-          </ul>
-          <blockquote class="regiao-frase">“${regiao.frase}”</blockquote>
+          <dl class="regiao-fatos">
+            <div><dt>Estados</dt><dd>${regiao.estados}</dd></div>
+            <div><dt>Área aproximada</dt><dd>${regiao.area}</dd></div>
+            <div><dt>População</dt><dd>${regiao.populacao}</dd></div>
+          </dl>
         </div>
 
-        <div class="sobre-regiao-card">
-          <h4>${ICONES.folha} Sobre a Região ${regiao.nome}</h4>
-          <p id="sobre-regiao-texto">${regiao.estados}. ${regiao.descricao}</p>
+        <div class="regiao-painel-destaques">
+          <h4>Para explorar</h4>
+          <ol class="regiao-indice">${destaquesHtml}</ol>
         </div>
       </aside>
     </div>

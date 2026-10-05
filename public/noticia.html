@@ -102,15 +102,40 @@ function obterNoticiaIdDaUrl() {
 // renderBloco() nem o JSX lá embaixo.
 function adaptarNoticiaDaApi(n) {
   const metadados = n.metadados || {};
+  const normalizar = (texto) => (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const listaEditorial = Array.isArray(window.NOTICIAS) ? window.NOTICIAS : [];
+  const alvo = normalizar(n.titulo);
+  const editorial = listaEditorial.find((item) => normalizar(item.titulo) === alvo)
+    || listaEditorial.find((item) => {
+      const titulo = normalizar(item.titulo);
+      return titulo.length > 45 && (alvo.includes(titulo) || titulo.includes(alvo));
+    })
+    || null;
+
   return {
     ...n,
-    imagem: n.imagem_url,
-    corpo: n.corpo_json || [],
-    autor: metadados.autor || 'Gira-Brasil',
-    dataPublicacao: metadados.dataPublicacao || formatarDataSimples(n.criado_em),
-    dataAtualizacao: metadados.dataAtualizacao || formatarDataSimples(n.atualizado_em || n.criado_em),
-    tempoLeitura: metadados.tempoLeitura || '',
-    legendaHero: metadados.legendaHero || '',
+    ...(editorial ? {
+      titulo: editorial.titulo || n.titulo,
+      resumo: editorial.resumo || n.resumo,
+      categoria: editorial.categoria || n.categoria,
+      bioma: editorial.bioma || n.bioma,
+      corpo: Array.isArray(editorial.corpo) ? editorial.corpo : (n.corpo_json || []),
+      link_fonte: editorial.link || n.link_fonte,
+      autor: editorial.autor || metadados.autor || 'Gira-Brasil',
+      dataPublicacao: editorial.dataPublicacao || metadados.dataPublicacao || formatarDataSimples(n.criado_em),
+      dataAtualizacao: editorial.dataAtualizacao || metadados.dataAtualizacao || formatarDataSimples(n.atualizado_em || n.criado_em),
+      tempoLeitura: editorial.tempoLeitura || metadados.tempoLeitura || '',
+      legendaHero: editorial.legendaHero || metadados.legendaHero || '',
+    } : {
+      imagem: n.imagem_url,
+      corpo: n.corpo_json || [],
+      autor: metadados.autor || 'Gira-Brasil',
+      dataPublicacao: metadados.dataPublicacao || formatarDataSimples(n.criado_em),
+      dataAtualizacao: metadados.dataAtualizacao || formatarDataSimples(n.atualizado_em || n.criado_em),
+      tempoLeitura: metadados.tempoLeitura || '',
+      legendaHero: metadados.legendaHero || '',
+    }),
+    imagem: n.imagem_url || editorial?.imagem || '',
     meta: formatarDataSimples(n.criado_em),
   };
 }
@@ -137,6 +162,12 @@ function obterUsuarioSessao() {
 }
 
 // Transforma "Marina Silva" em "MS" pro avatar do comentário
+const PALAVRAS_BLOQUEADAS = ['puta','puto','merda','caralho','porra','viado','vagabunda','vagabundo',' arrombado',' arrombada','fdp'];
+function contemOfensa(texto) {
+  const normalizado = (texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return PALAVRAS_BLOQUEADAS.some((termo) => new RegExp('(^|\\W)' + termo.trim() + '(?=$|\\W)', 'i').test(normalizado));
+}
+
 function obterIniciais(nome) {
   if (!nome) return '?';
   return nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
@@ -207,20 +238,33 @@ function renderBloco(bloco, i) {
   }
 }
 
+function Icone({ nome, tamanho = 20 }) {
+  const comum = { width: tamanho, height: tamanho, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true };
+  const desenhos = {
+    curtir: <><path d="M20.8 8.7c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.6Z"/></>,
+    comentario: <><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.5-3A7.5 7.5 0 1 1 20 11.5Z"/></>,
+    compartilhar: <><path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 13v6H5V6h6"/></>,
+    salvar: <><path d="M6 4.8A1.8 1.8 0 0 1 7.8 3h8.4A1.8 1.8 0 0 1 18 4.8V21l-6-4-6 4Z"/></>,
+    link: <><path d="M10 13.5a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 10.5a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 19.6l1.1-1.1"/></>,
+    fechar: <><path d="m18 6-12 12M6 6l12 12"/></>
+  };
+  return <svg {...comum}>{desenhos[nome] || desenhos.compartilhar}</svg>;
+}
+
 function RailAcoes({ curtido, salvo, curtidas, onCurtir, onSalvar, onCompartilhar, onIrComentarios, onFonteMenor, onFonteMaior }) {
   return (
     <aside className="rail" aria-label="Ações do artigo">
       <button className={`rail-btn ${curtido ? 'active' : ''}`} onClick={onCurtir} aria-pressed={curtido} aria-label="Curtir notícia">
-        {curtido ? '♥' : '♡'}<span className="count">{curtidas > 0 ? `${curtidas} curtida${curtidas === 1 ? '' : 's'}` : 'Curtir'}</span>
+        {<Icone nome="curtir" />}<span className="count">{curtidas > 0 ? `${curtidas} curtida${curtidas === 1 ? '' : 's'}` : 'Curtir'}</span>
       </button>
       <button className="rail-btn" onClick={onIrComentarios} aria-label="Ir para comentários">
-        💬<span className="count">Comentar</span>
+        <Icone nome="comentario"/><span className="count">Comentar</span>
       </button>
       <button className="rail-btn" onClick={onCompartilhar} aria-label="Compartilhar">
-        ↗<span className="count">Compartilhar</span>
+        <Icone nome="compartilhar"/><span className="count">Compartilhar</span>
       </button>
       <button className={`rail-btn ${salvo ? 'active' : ''}`} onClick={onSalvar} aria-pressed={salvo} aria-label="Salvar notícia">
-        🔖<span className="count">Salvar</span>
+        <Icone nome="salvar"/><span className="count">Salvar</span>
       </button>
       <div className="rail-divider"></div>
       <div className="rail-font">
@@ -234,10 +278,10 @@ function RailAcoes({ curtido, salvo, curtidas, onCurtir, onSalvar, onCompartilha
 function RailMobile({ curtido, salvo, onCurtir, onSalvar, onCompartilhar, onIrComentarios }) {
   return (
     <div className="mobile-rail" aria-label="Ações do artigo">
-      <button className={curtido ? 'active' : ''} onClick={onCurtir}>{curtido ? '♥' : '♡'}</button>
-      <button onClick={onIrComentarios}>💬</button>
-      <button onClick={onCompartilhar}>↗</button>
-      <button className={salvo ? 'active' : ''} onClick={onSalvar}>🔖</button>
+      <button className={curtido ? 'active' : ''} onClick={onCurtir}><Icone nome="curtir"/></button>
+      <button onClick={onIrComentarios} aria-label="Comentários"><Icone nome="comentario"/></button>
+      <button onClick={onCompartilhar} aria-label="Compartilhar"><Icone nome="compartilhar"/></button>
+      <button className={salvo ? 'active' : ''} onClick={onSalvar} aria-label="Salvar"><Icone nome="salvar"/></button>
     </div>
   );
 }
@@ -259,11 +303,11 @@ function ModalCompartilhar({ aberto, onFechar }) {
           <button onClick={onFechar} aria-label="Fechar">×</button>
         </div>
         <div className="share-options">
-          <button className="share-opt" onClick={copiarLink}><span className="ic">🔗</span> Copiar link</button>
-          <a className="share-opt" href="#"><span className="ic">💬</span> WhatsApp</a>
-          <a className="share-opt" href="#"><span className="ic">📷</span> Instagram</a>
+          <button className="share-opt" onClick={copiarLink}><span className="ic"><Icone nome="link"/></span> Copiar link</button>
+          <a className="share-opt" href="#"><span className="ic"><Icone nome="comentario"/></span> WhatsApp</a>
+          <a className="share-opt" href="#"><span className="ic">◎</span> Instagram</a>
           <a className="share-opt" href="#"><span className="ic">✕</span> X</a>
-          <a className="share-opt" href="#"><span className="ic">📘</span> Facebook</a>
+          <a className="share-opt" href="#"><span className="ic">f</span> Facebook</a>
         </div>
         <div className={`copy-feedback ${copiado ? 'show' : ''}`}>Link copiado!</div>
       </div>
@@ -281,6 +325,7 @@ function Comentarios({ comentarios, carregando, erro, enviando, usuarioAtualId, 
     }
     const limpo = texto.trim();
     if (!limpo) return;
+    if (contemOfensa(limpo)) { mostrarToast('Seu comentário contém linguagem ofensiva. Revise o texto antes de publicar.', 'erro'); return; }
     onEnviar(limpo);
     setTexto('');
   }
@@ -784,9 +829,9 @@ function App() {
             {curtido ? `♥ Curtido${curtidas > 0 ? ` (${curtidas})` : ''}` : '♡ Gostei'}
           </button>
           <button className={`pill-btn ${salvo ? 'active' : ''}`} onClick={alternarSalvar}>
-            {salvo ? '🔖 Salvo' : '🔖 Salvar notícia'}
+            {salvo ? <><Icone nome="salvar"/> Salvo</> : <><Icone nome="salvar"/> Salvar notícia</>}
           </button>
-          <button className="pill-btn" onClick={() => setModalAberto(true)}>↗ Compartilhar</button>
+          <button className="pill-btn" onClick={() => setModalAberto(true)}><Icone nome="compartilhar"/> Compartilhar</button>
         </div>
       </div>
 

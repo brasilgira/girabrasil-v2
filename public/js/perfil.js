@@ -585,7 +585,7 @@ function configurarAbas() {
 const JOGOS_DISPONIVEIS = [
   { id: 'quiz-da-floresta', nome: 'Quiz de Espécies', imagem: 'assets/jogos/game-quiz.avif' },
   { id: 'jogo-do-mico', nome: 'Jogo do Mico', imagem: 'assets/jogos/game-guardioes.jpg' },
-  { id: 'missao-biodiversidade', nome: 'Defender o Rio', imagem: 'assets/jogos/game-biodiversidade.jpg' },
+  { id: 'missao-biodiversidade', nome: 'Volta ao Rio', imagem: 'assets/jogos/game-biodiversidade.jpg' },
   { id: 'desafio-dos-biomas', nome: 'Fuga pela Floresta', imagem: 'assets/jogos/game-biomas.jpg' },
 ];
 

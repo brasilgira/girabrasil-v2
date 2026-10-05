@@ -70,6 +70,15 @@
     gap: 40px;
   }
 
+  .home-noticias-carregando,
+  .home-noticias-vazio,
+  .home-noticias-erro {
+    grid-column: 1 / -1;
+    padding: 48px 0;
+    text-align: center;
+    color: var(--cor-texto-suave);
+  }
+
   .noticia-destaque img {
     width: 100%;
     aspect-ratio: 16/10;

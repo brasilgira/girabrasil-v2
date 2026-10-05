@@ -865,3 +865,23 @@ body.pagina-jogos .header-site {
   color: var(--cor-floresta);   /* verde do menu do site */
   margin: 0;
 }
+
+/* ==========================================================================
+   TEXTO GRANDE NO MEIO (+pontos, Errou, Tempo!) — quiz e jogo do mico
+   Nasce centrado no ponto e sobe 44px, igual ao de antes.
+   ========================================================================== */
+@keyframes floatUpCentro {
+  0%   { opacity: 1; transform: translate(-50%, -50%) translateY(0); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateY(-44px); }
+}
+.game-panel .hit-popup.popup-grande {
+  font-family: 'Fredoka', 'Fraunces', sans-serif;
+  font-size: max(44px, 8cqw);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.75), 0 0 2px rgba(0, 0, 0, 0.9);
+  transform: translate(-50%, -50%);
+  animation-name: floatUpCentro;
+}

@@ -47,9 +47,13 @@ function atualizarCamposUsuarioLogado(campos) {
   if ('avatar_url' in campos) atualizarAvatarHeader(atualizado);
 }
 
-function sairDaConta() {
+async function sairDaConta() {
   localStorage.removeItem(CHAVE_USUARIO);
-  supabaseClient.auth.signOut();
+  try {
+    await supabaseClient.auth.signOut();
+  } catch {
+    // mesmo que falhe na rede, o cache local já foi limpo
+  }
 }
 
 // ---- Token de acesso (pra chamadas autenticadas na nossa API) ------------
@@ -235,6 +239,18 @@ function iniciaisDoNome(nome) {
     .toUpperCase();
 }
 
+// O avatar é salvo como caminho relativo à raiz do site (ex.:
+// "assets/games/species/onca.jpg"). Nas páginas dentro de /regioes/ e
+// /biomas/ esse caminho resolvia para /regioes/assets/... (que não existe),
+// e a foto não carregava. Aqui sobe uma pasta quando preciso; URLs absolutas
+// (http, data:, /) passam direto.
+function resolverCaminhoAvatar(url) {
+  if (!url) return url;
+  if (/^(https?:|data:|blob:|\/)/i.test(url)) return url;
+  const emSubpasta = /\/(biomas|regioes)\//.test(window.location.pathname);
+  return (emSubpasta ? '../' : '') + url.replace(/^\.?\//, '');
+}
+
 // Preenche só o conteúdo da bolinha (.perfil-avatar): foto se avatar_url
 // existir, iniciais caso contrário. Nunca usa innerHTML com texto do
 // usuário — tudo via textContent/DOM, pra evitar XSS no nome.
@@ -249,7 +265,7 @@ function atualizarAvatarHeader(usuario) {
     // numa implantação — não depende de nada além deste próprio script.
     el.style.overflow = 'hidden';
     const img = document.createElement('img');
-    img.src = usuario.avatar_url;
+    img.src = resolverCaminhoAvatar(usuario.avatar_url);
     img.alt = '';
     img.style.width = '100%';
     img.style.height = '100%';
@@ -273,10 +289,19 @@ function renderizarHeaderAuth() {
 
   const nome = usuario.nome || usuario.email.split('@')[0];
 
+  const emSubpasta = /\/(biomas|regioes)\//.test(window.location.pathname);
+  const raiz = emSubpasta ? '../' : '';
+
   const wrapper = document.createElement('div');
-  wrapper.className = 'perfil-usuario';
-  wrapper.id = 'perfilUsuario';
-  wrapper.title = 'Clique para sair';
+  wrapper.className = 'perfil-menu-wrap';
+
+  // Botão (nome + foto): abre/fecha o menu em vez de ir direto pro perfil
+  const gatilho = document.createElement('button');
+  gatilho.type = 'button';
+  gatilho.className = 'perfil-usuario';
+  gatilho.id = 'perfilUsuario';
+  gatilho.setAttribute('aria-haspopup', 'menu');
+  gatilho.setAttribute('aria-expanded', 'false');
 
   const avatar = document.createElement('span');
   avatar.className = 'perfil-avatar';
@@ -285,7 +310,42 @@ function renderizarHeaderAuth() {
   nomeEl.className = 'perfil-nome';
   nomeEl.textContent = nome;
 
-  wrapper.append(avatar, nomeEl);
+  const seta = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  seta.setAttribute('viewBox', '0 0 24 24');
+  seta.setAttribute('fill', 'none');
+  seta.setAttribute('stroke', 'currentColor');
+  seta.setAttribute('stroke-width', '2.2');
+  seta.setAttribute('stroke-linecap', 'round');
+  seta.setAttribute('stroke-linejoin', 'round');
+  seta.setAttribute('aria-hidden', 'true');
+  seta.classList.add('perfil-seta');
+  const setaPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  setaPath.setAttribute('d', 'm6 9 6 6 6-6');
+  seta.appendChild(setaPath);
+
+  gatilho.append(avatar, nomeEl, seta);
+
+  // Menu com as duas escolhas
+  const menu = document.createElement('div');
+  menu.className = 'perfil-menu';
+  menu.setAttribute('role', 'menu');
+
+  const itemPerfil = document.createElement('a');
+  itemPerfil.className = 'perfil-menu__item';
+  itemPerfil.href = raiz + 'perfil.html';
+  itemPerfil.setAttribute('role', 'menuitem');
+  itemPerfil.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Meu perfil';
+
+  const itemSair = document.createElement('button');
+  itemSair.type = 'button';
+  itemSair.className = 'perfil-menu__item perfil-menu__item--sair';
+  itemSair.setAttribute('role', 'menuitem');
+  itemSair.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Sair da conta';
+
+  menu.append(itemPerfil, itemSair);
+  wrapper.append(gatilho, menu);
   container.innerHTML = '';
   container.appendChild(wrapper);
 
@@ -305,10 +365,33 @@ function renderizarHeaderAuth() {
       .catch(() => {}); // sem avatar por enquanto, sem problema — fica nas iniciais
   }
 
-  wrapper.addEventListener('click', () => {
-    // Páginas dentro de /biomas/ e /regioes/ precisam voltar uma pasta
-    const emSubpasta = /\/(biomas|regioes)\//.test(window.location.pathname);
-    window.location.href = (emSubpasta ? '../' : '') + 'perfil.html';
+  function fecharMenu() {
+    menu.classList.remove('aberto');
+    gatilho.setAttribute('aria-expanded', 'false');
+  }
+  function alternarMenu() {
+    const abrir = !menu.classList.contains('aberto');
+    menu.classList.toggle('aberto', abrir);
+    gatilho.setAttribute('aria-expanded', String(abrir));
+  }
+
+  gatilho.addEventListener('click', (evento) => {
+    evento.stopPropagation();
+    alternarMenu();
+  });
+  document.addEventListener('click', (evento) => {
+    if (!wrapper.contains(evento.target)) fecharMenu();
+  });
+  document.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Escape' && menu.classList.contains('aberto')) {
+      fecharMenu();
+      gatilho.focus();
+    }
+  });
+
+  itemSair.addEventListener('click', async () => {
+    await sairDaConta();
+    window.location.href = raiz + 'index.html';
   });
 
   renderizarLinkAdmin(usuario);

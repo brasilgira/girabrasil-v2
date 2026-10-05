@@ -371,6 +371,71 @@ h1, h2, h3 {
   white-space: nowrap;
 }
 
+/* --- Link "Voltar" (mesmo estilo do "Ir para Notícias →" da home) --- */
+.link-voltar.link-voltar {
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #0d353d;
+  color: #0d353d;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: gap .2s, color .2s, border-color .2s;
+}
+.link-voltar.link-voltar:hover { gap: 14px; color: #246b5a; border-color: #246b5a; }
+.link-voltar svg { flex-shrink: 0; }
+
+/* --- Menu do perfil no header (Perfil / Sair da conta) --- */
+.perfil-menu-wrap { position: relative; }
+.perfil-usuario { border: 0; background: transparent; font: inherit; color: inherit; }
+.perfil-usuario[aria-expanded="true"] { background: rgba(0, 0, 0, 0.06); }
+.perfil-seta { width: 14px; height: 14px; opacity: .6; transition: transform .2s ease; flex-shrink: 0; }
+.perfil-usuario[aria-expanded="true"] .perfil-seta { transform: rotate(180deg); }
+.perfil-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  padding: 6px;
+  background: var(--cor-fundo-alt, #FBFAF6);
+  border: 1px solid var(--cor-borda, #E1DCCB);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(13, 53, 61, 0.16);
+  z-index: 200;
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+}
+.perfil-menu.aberto { opacity: 1; transform: none; pointer-events: auto; }
+.perfil-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--cor-texto, #1E241F);
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.perfil-menu__item:hover, .perfil-menu__item:focus-visible { background: rgba(13, 53, 61, 0.07); outline: none; }
+.perfil-menu__item svg { width: 17px; height: 17px; flex-shrink: 0; }
+.perfil-menu__item--sair { color: #a8402a; }
+.perfil-menu__item--sair:hover, .perfil-menu__item--sair:focus-visible { background: rgba(168, 64, 42, 0.09); }
+
 /* --- Responsividade base --- */
 @media (max-width: 860px) {
   .nav-site { display: none; } /* menu mobile pode ser implementado depois, com JS */

@@ -2,7 +2,7 @@
    GIRABRASIL — JOGOS.JS
    Jogos importados do protótipo Gira3:
    Quiz de Espécies, Guarda da Floresta,
-   Fuga do Desmatamento, Defender o Rio
+   Fuga do Desmatamento, Volta ao Rio
    ============================================= */
 (function () {
 
@@ -207,7 +207,7 @@ fecharBtn.onclick = () => pedirFechar();   // fecha direto, exceto entre rodadas
     screenEl.style.display = 'flex';
   }
   function hideScreen() { screenEl.style.display = 'none'; }
-  function popup(x, y, color, text) {
+  function popup(x, y, color, text, grande) {
     const rect = canvas.getBoundingClientRect();
     let sx = rect.width / W, sy = rect.height / H, ox = 0, oy = 0;
     const ajuste = getComputedStyle(canvas).objectFit;
@@ -219,9 +219,9 @@ fecharBtn.onclick = () => pedirFechar();   // fecha direto, exceto entre rodadas
     }
     const wrapRect = canvasWrap.getBoundingClientRect();
     const el = document.createElement('div');
-    el.className = 'hit-popup';
+    el.className = 'hit-popup' + (grande ? ' popup-grande' : '');
     el.style.left  = (rect.left - wrapRect.left + ox + x * sx) + 'px';
-    el.style.top   = (rect.top - wrapRect.top + oy + y * sy - 12) + 'px';
+    el.style.top   = (rect.top - wrapRect.top + oy + y * sy - (grande ? 0 : 12)) + 'px';
     el.style.color = color;
     el.textContent = text;
     canvasWrap.appendChild(el);
@@ -263,18 +263,19 @@ fecharBtn.onclick = () => pedirFechar();   // fecha direto, exceto entre rodadas
         scoreEmMetros = false;
             hudLives.firstChild.nodeValue = 'Vidas: ';
     hudLevel.firstChild.nodeValue = 'Nível ';
+
     const extra = document.getElementById('especies-opcoes');
     if (extra) extra.remove();
     switch(id) {
       case 'quiz-da-floresta':          initEspecies(); break;
       case 'jogo-do-mico':              initMico();     break;
       case 'desafio-dos-biomas':        initFuga();     break;
-      case 'missao-biodiversidade':     initRio();      break;
+      case 'missao-biodiversidade':     initSapo();     break;
       /* aliases (ids originais do protótipo) */
       case 'especies': initEspecies(); break;
       case 'mico':     initMico();     break;
       case 'fuga':     initFuga();     break;
-      case 'rio':      initRio();      break;
+      case 'rio':      initSapo();     break;
     }
   }
 
@@ -286,7 +287,6 @@ function initEspecies() {
   titleEl.textContent = 'Identificar Espécies';
   tipEl.textContent = 'Identifique o animal antes do tempo acabar · Erre 3 = fim de jogo';
   updateHUD(0, '', 3, false, true);
-
 
   const ESPECIES_POR_NIVEL = {
   facil: [
@@ -418,14 +418,14 @@ function buildQueue() {
       score += pontos;
       correct++;
       btn.classList.add('correct');
-      popup(W / 2, H / 2, '#22c55e', `+${pontos}`);
+      popup(W / 2, H / 2, '#22c55e', `+${pontos}`, true);
     } else {
       lives--;
       btn.classList.add('wrong');
       opcoesEl.querySelectorAll('.especie-btn').forEach(b => {
         if (b.dataset.nome === current.nome) b.classList.add('correct');
       });
-      popup(W / 2, H / 2, '#f87171', 'Errou');
+      popup(W / 2, H / 2, '#f87171', 'Errou', true);
       shakePanel();
     }
 
@@ -478,7 +478,7 @@ function buildQueue() {
         opcoesEl.querySelectorAll('.especie-btn').forEach(b => {
           if (b.dataset.nome === current.nome) b.classList.add('correct');
         });
-        popup(W / 2, 60, '#f87171', 'Tempo!');
+        popup(W / 2, H / 2, '#f87171', 'Tempo!', true);
        updateHUD(score, categoriaAtual, lives);
        updateDifficultyColor();
         if (lives <= 0) { setTimeout(() => end(false), 900); }
@@ -578,10 +578,11 @@ function initMico() {
 
     const imagens = {};
     [...TODAS, MICO].forEach(c => { const i = new Image(); i.src = c.img; imagens[c.id] = i; });
-    const fundoImg = new Image(); fundoImg.src = FUNDO_SRC;
+const fundoImg = new Image(); fundoImg.src = FUNDO_SRC;
+const imgLogo = new Image(); imgLogo.src = 'assets/logo/logobranco.png';
 
     /* tamanho base da carta (todo o desenho é feito nessa escala) */
-    const CW = 80, CH = 104, MAO_W = W - 60, TOP_Y = 14, BOT_Y = H - 14 - CH;
+const CW = 100, CH = 140, MAO_W = W - 60, MARGEM_Y = 38, TOP_Y = MARGEM_Y, BOT_Y = H - MARGEM_Y - CH;
     let player = [], bot = [], descarte = [], PARES = [];
     /* PONTUAÇÃO (feita pra ranking, quase nunca empata):
        100 por par · +50 por combo (pares seguidos em turnos seguidos)
@@ -592,6 +593,17 @@ function initMico() {
     let nivel = 1, proxNivel = 1, novoJogo = true;
         let paresAcum = 0;   // pares formados nas rodadas anteriores (zera quando perde ou recomeça)
     let score = 0, running = false, fase = 'fim', hl = null, hover = -1, timers = [];
+    let voo = null;   // carta em animação (voando de uma mão pra outra)
+let efeitosPar = [];   // pares que estão indo pro meio da mesa
+let restoX = [];   // x que cada carta restante da mão tinha antes de tirar os pares
+const PAR_FLY = 450, PAR_JOIN = 350, PAR_VAN = 300, PAR_STAG = 300;   // ms: ir pro meio · juntar · sumir · intervalo entre pares
+const PAR_TOTAL = PAR_FLY + PAR_JOIN + PAR_VAN;
+/* quando (em ms) os pontos aparecem e o turno seguinte pode continuar */
+const temposPar = n => {
+  const sumir = (n - 1) * PAR_STAG + PAR_FLY + PAR_JOIN;
+  return { sumir, fim: sumir + PAR_VAN + 200 };
+};
+
 
     const shuffle = a => [...a].sort(() => Math.random() - 0.5);
     /* timers do jogo: respeitam a pausa (X / Esc) */
@@ -616,27 +628,56 @@ function initMico() {
     /* HUD: pontos | nível (= rodada) | pares formados (no lugar das vidas) */
     function hud() {
       updateHUD(score, nivel, 3, true, true);
-      livesEl.textContent = paresAcum + descarte.length / 2;   // pares formados desde o início do jogo, somando todas as rodadas
+      
+      livesEl.textContent = paresAcum + parJog;   // pares que VOCÊ formou desde o início do jogo, somando todas as rodadas
     }
 
-    /* tira os pares de uma mão; devolve quantos pares saíram */
-    function tirarPares(mao) {
-      let n = 0, achou = true;
-      while (achou) {
-        achou = false;
-        for (let i = 0; i < mao.length && !achou; i++) {
-          if (mao[i].mico) continue;
-          for (let j = i + 1; j < mao.length; j++) {
-            if (mao[j].id === mao[i].id) {
-              descarte.push(mao[i]);
-              mao.splice(j, 1); mao.splice(i, 1);
-              n++; achou = true; break;
-            }
-          }
+/* tira os pares de uma mão; devolve quantos pares saíram.
+   lado: 'player' ou 'bot' (de onde as cartas saem, pra animação) */
+function tirarPares(mao, lado) {
+  const pos = layout(mao, lado === 'player' ? BOT_Y : TOP_Y);   // posições antes de tirar
+  let n = 0, achou = true;
+  while (achou) {
+    achou = false;
+    for (let i = 0; i < mao.length && !achou; i++) {
+      if (mao[i].mico) continue;
+      for (let j = i + 1; j < mao.length; j++) {
+        if (mao[j].id === mao[i].id) {
+          efeitosPar.push({
+            carta: mao[i], lado,
+            ax: pos[i].x, ay: pos[i].y, bx: pos[j].x, by: pos[j].y,
+            ini: agora() + n * PAR_STAG
+          });
+          descarte.push(mao[i]);
+          mao.splice(j, 1); mao.splice(i, 1);
+          pos.splice(j, 1); pos.splice(i, 1);
+          n++; achou = true; break;
         }
       }
-      return n;
     }
+  }
+restoX = pos.map(p => p.x);
+return n;
+}
+
+/* embaralha uma mão SEM animação, de forma totalmente aleatória:
+   cada carta pode cair em qualquer lugar, inclusive no mesmo onde estava.
+   (xAntes e y continuam como parâmetros só para não precisar mexer nas chamadas) */
+function embaralharMao(mao, xAntes, y) {
+  const r = [...mao];
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+}
+
+/* depois que o jogador escolhe: embaralha a mão do oponente e passa a vez */
+function aposEscolha() {
+  if (checarFim()) return;
+  bot = embaralharMao(bot, layout(bot, TOP_Y).map(p => p.x), TOP_Y);
+  turnoBot();
+}
 
     /* distribui as cartas da rodada: cada mão recebe UMA de cada animal,
        então ninguém começa com par; o mico vai pra um dos lados */
@@ -644,7 +685,7 @@ function initMico() {
       const nPares = (totalCartas - 1) / 2;
       PARES = shuffle(TODAS).slice(0, nPares);
       player = [...PARES]; bot = [...PARES]; descarte = [];
-      (Math.random() < 0.5 ? player : bot).push(MICO);
+      (Math.random() < 0.55 ? player : bot).push(MICO);
       player = shuffle(player); bot = shuffle(bot);
     }
 
@@ -657,6 +698,65 @@ function initMico() {
       const x0 = (W - total) / 2;
       return mao.map((c, i) => ({ c, x: x0 + i * step, y, w: CW, h: CH }));
     }
+
+    /* ── ANIMAÇÃO: a carta voa até a mão de quem pegou e depois gira, se revelando ── */
+    const VOO_MS = 520, VIRA_MS = 420;
+    function voar(cfg, fim) {   // cfg: { carta, lado, x0, y0, x1, y1, faceIni, faceFim }
+      voo = { ...cfg, ini: agora(), fim };
+    }
+    function desenharVoo() {
+      if (!voo) return;
+      const t = agora() - voo.ini;
+      let x, y, k = 1, flip = 1, face = voo.faceIni;
+      if (t < VOO_MS) {
+        const p = t / VOO_MS;
+        const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;   // começa e termina suave
+        x = voo.x0 + (voo.x1 - voo.x0) * e;
+        y = voo.y0 + (voo.y1 - voo.y0) * e;
+        k = 1 + 0.15 * Math.sin(Math.PI * p);   // cresce um pouco no meio do voo
+      } else {
+        x = voo.x1; y = voo.y1;
+        const p = Math.min(1, (t - VOO_MS) / VIRA_MS);
+        flip = Math.max(0.03, Math.abs(Math.cos(Math.PI * p)));   // 1 -> 0 -> 1
+        face = p < 0.5 ? voo.faceIni : voo.faceFim;               // troca de lado no meio do giro
+      }
+      drawCard(x - (k - 1) * CW / 2, y - (k - 1) * CH / 2, k, voo.carta, face, null, flip);
+      if (t >= VOO_MS + VIRA_MS) { const f = voo.fim; voo = null; f(); }
+    }
+
+/* pares: as duas cartas vão pro meio, se juntam uma sobre a outra e somem */
+function desenharEfeitosPar() {
+  if (!efeitosPar.length) return;
+  const now = agora();
+  efeitosPar = efeitosPar.filter(f => now - f.ini < PAR_TOTAL);
+  const cx = W / 2 - CW / 2, cy = H / 2 - CH / 2, SEP = CW * 0.62, EMP = 5;   // EMP: quanto uma fica deslocada sobre a outra
+  const ease = p => p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  efeitosPar.forEach(f => {
+    const t = now - f.ini;
+    let ax = f.ax, ay = f.ay, bx = f.bx, by = f.by, k = 1, alfa = 1;
+    let face = f.lado === 'player';              // cartas do oponente se revelam no caminho
+    if (t >= PAR_FLY + PAR_JOIN) {               // some
+      const p = (t - PAR_FLY - PAR_JOIN) / PAR_VAN;
+      ax = cx; ay = cy; bx = cx + EMP; by = cy + EMP;
+      k = 1 + 0.35 * p; alfa = 1 - p; face = true;
+    } else if (t >= PAR_FLY) {                   // junta
+      const p = (t - PAR_FLY) / PAR_JOIN, e = ease(p);
+      ax = cx - SEP * (1 - e); ay = cy;
+      bx = cx + SEP * (1 - e) + EMP * e; by = cy + EMP * e;
+      k = 1 + 0.12 * Math.sin(Math.PI * p); face = true;
+    } else if (t >= 0) {                         // vai pro meio
+      const p = t / PAR_FLY, e = ease(p);
+      ax = f.ax + (cx - SEP - f.ax) * e; ay = f.ay + (cy - f.ay) * e;
+      bx = f.bx + (cx + SEP - f.bx) * e; by = f.by + (cy - f.by) * e;
+      k = 1 + 0.1 * Math.sin(Math.PI * p);
+      if (p > 0.3) face = true;
+    }
+    ctx.globalAlpha = alfa;
+    drawCard(ax - (k - 1) * CW / 2, ay - (k - 1) * CH / 2, k, f.carta, face, null);
+    drawCard(bx - (k - 1) * CW / 2, by - (k - 1) * CH / 2, k, f.carta, face, null);   // a segunda fica por cima
+    ctx.globalAlpha = 1;
+  });
+}
 
     function rr(x, y, w, h, r) {
       ctx.beginPath();
@@ -677,68 +777,72 @@ function initMico() {
     }
 
     /* desenha uma carta com moldura. k = escala (1 = tamanho normal) */
-    function drawCard(x, y, k, card, faceUp, destaque) {
+    function drawCard(x, y, k, card, faceUp, destaque, flip = 1) {
       ctx.save();
       ctx.translate(x, y); ctx.scale(k, k);
+      if (flip !== 1) { ctx.translate(CW / 2, 0); ctx.scale(flip, 1); ctx.translate(-CW / 2, 0); }   // giro da carta
       const mico = faceUp && card.mico;
       const ouro = mico ? '#dc2626' : '#c9a24a';
+      const M = 9;                              // margem interna
+      const IW = CW - 2 * M;                    // largura da área da imagem
+      const IH = Math.round(CH * 0.66);         // altura da área da imagem
+      const NY = M + IH + 6;                    // topo da faixa do nome
+      const NH = CH - M - NY;                   // altura da faixa do nome
 
       /* corpo da carta (com sombra) */
-      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
-      rr(0, 0, CW, CH, 9);
-      ctx.fillStyle = faceUp ? (mico ? '#fde8e8' : '#f6edd4') : '#0f3d22';
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4;
+      rr(0, 0, CW, CH, 12);
+      ctx.fillStyle = faceUp ? (mico ? '#fde8e8' : '#fbf5e4') : '#0f3d22';
       ctx.fill();
       ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
       if (faceUp) {
-        /* área da imagem (quadrada) */
+        /* área da imagem */
         ctx.save();
-        rr(7, 7, 66, 66, 5); ctx.clip();
+        rr(M, M, IW, IH, 6); ctx.clip();
         const img = imagens[card.id];
         if (img && img.complete && img.naturalWidth) {
-          const s = Math.max(66 / img.naturalWidth, 66 / img.naturalHeight);
+          const s = Math.max(IW / img.naturalWidth, IH / img.naturalHeight);
           const w = img.naturalWidth * s, h = img.naturalHeight * s;
-          ctx.drawImage(img, 7 + (66 - w) / 2, 7 + (66 - h) / 2, w, h);
-        } else { ctx.fillStyle = '#1a5c35'; ctx.fillRect(7, 7, 66, 66); }
+          ctx.drawImage(img, M + (IW - w) / 2, M + (IH - h) / 2, w, h);
+        } else { ctx.fillStyle = '#1a5c35'; ctx.fillRect(M, M, IW, IH); }
         ctx.restore();
-        rr(7, 7, 66, 66, 5); ctx.lineWidth = 1.5; ctx.strokeStyle = mico ? '#991b1b' : '#145228'; ctx.stroke();
+        rr(M, M, IW, IH, 6); ctx.lineWidth = 2; ctx.strokeStyle = mico ? '#991b1b' : '#145228'; ctx.stroke();
 
         /* faixa do nome */
-        if (mico) {
-          rr(7, 78, 66, 19, 4); ctx.fillStyle = '#dc2626'; ctx.fill();
-          ctx.fillStyle = '#fff';
-        } else {
-          ctx.fillStyle = '#1a3d26';
-        }
+        rr(M, NY, IW, NH, 5);
+        ctx.fillStyle = mico ? '#dc2626' : '#1a3d26'; ctx.fill();
+        ctx.fillStyle = mico ? '#fff' : '#f6edd4';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         const txt = (mico ? 'MICO' : card.nome).toUpperCase();
-        let fs = 10;
-        do { ctx.font = '700 ' + fs + 'px Inter, sans-serif'; fs -= 0.5; } while (ctx.measureText(txt).width > 60 && fs > 5);
-        ctx.fillText(txt, CW / 2, 88);
+        let fs = 13;
+        do { ctx.font = '700 ' + fs + 'px Inter, sans-serif'; fs -= 0.5; } while (ctx.measureText(txt).width > IW - 8 && fs > 6);
+        ctx.fillText(txt, CW / 2, NY + NH / 2 + 0.5);
       } else {
         /* verso: losangos + folha */
+        const BH = CH - 2 * M;
         ctx.save();
-        rr(7, 7, 66, 90, 5); ctx.clip();
-        ctx.fillStyle = '#145228'; ctx.fillRect(7, 7, 66, 90);
+        rr(M, M, IW, BH, 6); ctx.clip();
+        ctx.fillStyle = '#145228'; ctx.fillRect(M, M, IW, BH);
         ctx.strokeStyle = 'rgba(143,201,166,0.28)'; ctx.lineWidth = 1;
-        for (let d = -100; d < 160; d += 12) {
-          ctx.beginPath(); ctx.moveTo(d, 7); ctx.lineTo(d + 90, 97); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(d + 90, 7); ctx.lineTo(d, 97); ctx.stroke();
+        for (let d = -CH; d < CW + CH; d += 14) {
+          ctx.beginPath(); ctx.moveTo(d, M); ctx.lineTo(d + CH, M + BH); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(d + CH, M); ctx.lineTo(d, M + BH); ctx.stroke();
         }
         ctx.restore();
-        rr(7, 7, 66, 90, 5); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(246,237,212,0.6)'; ctx.stroke();
-        ctx.beginPath(); ctx.arc(CW / 2, CH / 2, 17, 0, Math.PI * 2);
-        ctx.fillStyle = '#0f3d22'; ctx.fill(); ctx.strokeStyle = ouro; ctx.lineWidth = 1.5; ctx.stroke();
-        folha(CW / 2, CH / 2, 10);
+        rr(M, M, IW, BH, 6); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(246,237,212,0.6)'; ctx.stroke();
+if (imgLogo.complete && imgLogo.naturalWidth) {   // logo no meio do verso (recorte 506x717 da imagem 1920x1080)
+  const lh = CH * 0.46, lw = lh * 506 / 717;
+  ctx.drawImage(imgLogo, 699, 181, 506, 717, (CW - lw) / 2, (CH - lh) / 2, lw, lh);
+}
       }
 
       /* moldura externa + filete interno */
-      rr(0, 0, CW, CH, 9); ctx.lineWidth = 3; ctx.strokeStyle = ouro; ctx.stroke();
-      rr(3.5, 3.5, CW - 7, CH - 7, 6); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(201,162,74,0.55)';
-      if (mico) ctx.strokeStyle = 'rgba(220,38,38,0.5)';
+      rr(0, 0, CW, CH, 12); ctx.lineWidth = 3; ctx.strokeStyle = ouro; ctx.stroke();
+      rr(4.5, 4.5, CW - 9, CH - 9, 8); ctx.lineWidth = 1; ctx.strokeStyle = mico ? 'rgba(220,38,38,0.5)' : 'rgba(201,162,74,0.55)';
       ctx.stroke();
 
-      if (destaque) { rr(-3, -3, CW + 6, CH + 6, 11); ctx.lineWidth = 4; ctx.strokeStyle = destaque; ctx.stroke(); }
+      if (destaque) { rr(-3, -3, CW + 6, CH + 6, 14); ctx.lineWidth = 4; ctx.strokeStyle = destaque; ctx.stroke(); }
       ctx.restore();
     }
 
@@ -759,15 +863,19 @@ function initMico() {
       clrCanvas(); drawFundo();
 
       layout(bot, TOP_Y).forEach((p, i) => {
+        if (voo && voo.lado === 'bot' && i === bot.length - 1) return;   // carta ainda voando: não aparece na mão
         const dest = hl && hl.lado === 'bot' && hl.card === p.c ? '#f59e0b'
                    : (fase === 'player' && hover === i ? '#8FC9A6' : null);
         drawCard(p.x, p.y + (dest ? 8 : 0), 1, p.c, false, dest);
       });
-      layout(player, BOT_Y).forEach(p => {
+      layout(player, BOT_Y).forEach((p, i) => {
+        if (voo && voo.lado === 'player' && i === player.length - 1) return;   // carta ainda voando: não aparece na mão
         const dest = hl && hl.card === p.c ? (hl.lado === 'player' ? '#f59e0b' : '#22c55e') : null;
         drawCard(p.x, p.y - (dest ? 8 : 0), 1, p.c, true, dest);
       });
 
+      desenharEfeitosPar();
+      desenharVoo();   // a carta em voo fica por cima de tudo
       raf = requestAnimationFrame(loop);
     }
 
@@ -786,42 +894,63 @@ function initMico() {
       fase = 'bot'; hl = null;
       setMsg('Oponente está escolhendo...');
       later(() => {
-        const alvo = player[Math.floor(Math.random() * player.length)];
+        const idx = Math.floor(Math.random() * player.length);
+        const alvo = player[idx];
         hl = { lado: 'player', card: alvo };
         later(() => {
-          player.splice(player.indexOf(alvo), 1);
-          bot.push(alvo);
-          hl = null;
-          const n = tirarPares(bot);
-          setMsg(n ? 'Oponente formou um par!' : 'Oponente pegou uma carta sua');
-          hud();
-          bot = shuffle(bot);
-          later(() => { if (!checarFim()) turnoPlayer(); }, 600);
+          const o = layout(player, BOT_Y)[idx];          // de onde a carta sai (mão do jogador)
+          player.splice(idx, 1);
+          bot.push(alvo);                                // já conta na mão do bot, mas só aparece quando pousar
+          hl = null; setMsg('');
+          const d = layout(bot, TOP_Y)[bot.length - 1];  // onde ela vai pousar (mão do bot)
+          voar({ carta: alvo, lado: 'bot', x0: o.x, y0: o.y - 8, x1: d.x, y1: d.y, faceIni: true, faceFim: false }, () => {
+const n = tirarPares(bot, 'bot');
+hud();
+bot = embaralharMao(bot, restoX, TOP_Y);   // troca todas as cartas de lugar
+if (n) {
+  const tp = temposPar(n);
+  setMsg('');
+  later(() => setMsg('Oponente formou um par!'), tp.sumir);
+  later(() => { if (!checarFim()) turnoPlayer(); }, tp.fim);
+} else {
+  setMsg('Oponente pegou uma carta sua');
+  later(() => { if (!checarFim()) turnoPlayer(); }, 600);
+}
+          });
         }, 550);
       }, 500);
     }
-
     function pegar(i) {
-      fase = 'busy';
-      const carta = bot.splice(i, 1)[0];
-      player.push(carta);
-      hl = { lado: 'verde', card: carta };
-      setMsg(carta.mico ? 'Ops... você pegou o MICO!' : 'Você pegou ' + carta.nome);
-      later(() => {
-        const n = tirarPares(player);
-        hl = null; rodadas++;
-        if (n) {
-          combo++; parJog += n;
-          const pts = PTS_PAR * n + PTS_COMBO * (combo - 1);
-          score += pts; hud();
-          popup(W / 2, H / 2 - 50, '#22c55e', '+' + pts + (combo > 1 ? ' combo x' + combo : ''));
-          setMsg(combo > 1 ? 'Combo x' + combo + '!' : 'Par formado!');
-        } else {
-          combo = 0;
-          if (!carta.mico) setMsg('Sem par...');
-        }
-        later(() => { if (!checarFim()) turnoBot(); }, 650);
-      }, 550);
+      fase = 'busy'; hover = -1; setMsg('');
+      const carta = bot[i];
+      const o = layout(bot, TOP_Y)[i];                 // de onde a carta sai (mão do bot)
+      bot.splice(i, 1);
+      player.push(carta);                              // já conta na mão do jogador, mas só aparece quando pousar
+      const d = layout(player, BOT_Y)[player.length - 1];   // onde ela vai pousar (sua mão)
+      voar({ carta, lado: 'player', x0: o.x, y0: o.y + 8, x1: d.x, y1: d.y, faceIni: false, faceFim: true }, () => {
+        hl = { lado: 'verde', card: carta };
+        setMsg(carta.mico ? 'Ops... você pegou o MICO!' : 'Você pegou ' + carta.nome);
+        later(() => {
+const n = tirarPares(player, 'player');
+hl = null; rodadas++;
+if (n) {
+  combo++; parJog += n;
+  const pts = PTS_PAR * n + PTS_COMBO * (combo - 1);
+  const tp = temposPar(n), cb = combo;
+  setMsg('');
+  later(() => {   // os pontos aparecem junto com o sumiço das cartas
+    score += pts; hud();
+    popup(W / 2, H / 2 - 50, '#22c55e', '+' + pts + (cb > 1 ? ' combo x' + cb : ''), true);
+    setMsg(cb > 1 ? 'Combo x' + cb + '!' : 'Par formado!');
+  }, tp.sumir);
+later(aposEscolha, tp.fim);
+} else {
+  combo = 0;
+  if (!carta.mico) setMsg('Sem par...');
+later(aposEscolha, 650);
+}
+        }, 550);
+      });
     }
 
     function posCanvas(e) {
@@ -879,10 +1008,10 @@ function initMico() {
       timers.forEach(clearTimeout); timers = [];
       nivel = proxNivel;
       if (novoJogo) { score = 0; paresAcum = 0; novoJogo = false; }
-      else paresAcum += descarte.length / 2;   // continuou: soma os pares da rodada que acabou
+      else paresAcum += parJog;   // continuou: soma os pares que você formou na rodada que acabou
       distribuir(CARTAS_POR_RODADA[nivel - 1]);
       parJog = 0; combo = 0; rodadas = 0; t0 = agora();
-      hl = null; hover = -1; running = true;
+hl = null; hover = -1; voo = null; efeitosPar = []; running = true;
       hideScreen();
       hud();
       turnoPlayer();
@@ -1064,6 +1193,12 @@ let fundoX = 0;
 //CÉU (imagem parada, fica atrás do fundo)
 const ceuImg = new Image();
 ceuImg.src = 'assets/games/ceuonca.png';
+
+// NUVENS — ficam na frente do céu e atrás da floresta
+const nuvemImg = new Image();
+nuvemImg.src = 'assets/games/nuvemonca.png';
+
+let nuvemX = 0;
 
 /*
  * Guarda as máscaras de transparência já calculadas.
@@ -1906,6 +2041,42 @@ if (t.type === 'tree') {
         const cw = ceuImg.naturalWidth * cs, ch = ceuImg.naturalHeight * cs;
         ctx.drawImage(ceuImg, (VIEW_W - cw) / 2, ceuTopo + (ceuAlt - ch) / 2, cw, ch);
       }
+
+/* ☁️ NUVENS DISTANTES
+   Ficam na frente do céu, mas atrás da floresta.
+   Movem-se bem mais devagar para dar sensação de distância.
+*/
+if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
+
+  const NUVEM_W = VIEW_W * 1.7;
+  const NUVEM_H = NUVEM_W * (nuvemImg.naturalHeight / nuvemImg.naturalWidth);
+
+  // Movimento muito lento = nuvens parecem distantes
+  nuvemX -= speed * 0.10 * dt;
+
+  // Quando a primeira imagem sai, reposiciona para criar loop
+  if (nuvemX <= -NUVEM_W) {
+    nuvemX += NUVEM_W;
+  }
+
+  // Duas cópias para não aparecer buraco
+  ctx.drawImage(
+    nuvemImg,
+    nuvemX,
+    -20,
+    NUVEM_W,
+    NUVEM_H
+  );
+
+  ctx.drawImage(
+    nuvemImg,
+    nuvemX + NUVEM_W,
+    -20,
+    NUVEM_W,
+    NUVEM_H
+  );
+}
+
       if (fundoImg.complete && fundoImg.naturalWidth > 0) {
         const fh = 400;                      // altura da imagem no jogo (maior = floresta maior)
         const fy = (GROUND + 20) - fh;       // base da floresta fica escondida atrás do chão
@@ -2136,140 +2307,410 @@ ctx.restore();
   }
 
   /* ════════════════════════════════════
-     JOGO 3 — CHUVA ÁCIDA
+     JOGO — VOLTA AO RIO (endless frogger)    
   ════════════════════════════════════ */
-  
-  /* ════════════════════════════════════
-     JOGO — DEFENDER O RIO
-  ════════════════════════════════════ */
-  function initRio() {
-    titleEl.textContent = '🌊 Defender o Rio';
-    tipEl.textContent   = 'Clique para colocar filtros no rio · Bloqueie o lixo antes do mar!';
-    updateHUD(0,1,3,true,true);
-    showScreen('Defender o Rio',
-      'O rio está sendo poluído! <strong>Clique na tela</strong> para colocar filtros e bloquear o lixo.<br>Se chegar ao <strong>oceano</strong>, você perde uma vida.');
+  function initSapo() {
+    titleEl.textContent = 'Volta ao Rio';
+    scoreEmMetros = true;
+    tipEl.textContent   = 'Setas, WASD ou deslize na tela para pular · Toque na tela para ir pra frente · Não pare: a tela não espera';
+    updateHUD(0, 1, 3, true, false);
+    showScreen('Volta ao Rio',
+      'A floresta foi derrubada e o <strong>rio ficou longe</strong>. Ajude o sapo a voltar para casa!<br>Fuja dos caminhões dos madeireiros, pule nos <strong>troncos</strong> sobre a água contaminada e <strong>não pare</strong>: a tela não espera.');
 
-    const RIVER_Y1=H*.35, RIVER_Y2=H*.65, RIVER_CX=(RIVER_Y1+RIVER_Y2)/2;
-    const OCEAN_X=W-60;
-    const LIXO_TYPES=['🏭','⛏️','🗑️','🧪','🚢','☢️'];
-    const FILTER_TIME=220;
+    /* ── CONFIG ── */
+    const T = 48;                      // tamanho de cada quadrado (960 / 48 = 20 colunas)
+    const COLS = W / T;
+    const MARGEM = 6 * T;              // faixa fora da tela onde veículos e troncos "dão a volta"
+    const LARG_FAIXA = W + 2 * MARGEM;
+    const HOP_FRAMES = 7;              // duração do pulo (menor = mais rápido)
+    const SAPO_MEIA_LARG = 13;         // meia largura da hitbox do sapo
+    const RECORDE_KEY = 'girabrasil_sapo_recorde';
+    const delta = makeDelta();
 
-    let score=0,lives=3,level=1,running=false,tick=0,spawnI=90,spawnAccum=0;
-    let particles=[],filters=[],waterQuality=100;
-    const delta=makeDelta();
+    let running = false, estado = 'parado', tick = 0;
+    let lanes = [], gen = {};
+    let frog, camY, rowMax, nivel, comecou, fila, morte;
 
-    function spawnLixo(){
-      particles.push({x:-20,y:RIVER_Y1+10+Math.random()*(RIVER_Y2-RIVER_Y1-20),emoji:LIXO_TYPES[~~(Math.random()*LIXO_TYPES.length)],speed:1.2+level*0.25+Math.random()*.8,dead:false,size:24+~~(Math.random()*10)});
+    /* ── FAIXAS (cada fileira do mundo) ── */
+    const norm = p => ((p + MARGEM) % LARG_FAIXA + LARG_FAIXA) % LARG_FAIXA - MARGEM;
+
+    /* espalha veículos/troncos pela faixa inteira, com espaços variados */
+    function preencher(gerar, gapMin, jitter) {
+      const itens = [], gaps = []; let total = 0;
+      for (let i = 0; i < 30; i++) {
+        const it = gerar(), g = (gapMin + Math.random() * jitter) * T;
+        if (total + it.w + g > LARG_FAIXA) break;
+        itens.push(it); gaps.push(g); total += it.w + g;
+      }
+      if (!itens.length) { const it = gerar(); it.pos = 0; return [it]; }
+      const extra = (LARG_FAIXA - total) / itens.length;
+      let x = -MARGEM + Math.random() * LARG_FAIXA;
+      itens.forEach((it, i) => { it.pos = norm(x); x += it.w + gaps[i] + extra; });
+      return itens;
     }
 
-    const clickH=e=>{
-      if(!running)return;
-      const r=canvas.getBoundingClientRect();
-      const fx=(e.clientX-r.left)*(W/r.width);
-      const fy=(e.clientY-r.top)*(H/r.height);
-      if(fy<RIVER_Y1-10||fy>RIVER_Y2+10)return;
-      filters.push({x:fx,y:RIVER_CX,life:FILTER_TIME,max:FILTER_TIME,r:22});
-    };
-    canvas.addEventListener('click',clickH);
-
-    function drawRiver(){
-      /* fundo */
-      const sky=ctx.createLinearGradient(0,0,0,H);
-      sky.addColorStop(0,'#041208'); sky.addColorStop(0.6,'#061a0c'); sky.addColorStop(1,'#0a1e0e');
-      ctx.fillStyle=sky; ctx.fillRect(0,0,W,H);
-      /* margens */
-      ctx.fillStyle='#0d2e16'; ctx.fillRect(0,0,W,RIVER_Y1);
-      ctx.fillStyle='#0a2810'; ctx.fillRect(0,RIVER_Y2,W,H-RIVER_Y2);
-      /* vegetação margem */
-      for(let i=0;i<8;i++){
-        const gx=i*(W/7)+20;
-        ctx.font='20px serif'; ctx.textAlign='center';
-        ctx.fillText('🌿',gx,RIVER_Y1-4);
-        ctx.fillText('🌿',gx,RIVER_Y2+18);
+    function criarLane(r) {
+      const f = Math.min(1, r / 120);   // dificuldade: sobe até a fileira 120
+      const prev = lanes[r - 1];
+      let tipo;
+      if (r <= 2) tipo = 'grama';
+      else if (prev.tipo === 'grama') {
+        tipo = Math.random() < 0.6 ? 'estrada' : 'riacho';
+        gen.limite = 2 + Math.floor(Math.random() * 3);   // 2 a 4 faixas de perigo seguidas
+        gen.seguidos = 0;
+      } else if (gen.seguidos >= gen.limite) tipo = 'grama';
+      else if (Math.random() < 0.7) tipo = prev.tipo;
+      else tipo = prev.tipo === 'estrada' ? 'riacho' : 'estrada';
+      if (r > 2) {
+        if (tipo === prev.tipo && tipo === 'riacho' && gen.mesmo >= 3) tipo = 'estrada';
+        if (tipo === prev.tipo && tipo === 'estrada' && gen.mesmo >= 4) tipo = 'riacho';
+        gen.mesmo = tipo === prev.tipo ? gen.mesmo + 1 : 1;
+        if (tipo !== 'grama') gen.seguidos++;
       }
-      /* rio */
-      const rg=ctx.createLinearGradient(0,RIVER_Y1,0,RIVER_Y2);
-      const quality=waterQuality/100;
-      rg.addColorStop(0,`rgba(${~~(8+180*(1-quality))},${~~(120*quality)},${~~(200*quality)},0.9)`);
-      rg.addColorStop(1,`rgba(${~~(6+160*(1-quality))},${~~(100*quality)},${~~(180*quality)},0.95)`);
-      ctx.fillStyle=rg; ctx.fillRect(0,RIVER_Y1,W,RIVER_Y2-RIVER_Y1);
-      /* ondas */
-      ctx.strokeStyle=`rgba(255,255,255,${0.04+quality*0.06})`; ctx.lineWidth=1;
-      for(let i=0;i<5;i++){
-        const wy=RIVER_Y1+10+(i*(RIVER_Y2-RIVER_Y1)/5);
-        ctx.beginPath();
-        for(let x=0;x<W;x+=4){ctx.lineTo(x,wy+Math.sin((x+tick*2+i*30)*0.04)*3);}
-        ctx.stroke();
-      }
-      /* oceano */
-      const og=ctx.createLinearGradient(OCEAN_X,0,W,0);
-      og.addColorStop(0,'transparent');
-      og.addColorStop(1,`rgba(${~~(10+160*(1-quality))},${~~(80*quality)},${~~(160*quality)},0.7)`);
-      ctx.fillStyle=og; ctx.fillRect(OCEAN_X,RIVER_Y1,W-OCEAN_X,RIVER_Y2-RIVER_Y1);
-      ctx.fillStyle='rgba(34,197,94,0.5)'; ctx.font='bold 10px monospace';
-      ctx.textAlign='center'; ctx.fillText('OCEANO',W-28,RIVER_CX+4);
-      /* indicador qualidade */
-      const qw=120,qx=14,qy=14;
-      ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fillRect(qx,qy,qw,8);
-      ctx.fillStyle=waterQuality>60?'#22c55e':waterQuality>30?'#f59e0b':'#ef4444';
-      ctx.fillRect(qx,qy,qw*(waterQuality/100),8);
-      ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='9px monospace';
-      ctx.textAlign='left'; ctx.fillText(`Qualidade: ${~~waterQuality}%`,qx,qy-2);
-    }
 
-    function loop(ts){
-      if(!running)return;
-      const dt=delta(ts);
-      tick+=dt; spawnI=Math.max(32,90-level*7);
-      spawnAccum+=dt;
-      if(spawnAccum>=spawnI){spawnAccum=0;spawnLixo();}
-      if(score>=level*110)level++;
-      clrCanvas(); drawRiver();
-
-      /* filtros */
-      filters=filters.filter(f=>f.life>0);
-      filters.forEach(f=>{
-        f.life-=dt;
-        const alpha=f.life/f.max;
-        ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
-        ctx.fillStyle=`rgba(34,197,94,${alpha*0.25})`; ctx.fill();
-        ctx.strokeStyle=`rgba(34,197,94,${alpha*0.7})`; ctx.lineWidth=2; ctx.stroke();
-        ctx.font='16px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.globalAlpha=alpha; ctx.fillText('🔵',f.x,f.y); ctx.globalAlpha=1;
-      });
-
-      /* lixo */
-      particles.forEach(p=>{
-        if(p.dead)return; p.x+=p.speed*dt;
-        ctx.font=`${p.size}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(p.emoji,p.x,p.y);
-        /* colisão filtro */
-        filters.forEach(f=>{
-          if(!p.dead&&Math.hypot(p.x-f.x,p.y-f.y)<f.r+p.size/2){
-            p.dead=true; score+=12; waterQuality=Math.min(100,waterQuality+3);
-            updateHUD(score,level,lives); popup(p.x,p.y,'#22c55e','+12');
-          }
-        });
-        /* chegou ao oceano */
-        if(p.x>OCEAN_X&&!p.dead){
-          p.dead=true; lives--; waterQuality=Math.max(0,waterQuality-12);
-          shakePanel(); updateHUD(score,level,lives); popup(OCEAN_X,RIVER_CX,'#ef4444','💀 Poluído!');
-          if(lives<=0){end(false);return;}
+      if (tipo === 'grama') {
+        const blocos = [];
+        if (r > 2 && prev.tipo !== 'riacho') {   // depois do riacho a margem é livre
+          const n = Math.floor(Math.random() * 6);
+          while (blocos.length < n) { const c = Math.floor(Math.random() * COLS); if (!blocos.includes(c)) blocos.push(c); }
         }
-      });
-      particles=particles.filter(p=>!p.dead&&p.x<W+30);
-      updateHUD(score,level,lives);
-      raf=requestAnimationFrame(loop);
+        const deco = [];
+        for (let i = 0; i < 8; i++) deco.push({ x: Math.random() * W, y: 10 + Math.random() * (T - 16) });
+        return { tipo, seca: Math.random() < 0.5, blocos, deco };
+      }
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      if (tipo === 'estrada') {
+        const v = (1.1 + Math.random() * 1.0) * (1 + 0.9 * f);
+        const itens = preencher(() => {
+          const q = Math.random(), k = q < 0.4 ? 'caminhao' : q < 0.7 ? 'trator' : 'caminhonete';
+          return { k, w: (k === 'caminhao' ? 3 : 2) * T };
+        }, 3.4 - 1.4 * f, 3);
+        const deco = [];
+        for (let i = 0; i < 10; i++) deco.push({ x: Math.random() * W, y: 6 + Math.random() * (T - 12) });
+        return { tipo, dir, v, itens, deco };
+      }
+      const v = (0.7 + Math.random() * 0.8) * (1 + 0.5 * f);
+      const itens = preencher(() => ({ w: (2 + Math.floor(Math.random() * 3) + (f < 0.5 ? 1 : 0)) * T }), 1.0 + f * 0.8, 1.5);
+      return { tipo, dir, v, itens };
+    }
+    function getLane(r) { while (lanes.length <= r) lanes.push(criarLane(lanes.length)); return lanes[r]; }
+    function moverLane(l, dt) { if (l.itens) l.itens.forEach(it => { it.pos = norm(it.pos + l.dir * l.v * dt); }); }
+
+    const veiculoAtinge = l => l.itens.some(it => frog.x + SAPO_MEIA_LARG > it.pos + 6 && frog.x - SAPO_MEIA_LARG < it.pos + it.w - 6);
+    const sobreTronco = (l, x) => l.itens.some(it => x > it.pos + 4 && x < it.pos + it.w - 4);
+
+    /* ── ESTADO ── */
+    function atualizarHud() { updateHUD(rowMax - 1, nivel, 3, true, false); }
+    function resetar() {
+      lanes = []; gen = { limite: 0, seguidos: 0, mesmo: 1 };
+      frog = { x: (COLS / 2) * T + T / 2, r: 1, hop: null, ang: 0 };
+      camY = 0; rowMax = 1; nivel = 1; comecou = false; fila = null; morte = null; tick = 0;
+      estado = 'parado';
+    }
+    function morrer(tipo) {
+      if (estado !== 'jogando') return;
+      estado = 'morrendo'; morte = { tipo, t: 0 }; fila = null;
+      shakePanel();
     }
 
-    function end(won){
-      running=false;cancelAnimationFrame(raf);
-      showScreen(won?'🌊 Rio Limpo!':'☠️ Rio destruído...',
-        `Poluentes bloqueados: <strong>${score}</strong><br>Qualidade final da água: <strong>${~~waterQuality}%</strong><br>${won?'O ecossistema aquático foi salvo!':'Tente de novo!'}`,
-        won?'Jogar de novo':'Tentar novamente', true);
+    /* ── MOVIMENTO ── */
+    function pular(d) {
+      if (!running || estado !== 'jogando') return;
+      if (frog.hop) { fila = d; return; }   // guarda 1 comando enquanto pula
+      let nx = frog.x, nr = frog.r;
+      if (d === 'up') nr++; else if (d === 'down') nr--; else if (d === 'left') nx -= T; else nx += T;
+      frog.ang = d === 'up' ? 0 : d === 'right' ? Math.PI / 2 : d === 'down' ? Math.PI : -Math.PI / 2;
+      if (nr < 0 || nx < 12 || nx > W - 12) return;
+      const l = getLane(nr);
+      if ((d === 'up' || d === 'down') && l.tipo !== 'riacho') nx = Math.round((nx - T / 2) / T) * T + T / 2;   // encaixa na grade
+      if (l.tipo === 'grama' && l.blocos.includes(Math.floor(nx / T))) return;   // árvore / toco no caminho
+      frog.hop = { x0: frog.x, r0: frog.r, x1: nx, r1: nr, t: 0 };
+      comecou = true;
     }
-    function start(){score=0;lives=3;level=1;tick=0;spawnAccum=0;waterQuality=100;particles=[];filters=[];running=true;hideScreen();updateHUD(0,1,3);delta.reset();raf=requestAnimationFrame(loop);}
-    startBtn.onclick=start;
-    activeGame={cleanup:()=>{running=false;canvas.removeEventListener('click',clickH);canvas.onclick=null;}};
+    function aoPousar() {
+      if (frog.r > rowMax) { rowMax = frog.r; nivel = 1 + Math.floor((rowMax - 1) / 20); atualizarHud(); }
+      const l = getLane(frog.r);
+      if (l.tipo === 'estrada' && veiculoAtinge(l)) { morrer('atropelou'); return; }
+      if (l.tipo === 'riacho' && !sobreTronco(l, frog.x)) { morrer('afogou'); return; }
+      if (fila) { const d = fila; fila = null; pular(d); }
+    }
+
+    const MAPA = { ArrowUp: 'up', KeyW: 'up', Space: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+    const keyH = e => {
+      if (paused || !running) return;
+      const d = MAPA[e.code];
+      if (d) { e.preventDefault(); pular(d); }
+    };
+    document.addEventListener('keydown', keyH);
+    /* toque/clique: toque curto = frente · deslizar = direção do deslize */
+    let pIni = null;
+    canvas.style.touchAction = 'none';
+    canvas.onpointerdown = e => { if (paused) return; pIni = { x: e.clientX, y: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (_) {} };
+    canvas.onpointerup = e => {
+      if (!pIni || paused) { pIni = null; return; }
+      const dx = e.clientX - pIni.x, dy = e.clientY - pIni.y; pIni = null;
+      const ax = Math.abs(dx), ay = Math.abs(dy);
+      if (Math.max(ax, ay) < 24) pular('up');
+      else if (ax > ay) pular(dx > 0 ? 'right' : 'left');
+      else pular(dy < 0 ? 'up' : 'down');
+    };
+    canvas.onpointercancel = () => { pIni = null; };
+
+    /* ── ATUALIZAÇÃO ── */
+    function atualizar(dt) {
+      const base = Math.floor(camY);
+      getLane(base + 16);
+      for (let r = Math.max(0, base - 1); r <= base + 13; r++) moverLane(getLane(r), dt);
+      if (estado === 'morrendo') { morte.t += dt; if (morte.t >= 45) end(); return; }
+
+      if (frog.hop) {
+        const h = frog.hop; h.t += dt / HOP_FRAMES;
+        if (h.t >= 1) { frog.x = h.x1; frog.r = h.r1; frog.hop = null; aoPousar(); }
+      } else {
+        const l = getLane(frog.r);
+        if (l.tipo === 'riacho') {
+          frog.x += l.dir * l.v * dt;   // o tronco leva o sapo junto
+          if (!sobreTronco(l, frog.x)) morrer('afogou');
+          else if (frog.x < 8 || frog.x > W - 8) morrer('levado');
+        } else if (l.tipo === 'estrada' && veiculoAtinge(l)) morrer('atropelou');
+      }
+      if (estado !== 'jogando') return;
+
+      /* câmera: acompanha o sapo e também sobe sozinha (cada vez mais rápido) */
+      const alvo = rowMax - 3.4;
+      if (alvo > camY) camY += (alvo - camY) * Math.min(1, 0.12 * dt);
+      if (comecou || tick > 240) camY += (0.0045 + Math.min(0.014, rowMax * 0.00007)) * dt;
+      const rv = frog.hop ? frog.hop.r0 + (frog.hop.r1 - frog.hop.r0) * Math.min(1, frog.hop.t) : frog.r;
+      if (rv < camY - 0.12) morrer('deixado');
+    }
+
+    /* ── DESENHO ── */
+    const yLane = r => H - (r - camY + 1) * T;
+
+    function desenharArvore(cx, cy) {
+      ctx.fillStyle = '#5b3a1e'; ctx.fillRect(cx - 4, cy + 4, 8, 17);
+      ctx.fillStyle = '#1f6b2e'; ctx.beginPath(); ctx.arc(cx, cy - 6, 15, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#256f33';
+      ctx.beginPath(); ctx.arc(cx - 10, cy + 1, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + 10, cy + 1, 11, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2f8a3e'; ctx.beginPath(); ctx.arc(cx - 3, cy - 10, 6, 0, Math.PI * 2); ctx.fill();
+    }
+    function desenharToco(cx, cy) {
+      ctx.fillStyle = '#4a2f18'; ctx.beginPath(); ctx.ellipse(cx, cy + 12, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#7a4e24'; ctx.fillRect(cx - 14, cy - 2, 28, 14);
+      ctx.fillStyle = '#d2a56b'; ctx.beginPath(); ctx.ellipse(cx, cy - 2, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#a97c45'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.ellipse(cx, cy - 2, 9, 4.5, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(cx, cy - 2, 4, 2, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    function roda(x, y, r) {
+      ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#8a8a8a'; ctx.beginPath(); ctx.arc(x, y, r * 0.38, 0, Math.PI * 2); ctx.fill();
+    }
+    /* veículos: desenhados virados pra direita; se for pra esquerda, espelha */
+    function comEspelho(x, y, w, dir, fn) {
+      ctx.save(); ctx.translate(x, y);
+      if (dir < 0) { ctx.translate(w, 0); ctx.scale(-1, 1); }
+      fn(); ctx.restore();
+    }
+    function desenharCaminhao() {
+      ctx.fillStyle = '#2b2b2b'; ctx.fillRect(0, 30, 140, 6);
+      ctx.fillStyle = '#8b5a2b'; ctx.fillRect(2, 9, 98, 21);
+      ctx.strokeStyle = '#4a2f18'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(2, 16); ctx.lineTo(100, 16); ctx.moveTo(2, 23); ctx.lineTo(100, 23); ctx.stroke();
+      ctx.fillStyle = '#3b2a1a'; [6, 50, 94].forEach(x => ctx.fillRect(x, 6, 4, 24));
+      ctx.fillStyle = '#c0392b'; ctx.fillRect(104, 14, 36, 22);
+      ctx.fillStyle = '#bde3f2'; ctx.fillRect(122, 17, 14, 9);
+      ctx.fillStyle = '#ffe9a8'; ctx.fillRect(138, 28, 3, 4);
+      roda(16, 38, 6); roda(34, 38, 6); roda(116, 38, 6);
+    }
+    function desenharTrator() {
+      ctx.fillStyle = '#555'; ctx.fillRect(88, 18, 6, 20);
+      ctx.fillStyle = '#f1c40f'; ctx.fillRect(28, 18, 52, 14);
+      ctx.fillStyle = '#e0b30c'; ctx.fillRect(34, 6, 28, 14);
+      ctx.fillStyle = '#bde3f2'; ctx.fillRect(38, 9, 20, 8);
+      ctx.fillStyle = '#333'; ctx.fillRect(70, 4, 3, 14);
+      roda(26, 32, 13); roda(80, 37, 8);
+    }
+    function desenharCaminhonete() {
+      ctx.fillStyle = '#d35400'; ctx.fillRect(4, 20, 88, 14);
+      ctx.fillStyle = '#b84600'; ctx.fillRect(4, 16, 44, 5);
+      ctx.fillStyle = '#d35400'; ctx.fillRect(52, 9, 30, 13);
+      ctx.fillStyle = '#bde3f2'; ctx.fillRect(60, 11, 18, 8);
+      ctx.fillStyle = '#ffe9a8'; ctx.fillRect(90, 24, 3, 4);
+      roda(22, 36, 7); roda(72, 36, 7);
+    }
+    function retArred(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+
+const imgTronco = new Image();
+imgTronco.src = 'assets/games/troncosapo.png';
+
+function desenharTronco(x, y, w, dir) {
+  if (!imgTronco.complete || !imgTronco.naturalWidth) return;
+
+  // região do tronco dentro da imagem 1920x1080
+  const SX = 713, SY = 484, SW = 486, SH = 136;
+  const CAP = 90;   // ponta com os anéis (lado esquerdo da imagem)
+  const FIM = 29;   // ponta lisa (lado direito da imagem)
+
+  const ty = y + 9, th = 30;                 // posição e altura do tronco na tela
+  const k = th / SH;
+  const capW = CAP * k, fimW = FIM * k;
+  const meioW = w - capW - fimW;             // o miolo estica conforme o tamanho do tronco
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;         // mantém o pixel art nítido
+  let x0 = x;
+  if (dir > 0) {                             // esquerda -> direita: imagem invertida
+    ctx.translate(x + w, 0);
+    ctx.scale(-1, 1);
+    x0 = 0;
+  }                                          // direita -> esquerda: imagem normal
+  ctx.drawImage(imgTronco, SX, SY, CAP, SH, x0, ty, capW, th);
+  ctx.drawImage(imgTronco, SX + CAP, SY, SW - CAP - FIM, SH, x0 + capW, ty, meioW, th);
+  ctx.drawImage(imgTronco, SX + SW - FIM, SY, FIM, SH, x0 + capW + meioW, ty, fimW, th);
+  ctx.restore();
+}
+
+const imgSapo = new Image();
+imgSapo.src = 'assets/games/sapofrente.png';
+
+function desenharSapo(cx, cy, ang, esticar, sx, sy) {
+  if (!imgSapo.complete || !imgSapo.naturalWidth) return;
+  const w = 40, h = w * 310 / 386;   // largura do sapo na tela (mude o 40 pra ajustar)
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(ang);                   // <- vira o sapo conforme a direção
+  ctx.scale(sx, sy * (1 + esticar * 0.15));
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(imgSapo, 732, 444, 386, 310, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+const imgAgua = new Image();
+imgAgua.src = 'assets/games/aguasapo2.png';
+const VEL_AGUA = 0.6;   // velocidade da água (aumente ou diminua à vontade)
+    function desenharBase(l, r, y) {
+      if (l.tipo === 'grama') {
+        ctx.fillStyle = l.seca ? (r % 2 ? '#7c8a3d' : '#85933f') : (r % 2 ? '#3b8636' : '#41903a');
+        ctx.fillRect(0, y, W, T);
+        ctx.strokeStyle = l.seca ? '#5f6b2c' : '#2c6a29'; ctx.lineWidth = 2;
+        l.deco.forEach(d => {
+          ctx.beginPath(); ctx.moveTo(d.x, y + d.y); ctx.lineTo(d.x - 2, y + d.y - 5);
+          ctx.moveTo(d.x, y + d.y); ctx.lineTo(d.x + 2, y + d.y - 5); ctx.stroke();
+        });
+      } else if (l.tipo === 'estrada') {
+        ctx.fillStyle = '#8a6d4b'; ctx.fillRect(0, y, W, T);
+        ctx.fillStyle = '#7a5e3f'; ctx.fillRect(0, y + 13, W, 6); ctx.fillRect(0, y + 30, W, 5);
+        ctx.fillStyle = '#6e553a';
+        l.deco.forEach(d => ctx.fillRect(d.x, y + d.y, 3, 2));
+} else {
+  ctx.fillStyle = '#3a78a8'; ctx.fillRect(0, y, W, T);   // cor de fundo enquanto a imagem carrega
+  if (imgAgua.complete && imgAgua.naturalWidth) {
+    const tw = T * imgAgua.naturalWidth / imgAgua.naturalHeight;   // largura de cada repetição, na proporção certa
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.beginPath(); ctx.rect(0, y, W, T); ctx.clip();
+    const fase = r * 37;                                           // cada faixa começa em um ponto diferente
+const off = (((tick * l.v * l.dir + fase) % tw) + tw) % tw;
+    for (let xx = -tw + off; xx < W; xx += tw) {
+      ctx.drawImage(imgAgua, xx, y, tw, T);
+    }
+    ctx.restore();
   }
+}
+    }
+    function desenharObjetos(l, y) {
+      if (l.tipo === 'grama') {
+        l.blocos.forEach(c => { if (l.seca) desenharToco(c * T + T / 2, y + T / 2); else desenharArvore(c * T + T / 2, y + T / 2); });
+      } else if (l.tipo === 'estrada') {
+        l.itens.forEach(it => {
+          const fn = it.k === 'caminhao' ? desenharCaminhao : it.k === 'trator' ? desenharTrator : desenharCaminhonete;
+          comEspelho(it.pos, y, it.w, l.dir, fn);
+        });
+      } else {
+l.itens.forEach(it => desenharTronco(it.pos, y, it.w, l.dir));
+      }
+    }
+
+    function desenhar() {
+      clrCanvas();
+      const r0 = Math.max(0, Math.floor(camY) - 1), r1 = Math.ceil(camY + H / T) + 1;
+      for (let r = r0; r <= r1; r++) desenharBase(getLane(r), r, yLane(r));
+      for (let r = r1; r >= r0; r--) desenharObjetos(getLane(r), yLane(r));   // de cima pra baixo: o de baixo fica na frente
+
+      /* sapo */
+      let rv = frog.r, x = frog.x, arco = 0, esticar = 0;
+      if (frog.hop) {
+        const h = frog.hop, p = Math.min(1, h.t);
+        rv = h.r0 + (h.r1 - h.r0) * p; x = h.x0 + (h.x1 - h.x0) * p;
+        arco = Math.sin(Math.PI * p); esticar = arco;
+      }
+      let cy = yLane(rv) + T / 2 - arco * 14;
+      if (!frog.hop && estado === 'jogando' && getLane(frog.r).tipo === 'riacho') cy += Math.sin(tick * 0.12) * 1.5;   // balança no tronco
+      let sx = 1 + 0.12 * arco, sy = sx, alfa = 1;
+      if (estado === 'morrendo') {
+        const t = morte.t;
+        if (morte.tipo === 'atropelou') { sx = 1.4; sy = 0.25; alfa = Math.max(0, 1 - Math.max(0, t - 25) / 20); }
+        else if (morte.tipo === 'afogou' || morte.tipo === 'levado') {
+          sx = sy = Math.max(0, 1 - t / 30);
+          ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2;
+          for (let k = 0; k < 3; k++) {
+            const rad = (t * 0.8 + k * 9) % 28 + 4;
+            ctx.globalAlpha = Math.max(0, 1 - rad / 32);
+            ctx.beginPath(); ctx.arc(x, cy, rad, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+        }
+      }
+      if (sx > 0.02 && alfa > 0) { ctx.globalAlpha = alfa; desenharSapo(x, cy, frog.ang, esticar, sx, sy); ctx.globalAlpha = 1; }
+      if (estado === 'morrendo') {
+        ctx.fillStyle = 'rgba(200,30,30,' + (0.28 * Math.max(0, 1 - morte.t / 45)) + ')';
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    /* ── LOOP / FIM / INÍCIO ── */
+    function loop(ts) {
+      if (!running) return;
+      const dt = delta(ts); tick += dt;
+      atualizar(dt); desenhar();
+      if (running) raf = requestAnimationFrame(loop);
+    }
+    function end() {
+      running = false; estado = 'fim'; cancelAnimationFrame(raf);
+      const dist = rowMax - 1;
+      let rec = 0;
+      try { rec = parseInt(localStorage.getItem(RECORDE_KEY) || '0', 10) || 0; } catch (_) {}
+      const novo = dist > rec;
+      if (novo) { rec = dist; try { localStorage.setItem(RECORDE_KEY, String(rec)); } catch (_) {} }
+      const causa = { atropelou: 'Atropelado por um caminhão dos madeireiros.', afogou: 'Caiu na água contaminada.', levado: 'Foi levado pela correnteza.', deixado: 'A tela deixou o sapo para trás.' }[morte.tipo];
+      showScreen('O sapo não chegou ao rio',
+        causa + '<br>Distância: <strong>' + dist + ' m</strong> · Recorde: <strong>' + rec + ' m</strong>' + (novo && dist > 0 ? '<br>Novo recorde!' : ''),
+        'Tentar de novo', true);
+    }
+    function start() {
+      resetar(); estado = 'jogando'; running = true;
+      hideScreen(); atualizarHud(); delta.reset();
+      raf = requestAnimationFrame(loop);
+    }
+    startBtn.onclick = start;
+    resetar(); desenhar();   // mostra a primeira cena atrás da tela de início
+    activeGame = { cleanup: () => {
+      running = false;
+      document.removeEventListener('keydown', keyH);
+      canvas.onpointerdown = null; canvas.onpointerup = null; canvas.onpointercancel = null;
+      canvas.style.touchAction = '';
+    } };
+  }
+  
 })();

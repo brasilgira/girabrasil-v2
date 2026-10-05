@@ -81,43 +81,10 @@
     </div>
     <a href="noticias.html" class="link-ver-todas">Ir para Notícias <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
   </div>
-  <!-- NOTÍCIAS TEMPORÁRIAS(placeholder).-->
-  <div class="grid-destaque">
-    <a href="noticia.html" class="noticia-destaque">
-      <div class="gb-news-media"><img src="assets/noticias/news-agua.png" alt="Rio de águas claras cercado por vegetação"></div>
-      <div class="gb-news-info">
-        <span class="tag">Recursos Hídricos</span>
-        <h3>Título da notícia em destaque vai aqui</h3>
-        <p>Um parágrafo curto de resumo da notícia.</p>
-      </div>
-    </a>
-
-    <div class="lista-noticias">
-      <a href="noticia.html" class="item-noticia">
-        <div class="gb-news-media"><img src="assets/noticias/news-queimadas.jpg" alt="Fumaça de queimada no horizonte"></div>
-        <div>
-          <div class="tag">Queimadas</div>
-          <h4>Título curto da notícia secundária</h4>
-          <div class="meta">Data · Tempo de leitura</div>
-        </div>
-      </a>
-      <a href="noticia.html" class="item-noticia">
-        <div class="gb-news-media"><img src="assets/noticias/news-biodiversidade.jpg" alt="Onça-pintada às margens de um rio"></div>
-        <div>
-          <div class="tag">Biodiversidade</div>
-          <h4>Outro título curto de notícia</h4>
-          <div class="meta">Data · Tempo de leitura</div>
-        </div>
-      </a>
-      <a href="noticia.html" class="item-noticia">
-        <div class="gb-news-media"><img src="assets/noticias/news-desmatamento.jpg" alt="Área de floresta desmatada"></div>
-        <div>
-          <div class="tag">Desmatamento</div>
-          <h4>Mais um título de notícia de exemplo</h4>
-          <div class="meta">Data · Tempo de leitura</div>
-        </div>
-      </a>
-    </div>
+  <!-- Preenchido por js/home-noticias.js a partir de /api/noticias?geral=true
+       (as mais recentes de verdade, não mais placeholder). -->
+  <div class="grid-destaque" id="homeNoticiasGrid">
+    <p class="home-noticias-carregando">Carregando notícias...</p>
   </div>
 </section>
 
@@ -250,13 +217,13 @@
         </div>
       </a>
       <a href="jogos.html" class="card-jogo-mini">
-        <div class="fundo-imagem"><img src="assets/jogos/game-guardioes.jpg" alt="Ilustração de personagens na floresta amazônica"></div>
+        <div class="fundo-imagem"><img src="assets/jogos/game-guardioes.jpeg" alt="Ilustração de personagens na floresta amazônica"></div>
         <div class="card-jogo-mini-conteudo">
           <h4>GUARDA DA FLORESTA</h4>
         </div>
       </a>
       <a href="jogos.html" class="card-jogo-mini">
-        <div class="fundo-imagem"><img src="assets/jogos/game-biodiversidade.jpg" alt="Ilustração de onça-pintada e tucano na floresta"></div>
+        <div class="fundo-imagem"><img src="assets/jogos/game-biodiversidade.jpeg" alt="Ilustração de onça-pintada e tucano na floresta"></div>
         <div class="card-jogo-mini-conteudo">
           <h4>DEFENDER O RIO</h4>
         </div>
@@ -344,5 +311,6 @@
 <script src="js/auth.js"></script>
 <script src="js/nav-indicador.js"></script>
 <script src="js/scrollbar.js"></script>
+<script src="js/home-noticias.js"></script>
 </body>
 </html>

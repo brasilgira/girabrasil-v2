@@ -29,6 +29,17 @@ async function criar(req, res) {
       req.usuarioLogado.email ||
       'Usuário';
 
+    // Filtro mínimo de linguagem ofensiva. A validação no servidor é a
+    // autoridade; o frontend também avisa antes do envio por conveniência.
+    const textoNormalizado = String(conteudo || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const termosBloqueados = ['puta', 'puto', 'merda', 'caralho', 'porra', 'viado', 'vagabunda', 'vagabundo', 'arrombado', 'arrombada', 'fdp'];
+    const contemOfensa = termosBloqueados.some((termo) =>
+      new RegExp('(^|\\W)' + termo + '(?=$|\\W)', 'i').test(textoNormalizado)
+    );
+    if (contemOfensa) {
+      return res.status(400).json({ erro: 'Seu comentário contém linguagem ofensiva. Revise o texto antes de publicar.' });
+    }
+
     // Validação básica dos campos obrigatórios
     if (!conteudo || !conteudo.trim() || !noticiaId) {
       return res.status(400).json({
