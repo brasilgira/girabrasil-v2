@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Em processo — Gira-Brasil</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/index.css">
+<link rel="stylesheet" href="css/hero-biomas.css">
+
+<style>
+  /* Página "Em processo": mesmo visual do hero da home, só que mais baixo */
+  .gb-hero.gb-hero-processo { min-height: calc(100vh - 87px); }
+  .gb-hero-processo .gb-hero-inner { justify-content: flex-start; padding-top: 56px; padding-bottom: 56px; }
+  .gb-hero-processo h1 { max-width: 14ch; }
+  .gb-processo-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid #f4f0e673;
+    border-radius: 999px;
+    color: var(--gb-sage);
+    font-family: var(--gb-font-mono);
+    font-size: .68rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+  }
+  .gb-processo-selo i {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gb-yellow);
+    animation: gb-processo-pulso 1.6s ease-in-out infinite;
+  }
+  @keyframes gb-processo-pulso { 50% { opacity: .25; } }
+</style>
+</head>
+
+<body>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira-Brasil</a>
+    <nav class="nav-site">
+  <div class="indicador-verde" id="indicador"></div>
+
+  <a href="index.html">Início</a>
+  <a href="noticias.html">Notícias</a>
+  <a href="regioes.html">Regiões</a>
+  <a href="jogos.html">Jogos</a>
+  <a href="girabot.html">Gira-Bot</a>
+  <a href="sobre.html">Sobre</a>
+</nav>
+    <div class="header-acoes">
+      <a href="login.html" class="link-entrar">Entrar</a>
+      <a href="cadastro.html" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<section class="gb-hero gb-hero-processo">
+  <div class="gb-hero-bg" aria-hidden="true"></div>
+  <div class="gb-hero-grid" aria-hidden="true"></div>
+
+  <div class="gb-hero-inner gb-container">
+    <div class="gb-hero-copy">
+      <span class="gb-processo-selo"><i></i> Em processo</span>
+      <h1>Esta página ainda está <em>nascendo</em>.</h1>
+      <p>Estamos preparando o atlas dos seis biomas brasileiros com todo o cuidado. Em breve você poderá explorar clima, solo, fauna e os desafios de conservação de cada paisagem.</p>
+      <div class="gb-hero-actions">
+        <a href="index.html" class="gb-button gb-button-yellow">Voltar ao início <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></a>
+        <a href="regioes.html" class="gb-button gb-button-ghost">Explorar as regiões <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav-indicador.js"></script>
+<script src="js/scrollbar.js"></script>
+</body>
+</html>
