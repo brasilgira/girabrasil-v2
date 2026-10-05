@@ -344,7 +344,11 @@
 }
 
 @media (max-width: 700px) {
-  .sugestoes-grid { grid-template-columns: 1fr; }
+  .sugestoes-grid 
+  {
+     grid-template-columns: 1fr;
+     display: none; 
+}
   .girabot-sidebar { width: 240px; }
 }
 .mensagem.bot {
@@ -544,4 +548,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .item-historico-excluir { transition: none; }
+}
+@media (max-width: 780px){
+.estado-vazio {
+  padding: 18px 32px 3px 32px;
+}
 }
