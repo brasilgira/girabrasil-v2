@@ -88,16 +88,17 @@ async function apagarNoticia(id) {
 // ---------- Comentários ----------
 
 async function listarComentarios() {
-  // OBS: o autor do comentário agora vem direto de c.usuario_nome (o login
-  // é feito via Supabase Auth, então não dá mais pra confiar num JOIN com
-  // a tabela `usuario` local — nem todo usuário logado existe lá).
   const resultado = await pool.query(
-    `SELECT c.*, c.usuario_nome AS autor_nome, n.titulo AS noticia_titulo
+    `SELECT
+       c.*,
+       c.usuario_id::text AS autor_nome,
+       n.titulo AS noticia_titulo
      FROM comentario c
      LEFT JOIN noticias n ON n.id = c.noticia_id
      WHERE c.ativo = true
      ORDER BY c.criado_em DESC`
   );
+
   return resultado.rows;
 }
 
