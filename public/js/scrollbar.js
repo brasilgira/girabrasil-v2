@@ -1,6 +1,8 @@
 /* Barra de rolagem própria do Gira-Brasil.
    - Esconde a barra nativa do navegador.
-   - Desenha uma barra verde fixa à direita, que começa ABAIXO do header. */
+   - Desenha uma barra verde fixa à direita, que começa ABAIXO do header.
+   - Na página do Gira-Bot (onde a página não rola) a MESMA barra é
+     colocada na área de mensagens do chat (.chat-mensagens). */
 (function () {
   if (window.__gbScroll) return;
   window.__gbScroll = true;
@@ -9,12 +11,16 @@
     html { scrollbar-width: none; -ms-overflow-style: none; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
+    /* esconde a barra nativa de um elemento que usa a barra do site */
+    .gb-scroll-nativa-oculta { scrollbar-width: none; -ms-overflow-style: none; }
+    .gb-scroll-nativa-oculta::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
     .gb-scroll {
       --gb-scroll-thumb: #246b5a;        /* verde da barra */
       --gb-scroll-thumb-hover: #16281f;  /* verde ao passar o mouse / arrastar */
       position: fixed;
       right: 0;
-      width: 14px;                       /* era 10px (2,5x) */
+      width: 14px;
       z-index: 90;                       /* abaixo do header (z-index 100) */
       background: rgba(22, 40, 31, 0.08);
       display: none;
@@ -38,102 +44,142 @@
   style.textContent = css;
   document.head.appendChild(style);
 
-  var track = document.createElement('div');
-  track.className = 'gb-scroll';
-  track.setAttribute('aria-hidden', 'true');
-  var thumb = document.createElement('div');
-  thumb.className = 'gb-scroll-thumb';
-  track.appendChild(thumb);
-  document.body.appendChild(track);
-
   var root = document.scrollingElement || document.documentElement;
   var html = document.documentElement;
   var header = document.querySelector('.header-site');
+  var TEMPO_APAGAR = 2000;   // ms parada antes de apagar
 
-  function atualizar() {
-    var vh = window.innerHeight;
-    var total = root.scrollHeight;
+  /* Cria uma barra. `el` = elemento que rola; se for null, rola a página. */
+  function criarBarra(el) {
+    var track = document.createElement('div');
+    track.className = 'gb-scroll';
+    track.setAttribute('aria-hidden', 'true');
+    var thumb = document.createElement('div');
+    thumb.className = 'gb-scroll-thumb';
+    track.appendChild(thumb);
+    document.body.appendChild(track);
 
-    // a barra começa logo abaixo do header (se ele estiver visível na tela)
-    var topo = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
-    track.style.top = topo + 'px';
-    track.style.height = (vh - topo) + 'px';
+    var alvo = el || root;
+    if (el) el.classList.add('gb-scroll-nativa-oculta');
 
-    if (total <= vh + 1) { track.classList.remove('visivel'); return; }
-    track.classList.add('visivel');
+    function medidas() {
+      return el
+        ? { vh: el.clientHeight, total: el.scrollHeight }
+        : { vh: window.innerHeight, total: root.scrollHeight };
+    }
 
-    var trackH = track.clientHeight;
-    var thumbH = Math.max(40, trackH * (vh / total));
-    var maxScroll = total - vh;
-    var y = (root.scrollTop / maxScroll) * (trackH - thumbH);
+    function atualizar() {
+      var m = medidas();
 
-    thumb.style.height = thumbH + 'px';
-    thumb.style.transform = 'translateY(' + y + 'px)';
-  }
+      if (el) {
+        // a barra acompanha exatamente a área do elemento (chat)
+        var r = el.getBoundingClientRect();
+        track.style.top = r.top + 'px';
+        track.style.height = r.height + 'px';
+        track.style.right = Math.max(0, window.innerWidth - r.right) + 'px';
+      } else {
+        // a barra começa logo abaixo do header (se ele estiver visível na tela)
+        var topo = header ? Math.max(0, header.getBoundingClientRect().bottom) : 0;
+        track.style.top = topo + 'px';
+        track.style.height = (m.vh - topo) + 'px';
+      }
 
-  var pendente = false;
-  function agendar() {
-    if (pendente) return;
-    pendente = true;
-    requestAnimationFrame(function () { pendente = false; atualizar(); });
-  }
+      if (m.total <= m.vh + 1) { track.classList.remove('visivel'); return; }
+      track.classList.add('visivel');
+
+      var trackH = track.clientHeight;
+      var thumbH = Math.max(40, trackH * (m.vh / m.total));
+      var maxScroll = m.total - m.vh;
+      var y = (alvo.scrollTop / maxScroll) * (trackH - thumbH);
+
+      thumb.style.height = thumbH + 'px';
+      thumb.style.transform = 'translateY(' + y + 'px)';
+    }
+
+    var pendente = false;
+    function agendar() {
+      if (pendente) return;
+      pendente = true;
+      requestAnimationFrame(function () { pendente = false; atualizar(); });
+    }
 
     // ---- some depois de alguns segundos parada; volta ao rolar, passar o mouse ou arrastar ----
-  var TEMPO_APAGAR = 2000;   // ms parada antes de apagar
-  var timerApagar = null;
-  var mouseEmCima = false;
-  function mostrar() {
-    track.classList.add('ativo');
-    clearTimeout(timerApagar);
-    timerApagar = setTimeout(function () {
-      if (!arrastando && !mouseEmCima) track.classList.remove('ativo');
-    }, TEMPO_APAGAR);
-  }
-  track.addEventListener('pointerenter', function () { mouseEmCima = true; mostrar(); });
-  track.addEventListener('pointerleave', function () { mouseEmCima = false; mostrar(); });
+    var timerApagar = null;
+    var mouseEmCima = false;
+    var arrastando = false, inicioY = 0, inicioScroll = 0;
+    function mostrar() {
+      track.classList.add('ativo');
+      clearTimeout(timerApagar);
+      timerApagar = setTimeout(function () {
+        if (!arrastando && !mouseEmCima) track.classList.remove('ativo');
+      }, TEMPO_APAGAR);
+    }
+    track.addEventListener('pointerenter', function () { mouseEmCima = true; mostrar(); });
+    track.addEventListener('pointerleave', function () { mouseEmCima = false; mostrar(); });
 
-  // ---- arrastar a barra: a página vai EXATAMENTE para onde você puxa ----
-  var arrastando = false, inicioY = 0, inicioScroll = 0;
+    // ---- arrastar a barra: a página vai EXATAMENTE para onde você puxa ----
+    thumb.addEventListener('pointerdown', function (e) {
+      arrastando = true;
+      inicioY = e.clientY;
+      inicioScroll = alvo.scrollTop;
+      html.style.scrollBehavior = 'auto';   // desliga o "smooth" durante o arrasto
+      track.classList.add('arrastando');
+      mostrar();
+      thumb.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    thumb.addEventListener('pointermove', function (e) {
+      if (!arrastando) return;
+      var m = medidas();
+      var trackH = track.clientHeight;
+      var thumbH = thumb.offsetHeight;
+      alvo.scrollTop = inicioScroll + ((e.clientY - inicioY) / (trackH - thumbH)) * (m.total - m.vh);
+    });
+    function soltar() {
+      arrastando = false;
+      html.style.scrollBehavior = '';       // volta ao padrão do site
+      track.classList.remove('arrastando');
+      mostrar();
+    }
+    thumb.addEventListener('pointerup', soltar);
+    thumb.addEventListener('pointercancel', soltar);
 
-  thumb.addEventListener('pointerdown', function (e) {
-    arrastando = true;
-    inicioY = e.clientY;
-    inicioScroll = root.scrollTop;
-    html.style.scrollBehavior = 'auto';   // desliga o "smooth" durante o arrasto
-    track.classList.add('arrastando');
+    // ---- clicar na trilha: rola suave até aquele ponto ----
+    track.addEventListener('pointerdown', function (e) {
+      if (e.target !== track) return;
+      var r = track.getBoundingClientRect();
+      var m = medidas();
+      var proporcao = (e.clientY - r.top) / r.height;
+      alvo.scrollTo({ top: proporcao * (m.total - m.vh), behavior: 'smooth' });
+    });
+
+    // ---- eventos ----
+    (el || window).addEventListener('scroll', agendar, { passive: true });
+    (el || window).addEventListener('scroll', mostrar, { passive: true });
+    window.addEventListener('resize', agendar);
+    window.addEventListener('load', agendar);
+    if ('ResizeObserver' in window) {
+      var ro = new ResizeObserver(agendar);
+      ro.observe(el || document.body);
+      if (el) {
+        // mensagens novas no chat aumentam o scrollHeight sem mudar o tamanho do elemento
+        new MutationObserver(agendar).observe(el, { childList: true, subtree: true, characterData: true });
+      }
+    }
+    atualizar();
     mostrar();
-    thumb.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  });
-  thumb.addEventListener('pointermove', function (e) {
-    if (!arrastando) return;
-    var trackH = track.clientHeight;
-    var thumbH = thumb.offsetHeight;
-    var maxScroll = root.scrollHeight - window.innerHeight;
-    root.scrollTop = inicioScroll + ((e.clientY - inicioY) / (trackH - thumbH)) * maxScroll;
-  });
-  function soltar() {
-    arrastando = false;
-    html.style.scrollBehavior = '';       // volta ao padrão do site
-    track.classList.remove('arrastando');
-    mostrar();
   }
-  thumb.addEventListener('pointerup', soltar);
-  thumb.addEventListener('pointercancel', soltar);
 
-  // ---- clicar na trilha: rola suave até aquele ponto ----
-  track.addEventListener('pointerdown', function (e) {
-    if (e.target !== track) return;
-    var r = track.getBoundingClientRect();
-    var proporcao = (e.clientY - r.top) / r.height;
-    root.scrollTo({ top: proporcao * (root.scrollHeight - window.innerHeight), behavior: 'smooth' });
-  });
+  function iniciar() {
+    var chat = document.querySelector('.chat-mensagens');
+    if (chat) {
+      // página do Gira-Bot: a página não rola, quem rola é o chat
+      criarBarra(chat);
+    } else {
+      criarBarra(null);
+    }
+  }
 
-  window.addEventListener('scroll', agendar, { passive: true });
-    window.addEventListener('scroll', mostrar, { passive: true });
-  window.addEventListener('resize', agendar);
-  window.addEventListener('load', agendar);
-  if ('ResizeObserver' in window) new ResizeObserver(agendar).observe(document.body);
-  atualizar();
-  mostrar();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
+  else iniciar();
 })();

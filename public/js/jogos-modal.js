@@ -1028,7 +1028,7 @@ hl = null; hover = -1; voo = null; efeitosPar = []; running = true;
   function initFuga() {
     titleEl.textContent = 'Fuga pela Floresta';
     scoreEmMetros = true;
-    tipEl.textContent   = 'Espaço (ou clique/toque na tela) para pular · Segure para pular mais alto · Colete folhas para acelerar';
+    tipEl.textContent   = 'Aperte espaço ou clique na tela para pular · Segure para pular mais alto';
     updateHUD(0,'1,0x',3,true,true);
     hudLevel.firstChild.nodeValue = 'Velocidade ';
     showScreen('Fuga pela Floresta',
@@ -1052,7 +1052,7 @@ const FIRE_RENDER_WIDTH = FIRE_SRC_W * FIRE_SCALE;
 const FIRE_RENDER_HEIGHT = FIRE_SRC_H * FIRE_SCALE;
     let score=0,lives=3,level=1,running=false,dist=0;
     let onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
-    let obstacles=[],powerups=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
+    let obstacles=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
     const velTxt = () => (speed/5.2).toFixed(1).replace('.', ',') + 'x';   // 1,0x no começo, sobe a cada 0,4 de velocidade
     let groundX = 0; 
     const JUMP_V=-11.5, GRAVITY=0.55;
@@ -1822,7 +1822,7 @@ function drawTree(ob) {
             (y * treeImg.naturalWidth + x) * 4 + 3
           ];
 
-        if (alpha > 0) {
+        if (alpha >= 128) {
           bottomPixel = y;
           found = true;
           break;
@@ -1864,7 +1864,7 @@ const drawY =
   ob.sprite = {
     img: treeImg,
     x: ob.x,
-    y: ob.oy,
+    y: drawY,
     w: ob.w,
     h: ob.h
   };
@@ -2015,7 +2015,6 @@ if (t.type === 'tree') {
 
 
 
-      if(Math.random()<0.25)powerups.push({x:VIEW_W+60+Math.random()*80,y:GROUND-70,emoji:'🍃',alive:true});
     }
 
     function loop(ts){
@@ -2124,14 +2123,7 @@ ctx.drawImage(
   groundHeight
 );
 
-      /* powerups */
-      powerups.forEach(p=>{
-        if(!p.alive)return;
-        ctx.font='22px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(p.emoji,p.x,p.y); p.x-=speed*dt;
-        if(Math.abs(p.x-onca.x)<30&&Math.abs(p.y-(GROUND-30))<30){p.alive=false;score+=25;popup(p.x,p.y,'#fbbf24','+25');}
-        if(p.x<-20)p.alive=false;
-      });
+
 
 if (holdingJump) jump();
 
@@ -2271,12 +2263,6 @@ obstacles = obstacles.filter(
   o => o.x > -200
 );
 
-/*
- * Remove folhas coletadas ou que saíram da tela.
- */
-powerups = powerups.filter(
-  p => p.alive && p.x > -30
-);
 
 /*
  * Desenha a onça depois da colisão.
@@ -2300,7 +2286,7 @@ ctx.restore();
         'Correr de novo', true);
     }
     function start(){holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
-      obstacles=[];powerups=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
+      obstacles=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
       running=true;hideScreen();updateHUD(0,'1,0x',3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
     activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onpointerdown=null;canvas.onpointerup=null;canvas.onpointercancel=null;canvas.style.touchAction='';}};
@@ -2310,11 +2296,11 @@ ctx.restore();
      JOGO — VOLTA AO RIO (endless frogger)    
   ════════════════════════════════════ */
   function initSapo() {
-    titleEl.textContent = 'Volta ao Rio';
+    titleEl.textContent = 'De Volta ao Rio';
     scoreEmMetros = true;
     tipEl.textContent   = 'Setas, WASD ou deslize na tela para pular · Toque na tela para ir pra frente · Não pare: a tela não espera';
     updateHUD(0, 1, 3, true, false);
-    showScreen('Volta ao Rio',
+    showScreen('De Volta ao Rio',
       'A floresta foi derrubada e o <strong>rio ficou longe</strong>. Ajude o sapo a voltar para casa!<br>Fuja dos caminhões dos madeireiros, pule nos <strong>troncos</strong> sobre a água contaminada e <strong>não pare</strong>: a tela não espera.');
 
     /* ── CONFIG ── */
