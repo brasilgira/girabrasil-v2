@@ -124,7 +124,11 @@ body {
   background: var(--admin-fundo);
   border-bottom: 1px solid var(--admin-borda);
   overflow-x: auto;
+    scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
+.admin-abas::-webkit-scrollbar { display: none; }
 
 .admin-aba {
   position: relative;
@@ -164,16 +168,7 @@ body {
 .admin-aba.is-ativa svg { opacity: 1; }
 .admin-aba.is-ativa::after { background: var(--admin-amarelo); }
 
-.admin-abas__voltar {
-  margin-left: auto;
-  padding: 8px 12px;
-  color: var(--admin-suave);
-  font-size: .8rem;
-  text-decoration: none;
-  white-space: nowrap;
-  border-radius: 999px;
-}
-.admin-abas__voltar:hover { color: var(--admin-texto); background: var(--admin-borda); }
+
 
 /* --------------------------------------------------------------------------
    CONTEÚDO / PAINÉIS
@@ -889,7 +884,6 @@ body {
      fica mais compacta aqui em vez de quebrar ou esconder rótulos. */
   .admin-abas { padding: 0 20px; gap: 0; }
   .admin-aba { padding: 12px 12px; font-size: .82rem; }
-  .admin-abas__voltar { display: none; } /* "← Voltar ao site" some; o link do logo no header já cumpre esse papel */
   .admin-conteudo { padding: 25px 20px 48px; }
 }
 
