@@ -207,6 +207,26 @@ fecharBtn.onclick = () => pedirFechar();   // fecha direto, exceto entre rodadas
     screenEl.style.display = 'flex';
   }
   function hideScreen() { screenEl.style.display = 'none'; }
+
+  /* ── Ranking (js/ranking-jogos.js) ──
+     Falhar aqui nunca pode atrapalhar o jogo: sem login, sem rede ou com o
+     servidor fora do ar, a partida segue normal e só não entra no ranking. */
+  function iniciarRanking(jogo) {
+    return window.GiraRanking ? window.GiraRanking.iniciar(jogo) : null;
+  }
+  let envioRankingAtual = 0;
+  function enviarAoRanking(partida, pontuacao, jogo) {
+    if (!partida || !window.GiraRanking) return;
+    const meuEnvio = ++envioRankingAtual;
+    window.GiraRanking.enviar(partida, pontuacao).then(r => {
+      /* só escreve se a tela de resultado ainda é a desta partida */
+      if (!r || meuEnvio !== envioRankingAtual || screenEl.style.display === 'none') return;
+      if (!Number.isInteger(r.posicao)) return;
+      screenDesc.insertAdjacentHTML('beforeend',
+        '<br>Posição no ranking: <strong>#' + r.posicao + '</strong>' + (r.novoRecorde ? ' (novo melhor resultado)' : '') +
+        ' · <a href="ranking.html#' + jogo + '" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Ver ranking</a>');
+    });
+  }
   function popup(x, y, color, text, grande) {
     const rect = canvas.getBoundingClientRect();
     let sx = rect.width / W, sy = rect.height / H, ox = 0, oy = 0;
@@ -592,6 +612,7 @@ const CW = 100, CH = 140, MAO_W = W - 60, MARGEM_Y = 38, TOP_Y = MARGEM_Y, BOT_Y
     let parJog = 0, combo = 0, rodadas = 0, t0 = 0;
     let nivel = 1, proxNivel = 1, novoJogo = true;
         let paresAcum = 0;   // pares formados nas rodadas anteriores (zera quando perde ou recomeça)
+    let partidaRanking = null;   // partida do ranking: vale pela jogada inteira (todas as rodadas)
     let score = 0, running = false, fase = 'fim', hl = null, hover = -1, timers = [];
     let voo = null;   // carta em animação (voando de uma mão pra outra)
 let efeitosPar = [];   // pares que estão indo pro meio da mesa
@@ -987,6 +1008,8 @@ later(aposEscolha, 650);
       }
       score += bonus;
       hud();
+      /* ranking: só conta ao vencer uma rodada (checkpoint da pontuação acumulada) — perder zera a jogada */
+      if (ganhou) enviarAoRanking(partidaRanking, score, 'mico');
       const tempo = (ms / 1000).toFixed(1).replace('.', ',') + ' s';
       const resumo = `Pontuação: <strong>${score}</strong><br>Pares: <strong>${parJog}</strong> · Tempo: <strong>${tempo}</strong> · Turnos: <strong>${rodadas}</strong>`;
       if (ganhou && nivel < TOTAL_RODADAS) {
@@ -1007,7 +1030,7 @@ later(aposEscolha, 650);
     function start() {
       timers.forEach(clearTimeout); timers = [];
       nivel = proxNivel;
-      if (novoJogo) { score = 0; paresAcum = 0; novoJogo = false; }
+      if (novoJogo) { score = 0; paresAcum = 0; novoJogo = false; partidaRanking = iniciarRanking('mico'); }
       else paresAcum += parJog;   // continuou: soma os pares que você formou na rodada que acabou
       distribuir(CARTAS_POR_RODADA[nivel - 1]);
       parJog = 0; combo = 0; rodadas = 0; t0 = agora();
@@ -2279,13 +2302,15 @@ ctx.restore();
       raf=requestAnimationFrame(loop);
     }
 
+    let partidaRanking = null;
     function end(won){
       running=false;cancelAnimationFrame(raf);
+      enviarAoRanking(partidaRanking, ~~(dist/6), 'onca');
       showScreen(won?'🐆 Onça Salva!':'💀 A onça foi capturada...',
         `Distância percorrida: <strong>${~~(dist/6)} m</strong><br>${won?'A onça escapou para a reserva!':'Tente de novo!'}`,
         'Correr de novo', true);
     }
-    function start(){holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
+    function start(){partidaRanking=iniciarRanking('onca');holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
       obstacles=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
       running=true;hideScreen();updateHUD(0,'1,0x',3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
@@ -2311,6 +2336,7 @@ ctx.restore();
     const HOP_FRAMES = 7;              // duração do pulo (menor = mais rápido)
     const SAPO_MEIA_LARG = 13;         // meia largura da hitbox do sapo
     const RECORDE_KEY = 'girabrasil_sapo_recorde';
+    let partidaRanking = null;
     const delta = makeDelta();
 
     let running = false, estado = 'parado', tick = 0;
@@ -2675,6 +2701,7 @@ l.itens.forEach(it => desenharTronco(it.pos, y, it.w, l.dir));
     function end() {
       running = false; estado = 'fim'; cancelAnimationFrame(raf);
       const dist = rowMax - 1;
+      enviarAoRanking(partidaRanking, dist, 'sapo');
       let rec = 0;
       try { rec = parseInt(localStorage.getItem(RECORDE_KEY) || '0', 10) || 0; } catch (_) {}
       const novo = dist > rec;
@@ -2685,6 +2712,7 @@ l.itens.forEach(it => desenharTronco(it.pos, y, it.w, l.dir));
         'Tentar de novo', true);
     }
     function start() {
+      partidaRanking = iniciarRanking('sapo');
       resetar(); estado = 'jogando'; running = true;
       hideScreen(); atualizarHud(); delta.reset();
       raf = requestAnimationFrame(loop);

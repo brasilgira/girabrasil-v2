@@ -1,0 +1,242 @@
+/* ==========================================================================
+   GiraBrasil — Página Ranking
+   Painel escuro de tela única: nada de rolar a página. As abas trocam o
+   conteúdo no lugar; só a lista de classificação rola dentro do próprio cartão.
+   Tudo vive sob .rk para não vazar para outras páginas.
+   ========================================================================== */
+
+body.pagina-ranking {
+  background: #080D0A;
+  height: 100vh; height: 100dvh;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+body.pagina-ranking .header-site { flex: none; }
+
+.rk {
+  --rk-fundo: #080D0A;
+  --rk-card: #0E1611;
+  --rk-card-2: #131E17;
+  --rk-borda: rgba(74, 222, 154, .16);
+  --rk-borda-forte: rgba(74, 222, 154, .45);
+  --rk-texto: #F2F5F1;
+  --rk-suave: #9DAEA3;
+  --rk-fraco: #7C8E83;
+  --rk-acento: #4ADE9A;
+  --rk-ouro: #E3B95C;
+  --rk-prata: #C9D1CD;
+  --rk-bronze: #CD8B5A;
+  --rk-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  flex: 1; min-height: 0;
+  width: 100%; max-width: 1240px; margin: 0 auto;
+  padding: 22px 32px 24px;
+  display: flex; flex-direction: column; gap: 16px;
+  color: var(--rk-texto);
+  font-family: var(--fonte-corpo);
+}
+:where(.rk) p, :where(.rk) h1, :where(.rk) h2, :where(.rk) h3 { margin: 0; }
+.rk h1, .rk h2, .rk h3 { color: var(--rk-texto); font-family: var(--fonte-corpo); }
+
+.rk-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.rk a:focus-visible, .rk button:focus-visible, .rk [tabindex]:focus-visible { outline: 2px solid var(--rk-acento); outline-offset: 3px; }
+.rk #rk-painel:focus { outline: none; }
+
+/* rótulo pequeno em mono, como nos painéis de jogos */
+.rk-rotulo { font-family: var(--rk-mono); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--rk-acento); }
+
+/* ---------- Topo ---------- */
+.rk-topo { flex: none; }
+.rk-topo h1 { font-size: clamp(2rem, 4.2vw, 3rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1; }
+.rk-topo__sub { margin-top: 8px; font-size: .98rem; color: var(--rk-suave); }
+
+/* ---------- Abas ---------- */
+.rk-abas { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.rk-aba {
+  display: flex; align-items: center; gap: 14px; min-width: 0;
+  padding: 10px 16px 10px 10px; text-align: left; font: inherit; color: var(--rk-suave);
+  background: var(--rk-card); border: 1px solid var(--rk-borda); border-radius: 16px; cursor: pointer;
+  transition: border-color .2s, background-color .2s, color .2s;
+}
+.rk-aba:hover { background: var(--rk-card-2); border-color: var(--rk-borda-forte); color: var(--rk-texto); }
+.rk-aba[aria-selected="true"] { background: var(--rk-card-2); border-color: var(--rk-acento); color: var(--rk-texto); box-shadow: 0 0 0 1px var(--rk-acento) inset; }
+.rk-aba__arte { flex: none; width: 56px; height: 56px; border-radius: 12px; overflow: hidden; background: var(--rk-card-2); }
+.rk-aba__arte img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rk-aba__texto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.rk-aba__titulo { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; color: var(--rk-texto); }
+.rk-aba__sub { font-size: .8rem; color: var(--rk-suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-aba__contagem { flex: none; font-family: var(--rk-mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--rk-fraco); text-align: right; }
+.rk-aba__contagem:empty { display: none; }
+
+.rk-vistas { display: none; }
+
+/* ---------- Grade principal ---------- */
+.rk-grade { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 16px; }
+.rk-lateral { min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+.rk-card, .rk-quadro { background: var(--rk-card); border: 1px solid var(--rk-borda); border-radius: 18px; }
+.rk-quadro { min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 18px 18px 0; overflow: hidden; }
+
+.rk-quadro__cab { flex: none; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.rk-quadro__cab h2 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; }
+.rk-quadro__regra { max-width: 46ch; font-size: .82rem; line-height: 1.45; color: var(--rk-suave); text-align: right; }
+
+/* ---------- Pódio compacto ---------- */
+.rk-podio { flex: none; list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.rk-pos-card {
+  position: relative; display: flex; align-items: center; gap: 12px; min-width: 0;
+  padding: 12px 14px; background: var(--rk-card-2); border: 1px solid var(--rk-borda); border-radius: 14px;
+}
+.rk-podio__item[data-pos="1"] .rk-pos-card { --m: var(--rk-ouro); border-color: rgba(227, 185, 92, .55); }
+.rk-podio__item[data-pos="2"] .rk-pos-card { --m: var(--rk-prata); }
+.rk-podio__item[data-pos="3"] .rk-pos-card { --m: var(--rk-bronze); }
+.rk-pos-card__numero { flex: none; width: 1.1ch; font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--m, var(--rk-fraco)); font-variant-numeric: tabular-nums; }
+.rk-pos-card__corpo { min-width: 0; flex: 1; }
+.rk-pos-card__nome { font-weight: 600; font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rk-pos-card__pontos { margin-top: 3px; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.rk-pos-card__unidade { margin-left: 5px; font-size: .75rem; font-weight: 500; color: var(--rk-suave); }
+.rk-pos-card .rk-avatar { border-color: var(--m, var(--rk-borda)); }
+.rk-pos-card--vazio { border-style: dashed; background: transparent; }
+.rk-pos-card--vazio .rk-pos-card__numero { color: var(--rk-fraco); opacity: .6; }
+.rk-pos-card--vazio p { color: var(--rk-fraco); font-size: .88rem; }
+.rk-pos-card--eu { box-shadow: 0 0 0 1px var(--rk-acento); }
+
+.rk-voce { display: inline-flex; padding: 2px 8px; margin-left: 8px; font-family: var(--rk-mono); font-size: .62rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #06120B; background: var(--rk-acento); border-radius: 999px; vertical-align: middle; }
+
+/* ---------- Avatar ---------- */
+.rk-avatar { position: relative; flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; overflow: hidden; font-size: .74rem; font-weight: 700; color: var(--rk-texto); background: #1B2A21; border: 1px solid var(--rk-borda); }
+.rk-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rk-avatar--p { width: 32px; height: 32px; font-size: .68rem; }
+
+/* ---------- Lista (rola por dentro) ---------- */
+.rk-lista { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -18px; padding: 0 18px 10px; scrollbar-width: thin; scrollbar-color: rgba(74,222,154,.35) transparent; }
+.rk-lista::-webkit-scrollbar { width: 8px; }
+.rk-lista::-webkit-scrollbar-thumb { background: rgba(74,222,154,.3); border-radius: 8px; }
+.rk-tabela { width: 100%; border-collapse: collapse; }
+.rk-tabela th { position: sticky; top: 0; z-index: 1; padding: 8px 12px; text-align: left; background: var(--rk-card); font-family: var(--rk-mono); font-size: .64rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--rk-fraco); border-bottom: 1px solid var(--rk-borda); }
+.rk-tabela td { padding: 7px 12px; border-bottom: 1px solid rgba(74,222,154,.08); vertical-align: middle; }
+.rk-tabela tbody tr:hover { background: var(--rk-card-2); }
+.rk-tabela .col-pos { width: 56px; }
+.rk-tabela .col-data { width: 150px; }
+.rk-tabela .col-pontos { width: 130px; text-align: right; }
+.rk-tabela td.col-pos { font-size: 1rem; font-weight: 700; color: var(--rk-suave); font-variant-numeric: tabular-nums; }
+.rk-tabela td.col-data { font-size: .82rem; color: var(--rk-fraco); }
+.rk-tabela td.col-pontos { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rk-tabela td.col-pontos small { margin-left: 4px; font-size: .72rem; font-weight: 500; color: var(--rk-suave); }
+.rk-linha-jogador { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rk-linha-jogador .nome { font-weight: 500; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rk-tabela tr.eu { background: rgba(74,222,154,.09); box-shadow: inset 3px 0 0 var(--rk-acento); }
+.rk-lista__rodape { padding: 10px 12px 2px; font-size: .78rem; color: var(--rk-fraco); }
+.rk-lista--vazia { display: grid; place-items: center; color: var(--rk-fraco); font-size: .88rem; }
+
+/* ---------- Cartões laterais ---------- */
+.rk-meu { flex: none; padding: 18px; }
+.rk-meu h3 { margin-top: 4px; font-size: 1.05rem; font-weight: 700; }
+.rk-meu__valores { display: flex; align-items: baseline; gap: 16px; margin-top: 12px; }
+.rk-meu__posicao { font-size: 3rem; font-weight: 800; line-height: .9; letter-spacing: -0.05em; color: var(--rk-acento); }
+.rk-meu__pontos { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rk-meu__pontos small { margin-left: 4px; font-size: .8rem; font-weight: 500; color: var(--rk-suave); }
+.rk-meu__texto { margin-top: 10px; font-size: .86rem; line-height: 1.5; color: var(--rk-suave); }
+.rk-meu__texto strong { color: var(--rk-texto); font-weight: 600; }
+.rk-meu__acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+.rk-premios { flex: 1; min-height: 0; overflow-y: auto; padding: 18px; }
+.rk-premios__nota { margin-top: 8px; font-size: .8rem; line-height: 1.5; color: var(--rk-suave); }
+.rk-premios__lista { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.rk-premio { display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--rk-card-2); border: 1px solid var(--rk-borda); border-radius: 14px; }
+.rk-premio__arte { flex: none; width: 46px; height: 46px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(227,185,92,.5); }
+.rk-premio__arte img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rk-premio h3 { font-size: .95rem; font-weight: 700; }
+.rk-premio p { margin-top: 2px; font-size: .8rem; line-height: 1.4; color: var(--rk-suave); }
+.rk-premio p:empty { display: none; }
+.rk-premio p strong { color: var(--rk-texto); font-weight: 600; }
+.rk-premio__descricao { color: var(--rk-texto) !important; }
+
+/* ---------- Botões ---------- */
+.rk-botao { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 18px; font: inherit; font-size: .88rem; font-weight: 600; color: #06120B; background: var(--rk-acento); border: 1.5px solid var(--rk-acento); border-radius: 999px; cursor: pointer; transition: background-color .2s, border-color .2s; }
+.rk-botao:hover { background: #7BE8B5; border-color: #7BE8B5; }
+.rk-botao--sec { color: var(--rk-texto); background: transparent; border-color: var(--rk-borda-forte); }
+.rk-botao--sec:hover { background: var(--rk-card-2); border-color: var(--rk-acento); }
+.rk-botao svg { width: 15px; height: 15px; }
+
+/* ---------- Vazio / erro / carregando ---------- */
+.rk-aviso { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px 12px 22px; }
+.rk-aviso__icone { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 14px; color: var(--rk-acento); border: 1px solid var(--rk-borda-forte); border-radius: 14px; }
+.rk-aviso--erro .rk-aviso__icone { color: #F0A58A; border-color: rgba(240,165,138,.5); }
+.rk-aviso__icone svg { width: 24px; height: 24px; }
+.rk-aviso h3 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+.rk-aviso > p { max-width: 44ch; margin-top: 8px; font-size: .9rem; line-height: 1.5; color: var(--rk-suave); }
+.rk-passos { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; counter-reset: p; }
+.rk-passos li { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--rk-texto); counter-increment: p; }
+.rk-passos li::before { content: counter(p); display: grid; place-items: center; width: 22px; height: 22px; font-family: var(--rk-mono); font-size: .72rem; color: var(--rk-acento); border: 1px solid var(--rk-borda-forte); border-radius: 50%; }
+.rk-aviso__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
+
+.rk-esq { position: relative; overflow: hidden; background: var(--rk-card-2); border-radius: 12px; }
+.rk-esq::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(242,245,241,.06), transparent); transform: translateX(-100%); animation: rk-brilho 1.4s ease-in-out infinite; }
+@keyframes rk-brilho { to { transform: translateX(100%); } }
+.rk-esq-podio { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.rk-esq-podio .rk-esq { height: 80px; }
+.rk-esq-lista { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.rk-esq-lista .rk-esq { height: 40px; flex: none; }
+
+@keyframes rk-aparecer { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.rk-troca { animation: rk-aparecer .22s ease both; }
+
+/* ---------- Alturas pequenas (notebook): compacta o topo ---------- */
+@media (max-height: 800px) {
+  .rk { padding-top: 14px; padding-bottom: 16px; gap: 12px; }
+  .rk-topo__sub { display: none; }
+  .rk-aba__arte { width: 44px; height: 44px; }
+  .rk-pos-card { padding: 9px 12px; }
+  .rk-pos-card__numero { font-size: 2.1rem; }
+  .rk-premios__nota { display: none; }
+  .rk-premio { padding: 8px; }
+  .rk-premio__arte { width: 38px; height: 38px; }
+}
+
+/* ---------- Tablet e celular: uma coluna, com troca de vista na mesma tela ---------- */
+@media (max-width: 960px) {
+  .rk { padding: 14px 14px 14px; gap: 10px; }
+  .rk-topo__sub { display: none; }
+  .rk-aba { gap: 10px; padding: 8px; }
+  .rk-aba__arte { width: 40px; height: 40px; border-radius: 10px; }
+  .rk-aba__titulo { font-size: 1rem; }
+  .rk-aba__sub, .rk-aba__contagem { display: none; }
+
+  .rk-vistas { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px; background: var(--rk-card); border: 1px solid var(--rk-borda); border-radius: 14px; }
+  .rk-vista { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 6px 4px; font: inherit; font-size: .78rem; font-weight: 600; color: var(--rk-suave); background: transparent; border: 0; border-radius: 10px; cursor: pointer; }
+  .rk-vista svg { width: 16px; height: 16px; flex: none; }
+  .rk-vista[aria-pressed="true"] { color: #06120B; background: var(--rk-acento); }
+
+  .rk-grade { grid-template-columns: minmax(0, 1fr); }
+  .rk-lateral { display: contents; }
+  .rk-grade > *, .rk-lateral > * { display: none; }
+  .rk-grade[data-vista="rank"] > .rk-quadro { display: flex; }
+  .rk-grade[data-vista="eu"] .rk-meu { display: block; }
+  .rk-grade[data-vista="premios"] .rk-premios { display: block; }
+  .rk-meu, .rk-premios { overflow-y: auto; min-height: 0; max-height: 100%; }
+
+  .rk-quadro { padding: 14px 12px 0; }
+  .rk-quadro__regra { display: none; }
+  .rk-quadro__cab { margin-bottom: 10px; }
+  .rk-quadro__cab h2 { font-size: 1.15rem; }
+  .rk-podio { gap: 6px; margin-bottom: 10px; }
+  .rk-pos-card { flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px; }
+  .rk-pos-card .rk-avatar { display: none; }
+  .rk-pos-card__numero { font-size: 1.7rem; }
+  .rk-pos-card__corpo { width: 100%; }
+  .rk-pos-card__nome { font-size: .8rem; }
+  .rk-pos-card__pontos { font-size: 1.05rem; }
+  .rk-pos-card__unidade { display: block; margin: 0; }
+  .rk-pos-card .rk-voce { margin: 0 0 0 4px; }
+  .rk-lista { margin: 0 -12px; padding: 0 12px 8px; }
+  .rk-tabela th.col-data, .rk-tabela td.col-data { display: none; }
+  .rk-tabela .col-pos { width: 40px; }
+  .rk-tabela .col-pontos { width: auto; }
+  .rk-tabela th, .rk-tabela td { padding-left: 8px; padding-right: 8px; }
+  .rk-passos { flex-direction: column; align-items: flex-start; }
+  .rk-premios__nota { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rk *, .rk *::before, .rk *::after { animation: none !important; transition: none !important; }
+}

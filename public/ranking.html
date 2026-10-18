@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking — Gira-Brasil</title>
+<meta name="description" content="Veja quem lidera o ranking dos jogos do Gira-Brasil: De Volta ao Rio (Sapo), Fuga pela Floresta (Onça) e Jogo do Mico.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/ranking.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/auth.js"></script>
+<script src="js/ranking.js" defer></script>
+</head>
+<body class="pagina-ranking">
+
+<!-- Ícones de interface (traço simples, estilo Lucide) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ic-trofeu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+    </symbol>
+    <symbol id="ic-lista" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 3v16a2 2 0 0 0 2 2h16M7 16v-3M12 16V8M17 16v-5"/>
+    </symbol>
+    <symbol id="ic-usuario" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </symbol>
+    <symbol id="ic-alerta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3ZM12 9v4M12 17h.01"/>
+    </symbol>
+    <symbol id="ic-seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="header-site">
+  <div class="header-inner">
+    <a href="index.html" class="logo-site">Gira-Brasil</a>
+   <nav class="nav-site">
+  <div class="indicador-verde" id="indicador"></div>
+  <a href="index.html">Início</a>
+  <a href="noticias.html">Notícias</a>
+  <a href="regioes.html">Regiões</a>
+  <a href="jogos.html">Jogos</a>
+  <a href="girabot.html">Gira-Bot</a>
+  <a href="sobre.html">Sobre</a>
+  <a href="ranking.html" class="ativo">Ranking</a>
+</nav>
+    <div class="header-acoes">
+      <a href="login.html" class="link-entrar">Entrar</a>
+      <a href="cadastro.html" class="botao botao-primario">Criar conta</a>
+    </div>
+  </div>
+</header>
+
+<main class="rk" id="conteudo">
+
+  <div class="rk-topo">
+    <div>
+      <h1 id="rk-titulo">Ranking</h1>
+      <p class="rk-topo__sub">Do rio à floresta, três jogos e um campeão em cada.</p>
+    </div>
+  </div>
+
+  <div class="rk-abas" role="tablist" aria-label="Escolha o jogo">
+    <button type="button" role="tab" class="rk-aba" id="aba-sapo" data-jogo="sapo" aria-selected="true" aria-controls="rk-painel" tabindex="0">
+      <span class="rk-aba__arte"><img src="assets/jogos/game-biodiversidade.jpeg" alt="" loading="eager"></span>
+      <span class="rk-aba__texto"><span class="rk-aba__titulo">Sapo</span><span class="rk-aba__sub">De Volta ao Rio</span></span>
+      <span class="rk-aba__contagem" data-contagem></span>
+    </button>
+    <button type="button" role="tab" class="rk-aba" id="aba-onca" data-jogo="onca" aria-selected="false" aria-controls="rk-painel" tabindex="-1">
+      <span class="rk-aba__arte"><img src="assets/jogos/game-biomas.jpg" alt="" loading="eager"></span>
+      <span class="rk-aba__texto"><span class="rk-aba__titulo">Onça</span><span class="rk-aba__sub">Fuga pela Floresta</span></span>
+      <span class="rk-aba__contagem" data-contagem></span>
+    </button>
+    <button type="button" role="tab" class="rk-aba" id="aba-mico" data-jogo="mico" aria-selected="false" aria-controls="rk-painel" tabindex="-1">
+      <span class="rk-aba__arte"><img src="assets/jogos/game-guardioes.jpeg" alt="" loading="eager"></span>
+      <span class="rk-aba__texto"><span class="rk-aba__titulo">Mico</span><span class="rk-aba__sub">Jogo do Mico</span></span>
+      <span class="rk-aba__contagem" data-contagem></span>
+    </button>
+  </div>
+
+  <!-- Só no celular: alterna, na mesma tela, entre classificação, meu desempenho e prêmios -->
+  <div class="rk-vistas" role="group" aria-label="O que mostrar">
+    <button type="button" class="rk-vista" data-vista="rank" aria-pressed="true"><svg aria-hidden="true"><use href="#ic-lista"/></svg>Classificação</button>
+    <button type="button" class="rk-vista" data-vista="eu" aria-pressed="false"><svg aria-hidden="true"><use href="#ic-usuario"/></svg>Meu lugar</button>
+    <button type="button" class="rk-vista" data-vista="premios" aria-pressed="false"><svg aria-hidden="true"><use href="#ic-trofeu"/></svg>Prêmios</button>
+  </div>
+
+  <p class="rk-sr" id="rk-status" role="status" aria-live="polite"></p>
+
+  <div class="rk-grade" id="rk-painel" role="tabpanel" aria-labelledby="aba-sapo" tabindex="-1" aria-busy="true" data-vista="rank">
+    <section class="rk-quadro" id="rk-quadro" aria-labelledby="rk-painel-titulo"></section>
+    <div class="rk-lateral">
+      <section class="rk-card rk-meu" id="rk-meu" aria-labelledby="rk-meu-titulo"></section>
+      <section class="rk-card rk-premios" id="rk-premios" aria-labelledby="rk-premios-titulo">
+        <div class="rk-rotulo" id="rk-premios-titulo">Prêmios</div>
+        <p class="rk-premios__nota">Um prêmio por jogo: só o 1º colocado de cada um leva. São três prêmios no total, definidos e entregues pela equipe do Gira-Brasil.</p>
+        <ul class="rk-premios__lista">
+          <li class="rk-premio" data-jogo="sapo">
+            <span class="rk-premio__arte"><img src="assets/jogos/game-biodiversidade.jpeg" alt=""></span>
+            <div><h3>1º do Sapo</h3><p data-lider></p><p class="rk-premio__descricao" data-descricao hidden></p></div>
+          </li>
+          <li class="rk-premio" data-jogo="onca">
+            <span class="rk-premio__arte"><img src="assets/jogos/game-biomas.jpg" alt=""></span>
+            <div><h3>1º da Onça</h3><p data-lider></p><p class="rk-premio__descricao" data-descricao hidden></p></div>
+          </li>
+          <li class="rk-premio" data-jogo="mico">
+            <span class="rk-premio__arte"><img src="assets/jogos/game-guardioes.jpeg" alt=""></span>
+            <div><h3>1º do Mico</h3><p data-lider></p><p class="rk-premio__descricao" data-descricao hidden></p></div>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+</main>
+
+<script src="js/nav-indicador.js?v=2"></script>
+</body>
+</html>

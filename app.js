@@ -27,6 +27,7 @@ const comentariosRoutes = require('./routes/comentarios.routes');
 const usuariosRoutes = require('./routes/usuarios.routes');
 const adminRoutes = require('./routes/admin.routes');
 const perfilRoutes = require('./routes/perfil.routes');
+const rankingRoutes = require('./routes/ranking.routes');
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', usuariosRoutes);
@@ -35,6 +36,7 @@ app.use('/api/noticias', noticiasRoutes);
 app.use('/api/girabot', girabotRoutes);
 app.use('/api/comentarios', comentariosRoutes);
 app.use('/api/perfil', perfilRoutes);
+app.use('/api/ranking', rankingRoutes);
 
 // Serve os arquivos estáticos do front-end (HTML, CSS, JS puro).
 // Na Vercel isso normalmente nem é usado (ela já serve a pasta `public`

@@ -885,3 +885,12 @@ body.pagina-jogos .header-site {
   transform: translate(-50%, -50%);
   animation-name: floatUpCentro;
 }
+
+/* --- Link "Ver o ranking dos jogos" (abaixo dos cards) ---
+   Também serve de caminho até o ranking no celular, onde o menu do cabeçalho
+   fica escondido. Usa o estilo .link-voltar do base.css. */
+.jogos-ranking-link {
+  flex: 0 0 auto;
+  text-align: center;
+  margin: 16px 0 0;
+}
