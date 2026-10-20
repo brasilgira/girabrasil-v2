@@ -1229,6 +1229,271 @@ const SOMBRA_CHAO_ALTURA = 70;          // altura da sombra acima do chão (px)
 const SOMBRA_CHAO_FORCA = 0.5;          // força da sombra (0 = nenhuma · 1 = preta)
 const SOMBRA_CHAO_COR = '3,20,12';      // cor da sombra (R,G,B)
 
+/* ===== 🌿 DECORAÇÃO (desenhada por código, em pixel art) ===== */
+const DEC_PX = 3;                        // tamanho de cada "pixel" dos desenhos (3 = igual ao da floresta)
+
+/* 6) tufos de capim e pedrinhas em cima do chão (rolam junto com o chão) */
+const TUFOS_ATIVO = true;                // false = desliga
+const TUFOS_DIST_MIN = 45;               // distância mínima entre um tufo e o próximo (px)
+const TUFOS_DIST_MAX = 120;              // distância máxima (px)
+const TUFOS_PEDRA_CHANCE = 0.2;          // chance de ser pedrinha em vez de capim (0 a 1)
+const TUFOS_ALTURA = 8;                  // altura máxima do capim (em "pixels" do desenho · 8 = ~24 px)
+
+/* 7) capim na frente da onça (passa mais rápido que o chão) */
+const FRENTE_ATIVO = true;               // false = desliga
+const FRENTE_VEL = 1.5;                  // velocidade em relação ao chão (1 = igual · 2 = o dobro)
+const FRENTE_DIST_MIN = 120;             // distância mínima entre um e o próximo (px)
+const FRENTE_DIST_MAX = 320;             // distância máxima (px)
+const FRENTE_ALTURA = 10;                // altura das folhas (em "pixels" do desenho · 10 = ~30 px)
+const FRENTE_ALTA_CHANCE = 0.15;         // chance de um capim bem alto, que passa na frente das patas
+const FRENTE_PERIODO = 1500;             // de quantos em quantos px o desenho se repete
+
+/* 8) moitas e palmeiras entre a floresta e o chão */
+const MEIO_ATIVO = true;                 // false = desliga
+const MEIO_VEL = 0.25;                   // velocidade em relação ao chão (0.03 = igual à floresta · 1 = igual ao chão)
+const MEIO_DIST_MIN = 80;                // distância mínima entre uma moita e a próxima (px)
+const MEIO_DIST_MAX = 240;               // distância máxima (px)
+const MEIO_PERIODO = 1600;               // de quantos em quantos px o desenho se repete
+
+let decoracao = null, meioX = 0, frenteX = 0;
+
+function decRng(seed) {                  // números "aleatórios" sempre iguais (o desenho não muda a cada partida)
+  let s = seed >>> 0;
+  return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+}
+
+function decSprite(wu, hu, desenhar) {   // cria um desenho de wu × hu "pixels"
+  const c = document.createElement('canvas');
+  c.width = wu * DEC_PX; c.height = hu * DEC_PX;
+  const cc = c.getContext('2d');
+  const p = (x, y, cor) => {
+    if (x < 0 || y < 0 || x >= wu || y >= hu) return;
+    cc.fillStyle = cor;
+    cc.fillRect(x * DEC_PX, y * DEC_PX, DEC_PX, DEC_PX);
+  };
+  desenhar(p);
+  return c;
+}
+
+function decTufo(rnd, wu, hu, c) {       // folhinhas de capim
+  return decSprite(wu, hu, p => {
+    const n = 3 + Math.floor(rnd() * 3) + (wu > 9 ? 2 : 0);
+    for (let i = 0; i < n; i++) {
+      const bx = 1 + Math.floor(rnd() * (wu - 2));
+      const alt = Math.max(2, Math.round(hu * (0.45 + rnd() * 0.55)));
+      const lado = rnd() < 0.5 ? -1 : 1;
+      for (let y = 0; y < alt; y++) {
+        const x = bx + lado * Math.round(2 * (y / alt) * (y / alt));   // a ponta encurva
+        const cor = y >= alt - 1 ? (c.brilho && rnd() < 0.25 ? c.brilho : c.claro)
+                  : (y > alt * 0.5 ? c.medio : c.escuro);
+        p(x, hu - 1 - y, cor);
+      }
+    }
+  });
+}
+
+function decPedra(rnd, c) {              // pedrinha
+  const wu = 3 + Math.floor(rnd() * 3);
+  return decSprite(wu, 3, p => {
+    for (let x = 0; x < wu; x++) p(x, 2, c.escuro);
+    for (let x = 0; x < wu; x++) p(x, 1, c.medio);
+    for (let x = 1; x < wu - 1; x++) p(x, 0, c.medio);
+    p(1, 0, c.claro);
+  });
+}
+
+function decMoita(rnd, wu, hu, c) {      // moita feita de 2 a 3 bolotas juntas (borda irregular, com textura)
+  const lobos = [];
+  const n = 2 + Math.floor(rnd() * 2);
+  for (let i = 0; i < n; i++) {
+    const rx = wu * (0.28 + rnd() * 0.12);
+    lobos.push({ cx: rx + (wu - 2 * rx) * (n === 1 ? 0.5 : i / (n - 1)), rx, h: hu * (0.6 + rnd() * 0.4) });
+  }
+  return decSprite(wu, hu, p => {
+    for (let y = 0; y < hu; y++) for (let x = 0; x < wu; x++) {
+      let melhor = -1;                                                // o quanto o ponto está "dentro" da bolota mais alta
+      for (const l of lobos) {
+        const dx = (x + 0.5 - l.cx) / l.rx, dy = (y + 0.5 - hu) / l.h;
+        const d = dx * dx + dy * dy + (rnd() - 0.5) * 0.15;
+        if (d <= 1) melhor = Math.max(melhor, 1 - d);
+      }
+      if (melhor < 0) continue;
+      const t = y / hu;                                               // 0 = topo · 1 = base
+      let cor = c.medio;
+      if (melhor < 0.18) cor = c.escuro;                              // borda mais escura
+      else if (t < 0.5 && (x + y) % 2 === 0) cor = c.claro;           // textura clara em cima
+      else if (t > 0.7) cor = c.escuro;
+      else if ((x * 3 + y * 5) % 7 === 0) cor = c.escuro;
+      p(x, y, cor);
+    }
+  });
+}
+
+function decPalma(rnd, hu, c) {          // folhas abertas em leque (palmeira / samambaia)
+  const wu = hu * 2 + 1;
+  return decSprite(wu, hu, p => {
+    const cx = hu, by = hu - 1;
+    const n = 6 + Math.floor(rnd() * 3);
+    for (let i = 0; i < n; i++) {
+      const ang = -1.35 + (2.7 * i) / (n - 1) + (rnd() - 0.5) * 0.2;  // abre de -77° a +77°
+      const len = hu * (0.55 + rnd() * 0.45);
+      const caida = 0.5 + rnd() * 0.5;                                // quanto a folha cai na ponta
+      for (let s = 0; s <= len; s++) {
+        const t = s / len;
+        const x = Math.round(cx + Math.sin(ang) * s);
+        const y = Math.round(by - Math.cos(ang) * s + caida * t * t * len * 0.5 * Math.abs(Math.sin(ang)));
+        const cor = t > 0.7 ? c.claro : (t > 0.3 ? c.medio : c.escuro);
+        p(x, y, cor);
+        p(x, y + 1, c.escuro);                                        // dá volume à folha
+      }
+    }
+  });
+}
+
+function decLista(rnd, periodo, distMin, distMax, criar) {   // espalha desenhos ao longo de um trecho que se repete
+  const lista = [];
+  let x = rnd() * distMin;
+  while (x < periodo) {
+    const spr = criar(rnd);
+    lista.push({ x, spr });
+    x += distMin + rnd() * (distMax - distMin) + spr.width * 0.5;
+  }
+  return lista;
+}
+
+function decDesenhar(lista, offset, periodo, baseY) {        // desenha a lista (offset = quanto já rolou, entre -periodo e 0)
+  for (const it of lista) {
+    for (let k = 0; k < 3; k++) {
+      const x = offset + it.x + k * periodo;
+      if (x > VIEW_W) break;
+      if (x + it.spr.width < 0) continue;
+      ctx.drawImage(it.spr, x, baseY - it.spr.height);
+    }
+  }
+}
+
+function prepararDecoracao() {
+  const rnd = decRng(20261020);
+  const GRAMA = { escuro: '#2e6a3c', medio: '#519145', claro: '#7dbb4e', brilho: '#c3d84a' };   // tons do capim do chão
+  const PEDRA = { escuro: '#2a2126', medio: '#4a3c3c', claro: '#6b5a55' };
+  const MOITA = { escuro: '#072a18', medio: '#0e4426', claro: '#16603a' };                      // tons parecidos com os da floresta
+  const FOLHA = { escuro: '#08280f', medio: '#0f4a22', claro: '#1a6a30' };                      // frente: bem escuro
+  const escurecerChao = c => {            // mesma paleta e mesmo escurecimento verde do chão
+    ajustarPaleta(c);
+    const cc = c.getContext('2d');
+    cc.globalCompositeOperation = 'source-atop';
+    cc.fillStyle = `rgba(${CHAO_COR_ESCURA},${CHAO_ESCURECER})`;
+    cc.fillRect(0, 0, c.width, c.height);
+    return c;
+  };
+
+  const tufos = decLista(rnd, CHAO_PERIODO, TUFOS_DIST_MIN, TUFOS_DIST_MAX, r =>
+    escurecerChao(r() < TUFOS_PEDRA_CHANCE
+      ? decPedra(r, PEDRA)
+      : decTufo(r, 11, 3 + Math.floor(r() * (TUFOS_ALTURA - 2)), GRAMA)));
+
+  const meio = decLista(rnd, MEIO_PERIODO, MEIO_DIST_MIN, MEIO_DIST_MAX, r =>
+    r() < 0.55
+      ? decMoita(r, 12 + Math.floor(r() * 11), 7 + Math.floor(r() * 7), MOITA)
+      : decPalma(r, 9 + Math.floor(r() * 5), MOITA));
+
+  const frente = decLista(rnd, FRENTE_PERIODO, FRENTE_DIST_MIN, FRENTE_DIST_MAX, r =>
+    r() < 0.4
+      ? decPalma(r, FRENTE_ALTURA - 2 + Math.floor(r() * 3), FOLHA)
+      : decTufo(r, 11, FRENTE_ALTURA + (r() < FRENTE_ALTA_CHANCE ? 6 : 0), FOLHA));
+
+  return { tufos, meio, frente };
+}
+
+/* ===== 🟫 CHÃO NOVO (desenhado por código, pixel quadrado igual ao da floresta) ===== */
+const CHAO_PERIODO = 1920;               // largura do desenho antes de repetir (px) · maior = repete menos
+const CHAO_LINHAS = 16;                  // altura do chão em "pixels" do desenho (16 = 48 px)
+const CHAO_LINHA_GRAMA = 2;              // quantos "pixels" a grama sobe acima da linha do chão (folhinhas irregulares)
+const CHAO_CORES = {
+  grama: { brilho: '#7fb445', claro: '#4f9640', medio: '#37803a', escuro: '#215f2d', sombra: '#154425' },
+  terra: ['#5e3d28', '#4b2e20', '#38231d', '#271c21', '#1a151b'],     // da mais clara (em cima) à mais escura (embaixo)
+  pedra: '#7a5c48',
+};
+let chaoNovo = null;
+
+/* 🎨 PALETA: puxa o verde do chão para o verde da floresta (matiz, saturação e brilho) */
+const CHAO_MATIZ = 12;                   // gira o verde (graus) · + = mais azulado, como a floresta · - = mais amarelo · 0 = igual
+const CHAO_SATURACAO = 0.85;             // cor do chão (1 = igual · 0.7 = mais apagado)
+const CHAO_BRILHO = 0.95;                // claridade do chão (1 = igual · 0.85 = mais escuro)
+
+function ajustarPaleta(canvas) {         // aplica matiz/saturação/brilho (só o verde muda de matiz, a terra fica marrom)
+  const cc = canvas.getContext('2d');
+  const img = cc.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] === 0) continue;
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+    let h = 0, sa = 0;
+    if (mx !== mn) {
+      const df = mx - mn;
+      sa = l > 0.5 ? df / (2 - mx - mn) : df / (mx + mn);
+      if (mx === r) h = ((g - b) / df + (g < b ? 6 : 0)) * 60;
+      else if (mx === g) h = ((b - r) / df + 2) * 60;
+      else h = ((r - g) / df + 4) * 60;
+    }
+    if (h > 60 && h < 180) h += CHAO_MATIZ;                      // só o verde gira
+    sa = Math.min(1, sa * CHAO_SATURACAO);
+    const ll = Math.min(1, l * CHAO_BRILHO);
+    const q = ll < 0.5 ? ll * (1 + sa) : ll + sa - ll * sa, pp = 2 * ll - q;
+    const f = t => { t = (t + 360) % 360 / 360; return t < 1/6 ? pp + (q - pp) * 6 * t : t < 1/2 ? q : t < 2/3 ? pp + (q - pp) * (2/3 - t) * 6 : pp; };
+    if (sa === 0) { d[i] = d[i + 1] = d[i + 2] = ll * 255; }
+    else { d[i] = f(h + 120) * 255; d[i + 1] = f(h) * 255; d[i + 2] = f(h - 120) * 255; }
+  }
+  cc.putImageData(img, 0, 0);
+  return canvas;
+}
+
+function prepararChaoNovo() {
+  const wu = CHAO_PERIODO / DEC_PX, hu = CHAO_LINHAS;
+  const rnd = decRng(777);
+  /* ondas que se repetem certinho no fim do desenho (para a emenda não aparecer) */
+  const onda = () => {
+    const ws = [];
+    for (let i = 0; i < 3; i++) ws.push({ k: 3 + Math.floor(rnd() * 40), f: rnd() * 6.2832 });
+    return x => ws.reduce((a, w) => a + Math.sin(6.2832 * w.k * x / wu + w.f), 0) / ws.length;   // de -1 a 1
+  };
+  const fBorda = onda(), fGrama = onda(), fTerra = onda();
+  const G = CHAO_CORES.grama, T = CHAO_CORES.terra;
+  const linha = CHAO_LINHA_GRAMA;
+
+  const c = decSprite(wu, hu, p => {
+    for (let x = 0; x < wu; x++) {
+      let topo = linha - (fBorda(x) > 0.3 ? 1 : 0) - (fBorda(x) > 0.7 ? 1 : 0);   // folhinhas altas e baixas
+      if (rnd() < 0.05) topo = Math.max(0, topo - 1);                             // uma folhinha solta
+      const fimGrama = linha + 3 + Math.round(fGrama(x) + 1);                     // a grama "pinga" na terra (3 a 5)
+
+      for (let y = topo; y < fimGrama; y++) {
+        let cor;
+        if (y === topo) cor = rnd() < 0.15 ? G.brilho : G.claro;
+        else if (y === topo + 1) cor = G.medio;
+        else if (y === fimGrama - 1) cor = G.sombra;
+        else cor = G.escuro;
+        if ((cor === G.medio || cor === G.escuro) && rnd() < 0.15) cor = G.claro;  // pintinhas
+        p(x, y, cor);
+      }
+      for (let y = fimGrama; y < hu; y++) {
+        const deslocamento = Math.round(fTerra(x) * 1.5);                         // faixas de terra onduladas
+        let i = Math.floor((y - fimGrama + 1 + deslocamento) / 3);
+        if (rnd() < 0.12) i += rnd() < 0.5 ? -1 : 1;                              // ruído
+        i = Math.max(0, Math.min(T.length - 1, i));
+        p(x, y, T[i]);
+      }
+      if (rnd() < 0.012) { const y = fimGrama + 1 + Math.floor(rnd() * 4); p(x, y, CHAO_CORES.pedra); p(x + 1, y, CHAO_CORES.pedra); }   // pedrinha na terra
+    }
+  });
+  ajustarPaleta(c);                       // puxa a paleta para a da floresta
+  const cc = c.getContext('2d');          // mesmo escurecimento verde do resto
+  cc.globalCompositeOperation = 'source-atop';
+  cc.fillStyle = `rgba(${CHAO_COR_ESCURA},${CHAO_ESCURECER * 0.5})`;
+  cc.fillRect(0, 0, c.width, c.height);
+  return c;
+}
 
 //FUNDO
 const fundoImg = new Image();
@@ -1251,6 +1516,39 @@ let fundoSolTmp = null;
 /* ☀️ LUZ POR TRÁS DA FLORESTA (contraluz): brilho laranja entre o céu e as árvores */
 const SOL_ATRAS_FORCA = 0.28;           // força do brilho atrás das árvores (0 = nenhum · 1 = forte)
 const SOL_ATRAS_RAIO = 300;             // tamanho do brilho atrás das árvores
+
+/* ☀️ PONTINHOS DE SOL: só algumas pontas de copa "pegam" sol, como folhas isoladas (sem contorno contínuo) */
+const PONTOS_SOL_ATIVO = true;           // false = desliga
+const PONTOS_SOL_FORCA = 0.85;           // brilho dos pontinhos (0 a 1)
+const PONTOS_SOL_ALCANCE = 300;          // até que distância do sol aparecem pontinhos (px)
+const PONTOS_SOL_DENSIDADE = 0.5;        // fração das pontas de copa que pegam sol (0.1 = poucas · 0.6 = muitas)
+const PONTOS_SOL_TAM = 3;                // tamanho de cada pontinho (px · 3 = um "pixel" da floresta)
+const PONTOS_SOL_COR = '255,214,130';    // cor da luz (R,G,B)
+const PONTOS_SOL_PISCA = 0.3;            // o quanto eles piscam devagar (0 = fixos)
+let pontosSol = null;
+
+function prepararPontosSol() {           // acha as pontas de copa (pixel cheio com vazio logo acima), uma vez só
+  const lista = [];
+  try {
+    const w = fundoImg.naturalWidth, h = fundoImg.naturalHeight - 2;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const cc = c.getContext('2d');
+    cc.drawImage(fundoImg, 0, 0, w, h, 0, 0, w, h);
+    const a = cc.getImageData(0, 0, w, h).data;
+    const alfa = (x, y) => a[(y * w + x) * 4 + 3];
+    const B = 8;                                                      // tamanho de um "pixel" da imagem original
+    for (let by = B; by < h - B; by += B) {
+      for (let bx = 0; bx < w - B; bx += B) {
+        const x = bx + B / 2;
+        if (alfa(x, by + B / 2) < 200 || alfa(x, by - B / 2) > 60) continue;   // precisa ser folha com ar em cima
+        const sorteio = (((bx * 73856093) ^ (by * 19349663)) >>> 0) % 1000 / 1000;
+        if (sorteio < PONTOS_SOL_DENSIDADE) lista.push({ x, y: by, fase: sorteio * 40 });
+      }
+    }
+  } catch (e) { /* imagem bloqueada pelo navegador: fica sem pontinhos */ }
+  return lista;
+}
 
 function prepararFundo() {
   const w = fundoImg.naturalWidth;
@@ -1305,7 +1603,6 @@ function prepararFundo() {
   return c;
 }
 
-
 //CÉU (imagem parada, fica atrás do fundo)
 const ceuImg = new Image();
 ceuImg.src = 'assets/games/ceuonca2.png';
@@ -1315,7 +1612,7 @@ const SOL_X = 0.658;           // posição do sol na imagem do céu (0 = esquer
 const SOL_Y = 0.564;           // (0 = topo · 1 = base)
 const SOL_DESFOQUE = 3;        // quanto o sol é borrado (0 = sem desfoque)
 const SOL_RAIO_DESFOQUE = 85;  // até onde, ao redor do sol, vai o desfoque
-const SOL_BRILHO = 0.3;       // força do brilho de luz (0 = nenhum · 1 = bem forte)
+const SOL_BRILHO = 0.3;        // força do brilho de luz (0 = nenhum · 1 = bem forte)
 const SOL_RAIO_BRILHO = 210;   // tamanho do brilho em volta do sol
 let ceuPronto = null;
 let solMundoX = null, solMundoY = null;   // onde o sol está na tela (atualizado a cada quadro)
@@ -2361,8 +2658,38 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
           ctx.drawImage(fundoSolTmp, solMundoX - R, solMundoY - R, 2 * R, 2 * R);
           ctx.restore();
         }
+
+        /* ☀️ pontinhos de sol nas pontas de copa perto do sol */
+        if (PONTOS_SOL_ATIVO && solMundoX !== null) {
+          if (!pontosSol) pontosSol = prepararPontosSol();
+          const ex = fw / srcW, ey = fh / srcH;                       // escala da imagem no jogo
+          const T = PONTOS_SOL_TAM, R2 = PONTOS_SOL_ALCANCE;
+          ctx.save();
+          for (let k = 0; fundoX + k * fw < VIEW_W + fw; k++) {
+            const x0 = fundoX + k * fw;
+            for (const pt of pontosSol) {
+              const xw = (k % 2) ? x0 + fw - pt.x * ex : x0 + pt.x * ex;   // cópias espelhadas
+              const yw = fy + pt.y * ey;
+              const dx = xw - solMundoX, dy = yw - solMundoY;
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d > R2 || xw < -T || xw > VIEW_W) continue;
+              const f = 1 - d / R2;                                    // 1 perto do sol · 0 longe
+              const pisca = 1 - PONTOS_SOL_PISCA * (0.5 + 0.5 * Math.sin(tick * 0.04 + pt.fase));
+              ctx.fillStyle = `rgba(${PONTOS_SOL_COR},${PONTOS_SOL_FORCA * f * f * pisca})`;
+              ctx.fillRect(xw - T / 2, yw - T / 2, T, T);
+            }
+          }
+          ctx.restore();
+        }
       }
 
+/* 🌳 MOITAS E PALMEIRAS DO MEIO: ficam entre a floresta e o chão */
+if (!decoracao) decoracao = prepararDecoracao();
+if (MEIO_ATIVO && decoracao) {
+  meioX -= speed * MEIO_VEL * dt;
+  if (meioX <= -MEIO_PERIODO) meioX += MEIO_PERIODO;
+  decDesenhar(decoracao.meio, meioX, MEIO_PERIODO, GROUND + 14);   // a base fica escondida atrás do chão
+}
 
 /* 🌑 SOMBRA DE CONTATO: base da floresta escurece onde encontra o chão */
 if (SOMBRA_CHAO_FORCA > 0) {
@@ -2374,36 +2701,17 @@ if (SOMBRA_CHAO_FORCA > 0) {
   ctx.fillRect(0, topoChao - SOMBRA_CHAO_ALTURA, VIEW_W, SOMBRA_CHAO_ALTURA);
 }
 
-/* 🆕 CHÃO COM IMAGEM AJUSTADO */
-const groundHeight = 320;
-
-// ajuste fino (esse é o segredo)
-const groundOffset = 258;
-
+/* 🟫 CHÃO NOVO (desenhado por código, pixel quadrado) */
 groundX -= speed * dt;
+if (groundX <= -CHAO_PERIODO) groundX += CHAO_PERIODO;
 
-if (groundX <= -groundImg.width) {
-  groundX += groundImg.width;
-}
+if (!chaoNovo) chaoNovo = prepararChaoNovo();
+const chaoTopo = GROUND + 10 - CHAO_LINHA_GRAMA * DEC_PX;   // a linha da grama continua em GROUND + 10
+ctx.drawImage(chaoNovo, groundX, chaoTopo);
+ctx.drawImage(chaoNovo, groundX + CHAO_PERIODO, chaoTopo);
 
-if (!groundPronto && groundImg.complete && groundImg.naturalWidth > 0) groundPronto = prepararChao();
-const chaoImg = groundPronto || groundImg;
-
-ctx.drawImage(
-  groundImg,
-  groundX,
-  GROUND - groundOffset,
-  groundImg.width,
-  groundHeight
-);
-
-ctx.drawImage(
-  groundImg,
-  groundX + groundImg.width,
-  GROUND - groundOffset,
-  groundImg.width,
-  groundHeight
-);
+/* 🌱 TUFOS E PEDRINHAS: rolam junto com o chão, na linha da grama */
+if (TUFOS_ATIVO && decoracao) decDesenhar(decoracao.tufos, groundX, CHAO_PERIODO, GROUND + 14);
 
 
 
@@ -2553,6 +2861,14 @@ obstacles = obstacles.filter(
  * preparado em updateOncaSprite().
  */
 drawOnca();
+
+/* 🌿 CAPIM DA FRENTE: passa na frente da onça, mais rápido que o chão */
+if (FRENTE_ATIVO && decoracao) {
+  frenteX -= speed * FRENTE_VEL * dt;
+  if (frenteX <= -FRENTE_PERIODO) frenteX += FRENTE_PERIODO;
+  decDesenhar(decoracao.frente, frenteX, FRENTE_PERIODO, GH + DEC_PX);   // a base fica cortada embaixo da tela
+}
+
 ctx.restore();
       /* spawn obs */
       obsTick+=dt; if(obsTick>=obsInterval){obsTick=0;obsInterval=Math.max(55,110-level*8);spawnObs();}
@@ -2858,21 +3174,42 @@ imgSapo.src = 'assets/games/sapofrente.png';
 const imgSapoVolta = new Image();
 imgSapoVolta.src = 'assets/games/sapofrente2.png';   // sapo de frente (sem fundo), usado ao voltar
 
+/* 🐸 SAPO: os PNGs novos (967×720) têm área transparente em volta, então só a parte com o sapo é recortada */
+const SAPO_W = 40;                                      // largura do sapo andando na tela (mude pra ajustar)
+const SAPO_VOLTA_W = 42;                                // largura do sapo de frente (ao voltar) na tela
+const SAPO_CORTE = { x: 199, y: 175, w: 547, h: 376 };  // onde está o sapo dentro do sapofrente.png
+const SAPO_VOLTA_CORTE = { x: 199, y: 175, w: 552, h: 406 };   // onde está o sapo dentro do sapofrente2.png
+const SAPO_QUALIDADE = 3;                               // o sapo é reduzido uma vez só, nessa resolução (3 = nítido mesmo girando)
+let sapoAnda = null, sapoVolta = null;
+
+function recortarSapo(img, corte, largura) {            // recorta e reduz com suavização boa (1 vez só)
+  const c = document.createElement('canvas');
+  c.width = Math.round(largura * SAPO_QUALIDADE);
+  c.height = Math.round(largura * SAPO_QUALIDADE * corte.h / corte.w);
+  const cc = c.getContext('2d');
+  cc.imageSmoothingEnabled = true;
+  cc.imageSmoothingQuality = 'high';
+  cc.drawImage(img, corte.x, corte.y, corte.w, corte.h, 0, 0, c.width, c.height);
+  return c;
+}
+
 function desenharSapo(cx, cy, ang, esticar, sx, sy) {
   if (!imgSapo.complete || !imgSapo.naturalWidth) return;
   const voltando = Math.abs(ang - Math.PI) < 0.01 && imgSapoVolta.complete && imgSapoVolta.naturalWidth;
+  if (!sapoAnda) sapoAnda = recortarSapo(imgSapo, SAPO_CORTE, SAPO_W);
+  if (voltando && !sapoVolta) sapoVolta = recortarSapo(imgSapoVolta, SAPO_VOLTA_CORTE, SAPO_VOLTA_W);
   ctx.save();
   ctx.translate(cx, cy);
   ctx.scale(sx, sy * (1 + esticar * 0.15));
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;          // o sapo já foi reduzido com qualidade, então aqui suaviza
   if (voltando) {
     // ao voltar (seta pra baixo) usa o sapo de frente, sem girar
-    const w = 42, h = w * imgSapoVolta.naturalHeight / imgSapoVolta.naturalWidth;   // largura na tela (mude o 42 pra ajustar)
-    ctx.drawImage(imgSapoVolta, -w / 2, -h / 2, w, h);
+    const w = SAPO_VOLTA_W, h = sapoVolta.height / SAPO_QUALIDADE;
+    ctx.drawImage(sapoVolta, -w / 2, -h / 2, w, h);
   } else {
-    const w = 40, h = w * 310 / 386;   // largura do sapo na tela (mude o 40 pra ajustar)
+    const w = SAPO_W, h = sapoAnda.height / SAPO_QUALIDADE;
     ctx.rotate(ang);                   // <- vira o sapo conforme a direção
-    ctx.drawImage(imgSapo, 732, 444, 386, 310, -w / 2, -h / 2, w, h);
+    ctx.drawImage(sapoAnda, -w / 2, -h / 2, w, h);
   }
   ctx.restore();
 }

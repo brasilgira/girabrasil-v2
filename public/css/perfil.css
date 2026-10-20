@@ -1,7 +1,7 @@
 /* ==========================================================
    perfil.css — estilos exclusivos da página de perfil
-   Header (.header-site/.header-inner/.nav-site) vem do base.css,
-   igual em todas as páginas — aqui só ajustamos .header-acoes.
+   Header (.header-site/.header-inner/.nav-site/.header-acoes) vem do base.css,
+   igual em todas as páginas — não é alterado aqui.
    Sidebar + conteúdo ficam dentro de .app-shell, ABAIXO do header
    (ver perfil.html: header agora é irmão de .app-shell, não filho
    de .main — isso corrige o retângulo comprimindo o conteúdo).
@@ -13,9 +13,7 @@
 .perfil-app button{font:inherit}
 .perfil-app .sidebar a,
 .perfil-app .content a{text-decoration:none;color:inherit}
-.perfil-app svg{width:16px;height:16px;flex:none}
-
-.perfil-app .header-acoes{display:flex;align-items:center;gap:14px}
+.app-shell svg{width:16px;height:16px;flex:none}   /* só dentro da sidebar/conteúdo: não mexe nos ícones do header (mesma força de antes, então os tamanhos específicos continuam valendo) */
 
 /* Sidebar + conteúdo lado a lado, sempre abaixo do header */
 .app-shell{display:flex}
@@ -168,14 +166,6 @@
 .estado-vazio a{color:var(--cor-destaque);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .carregando{padding:18px 4px;font-size:12px;color:var(--cor-texto-suave)}
 
-/* ---------- JOGOS (molde, sem pontuação inventada) ---------- */
-.jogos-aviso{font-size:11.5px;color:var(--cor-texto-suave);margin:0 0 12px;line-height:1.5}
-.games-list{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.game-card{display:flex;align-items:center;gap:12px;border:1px solid var(--cor-borda);border-radius:var(--raio-pequeno);padding:10px 12px;background:var(--cor-fundo)}
-.game-thumb{width:44px;height:44px;border-radius:var(--raio-pequeno);flex:none;background-size:cover;background-position:center}
-.game-card .item-copy strong{-webkit-line-clamp:1}
-.game-placeholder{font-size:10px;color:var(--cor-texto-suave);background:var(--cor-borda);border-radius:99px;padding:2px 8px;display:inline-block;margin-top:2px;width:fit-content}
-
 /* ---------- BIO ---------- */
 .link-botao{background:none;border:0;color:var(--cor-destaque);font-size:11.5px;font-weight:600;cursor:pointer}
 .link-botao:hover{text-decoration:underline}
@@ -278,7 +268,6 @@
   .welcome-card h1{font-size:18px}
   .stats-grid{grid-template-columns:1fr}
   .progress{width:100%}
-  .games-list{grid-template-columns:1fr}
   .avatar-grid{grid-template-columns:repeat(3,1fr)}
   .bioma-grid{grid-template-columns:repeat(2,1fr)}
 }

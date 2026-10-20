@@ -91,10 +91,11 @@ async function listarComentarios() {
   const resultado = await pool.query(
     `SELECT
        c.*,
-       c.usuario_id::text AS autor_nome,
+       COALESCE(p.nome, 'Usuário removido') AS autor_nome,
        n.titulo AS noticia_titulo
      FROM comentario c
      LEFT JOIN noticias n ON n.id = c.noticia_id
+     LEFT JOIN perfil p ON p.id = c.usuario_id
      WHERE c.ativo = true
      ORDER BY c.criado_em DESC`
   );

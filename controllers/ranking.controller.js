@@ -13,6 +13,7 @@ const perfilModel = require('../models/perfil.model');
 const {
   JOGOS,
   CHAVES_JOGOS,
+  PARTIDAS_VALENDO_POR_DIA,
   MICO_MAX_ENVIOS,
   limiteDePontuacao,
 } = require('../config/ranking');
@@ -62,18 +63,30 @@ async function iniciarPartida(req, res) {
       return res.status(429).json({ erro: 'Muitas partidas em pouco tempo. Aguarde um instante.' });
     }
 
-    let partidaId;
+    let partida;
     try {
-      partidaId = await rankingModel.criarPartida(usuarioId, jogo);
+      partida = await rankingModel.criarPartida(usuarioId, jogo, PARTIDAS_VALENDO_POR_DIA);
     } catch (erro) {
       // 23503 = violação de foreign key: a conta existe no Supabase Auth mas a
       // linha de `perfil` ainda não foi criada. Cria e tenta de novo, uma vez.
       if (erro.code !== '23503') throw erro;
       await perfilModel.garantirPerfil(usuarioId, nomeParaPerfil(req.usuarioLogado));
-      partidaId = await rankingModel.criarPartida(usuarioId, jogo);
+      partida = await rankingModel.criarPartida(usuarioId, jogo, PARTIDAS_VALENDO_POR_DIA);
     }
 
-    return res.status(201).json({ partidaId });
+    // Quantas partidas valendo ainda restam hoje (0 se esta já é só treino).
+    let restantes = 0;
+    if (partida.valendo) {
+      const usadas = await rankingModel.contarPartidasValendoHoje(usuarioId, jogo);
+      restantes = Math.max(0, PARTIDAS_VALENDO_POR_DIA - usadas);
+    }
+
+    return res.status(201).json({
+      partidaId: partida.id,
+      valendo: partida.valendo,
+      restantes,
+      limite: PARTIDAS_VALENDO_POR_DIA,
+    });
   } catch (erro) {
     console.error('Erro ao iniciar partida do ranking:', erro);
     return res.status(500).json({ erro: 'Erro ao iniciar a partida.' });
@@ -108,6 +121,12 @@ async function enviarPontuacao(req, res) {
     }
     if (ehMico && partida.envios >= MICO_MAX_ENVIOS) {
       return res.status(409).json({ erro: 'Limite de envios desta partida atingido.' });
+    }
+
+    // Partida acima do limite diário: serve de treino, não entra no ranking.
+    if (!partida.valendo) {
+      await rankingModel.registrarEnvioNaPartida(partida.id, 0);
+      return res.json({ jogo: partida.jogo, treino: true, novoRecorde: false });
     }
 
     const limite = limiteDePontuacao(partida.jogo, partida.segundos);

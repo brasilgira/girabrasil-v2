@@ -32,15 +32,18 @@
     }
   }
 
-  // Devolve uma Promise com o id da partida (ou null). Não precisa de await:
-  // o jogo guarda a Promise e a entrega de volta em enviar().
+  // Devolve uma Promise com { partidaId, valendo, restantes, limite } (ou null).
+  // `valendo` é false quando o jogador já usou as partidas do dia: a partida
+  // vira treino. Não precisa de await: o jogo guarda a Promise e a entrega de
+  // volta em enviar().
   function iniciar(jogo) {
-    return postar(BASE + '/partidas', { jogo }).then((dados) => (dados && dados.partidaId) || null);
+    return postar(BASE + '/partidas', { jogo }).then((dados) => (dados && dados.partidaId ? dados : null));
   }
 
   // `partida` é o que iniciar() devolveu (Promise do id).
   async function enviar(partida, pontuacao) {
-    const partidaId = await partida;
+    const info = await partida;
+    const partidaId = info && info.partidaId;
     if (!partidaId || !Number.isInteger(pontuacao) || pontuacao < 0) return null;
     return postar(BASE + '/partidas/' + encodeURIComponent(partidaId) + '/pontuacao', { pontuacao });
   }

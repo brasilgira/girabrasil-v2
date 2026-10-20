@@ -581,45 +581,6 @@ function configurarAbas() {
   });
 }
 
-// ---- Jogos: molde de desempenho (sem inventar pontuação/ranking) ---------
-const JOGOS_DISPONIVEIS = [
-  { id: 'quiz-da-floresta', nome: 'Quiz de Espécies', imagem: 'assets/jogos/game-quiz.avif' },
-  { id: 'jogo-do-mico', nome: 'Jogo do Mico', imagem: 'assets/jogos/game-guardioes.jpeg' },
-  { id: 'missao-biodiversidade', nome: 'De Volta ao Rio', imagem: 'assets/jogos/game-biodiversidade.jpeg' },
-  { id: 'desafio-dos-biomas', nome: 'Fuga pela Floresta', imagem: 'assets/jogos/game-biomas.jpg' },
-];
-
-function preencherJogos() {
-  const container = document.querySelector('[data-lista-jogos]');
-  container.innerHTML = '';
-
-  JOGOS_DISPONIVEIS.forEach((jogo) => {
-    const card = document.createElement('a');
-    card.className = 'game-card';
-    card.href = `jogos.html#${jogo.id}`;
-    // Preparado pra receber dados reais quando o histórico existir:
-    card.dataset.jogoId = jogo.id;
-    card.dataset.pontuacao = '';
-    card.dataset.posicao = '';
-
-    const thumb = document.createElement('div');
-    thumb.className = 'game-thumb';
-    thumb.style.backgroundImage = `url("${jogo.imagem}")`;
-
-    const copy = document.createElement('div');
-    copy.className = 'item-copy';
-    const titulo = document.createElement('strong');
-    titulo.textContent = jogo.nome;
-    const placeholder = document.createElement('span');
-    placeholder.className = 'game-placeholder';
-    placeholder.textContent = 'Pontuação em breve';
-    copy.append(titulo, placeholder);
-
-    card.append(thumb, copy);
-    container.appendChild(card);
-  });
-}
-
 // ---- Bio (visualizar / editar) --------------------------------------------
 function configurarBio(perfil, usuario) {
   const textoEl = document.querySelector('[data-bio-texto]');
@@ -707,7 +668,6 @@ async function iniciarPerfil() {
   configurarModal('[data-modal-nivel]', '[data-abrir-nivel]', '[data-fechar-modal-nivel]');
   configurarModal('[data-modal-avatar]', '[data-abrir-avatar]', '[data-fechar-modal-avatar]');
   configurarModal('[data-modal-bioma]', '[data-abrir-bioma]', '[data-fechar-modal-bioma]');
-  preencherJogos();
   preencherFraseDoDia();
 
 

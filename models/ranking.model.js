@@ -5,14 +5,39 @@
 // nunca do corpo da requisição.
 const pool = require('../config/db');
 
-// Cria uma partida e devolve o id dela. A hora de início é a do SERVIDOR
-// (default now() do banco) — o cliente não consegue mexer nela.
-async function criarPartida(usuarioId, jogo) {
+// Começo do dia atual no horário de Brasília (o banco calcula, então não
+// depende do fuso do servidor).
+const INICIO_DO_DIA_BRASILIA =
+  `date_trunc('day', now() AT TIME ZONE 'America/Sao_Paulo') AT TIME ZONE 'America/Sao_Paulo'`;
+
+// Cria uma partida e devolve { id, valendo }. A hora de início é a do SERVIDOR
+// (default now() do banco) — o cliente não consegue mexer nela. A partida só
+// "vale" se o jogador ainda não usou o limite diário daquele jogo; a contagem
+// e o INSERT acontecem no mesmo comando.
+async function criarPartida(usuarioId, jogo, limiteDiario) {
   const resultado = await pool.query(
-    `INSERT INTO jogo_partida (usuario_id, jogo) VALUES ($1, $2) RETURNING id`,
+    `INSERT INTO jogo_partida (usuario_id, jogo, valendo)
+     VALUES ($1, $2, (
+       SELECT COUNT(*) FROM jogo_partida
+       WHERE usuario_id = $1 AND jogo = $2 AND valendo
+         AND iniciada_em >= ${INICIO_DO_DIA_BRASILIA}
+     ) < $3)
+     RETURNING id, valendo`,
+    [usuarioId, jogo, limiteDiario]
+  );
+  return resultado.rows[0];
+}
+
+// Quantas partidas valendo o jogador já iniciou hoje naquele jogo.
+async function contarPartidasValendoHoje(usuarioId, jogo) {
+  const resultado = await pool.query(
+    `SELECT COUNT(*)::int AS total
+     FROM jogo_partida
+     WHERE usuario_id = $1 AND jogo = $2 AND valendo
+       AND iniciada_em >= ${INICIO_DO_DIA_BRASILIA}`,
     [usuarioId, jogo]
   );
-  return resultado.rows[0].id;
+  return resultado.rows[0].total;
 }
 
 // Quantas partidas o usuário iniciou no último minuto (limite contra abuso).
@@ -31,7 +56,7 @@ async function contarPartidasUltimoMinuto(usuarioId) {
 // Já traz os segundos decorridos calculados pelo próprio banco.
 async function obterPartidaDoDono(partidaId, usuarioId) {
   const resultado = await pool.query(
-    `SELECT id, jogo, pontuacao, envios, finalizada_em,
+    `SELECT id, jogo, pontuacao, envios, finalizada_em, valendo,
             EXTRACT(EPOCH FROM (now() - iniciada_em))::float8 AS segundos
      FROM jogo_partida
      WHERE id = $1 AND usuario_id = $2`,
@@ -142,6 +167,7 @@ async function contarJogadoresPorJogo() {
 
 module.exports = {
   criarPartida,
+  contarPartidasValendoHoje,
   contarPartidasUltimoMinuto,
   obterPartidaDoDono,
   registrarEnvioNaPartida,

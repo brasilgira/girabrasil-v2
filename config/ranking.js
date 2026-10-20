@@ -20,6 +20,10 @@ const JOGOS = {
 
 const CHAVES_JOGOS = Object.keys(JOGOS);
 
+// Quantas partidas VALENDO cada jogador pode fazer por jogo, por dia (o dia vira
+// à meia-noite, horário de Brasília). Depois disso o jogo segue como treino.
+const PARTIDAS_VALENDO_POR_DIA = 5;
+
 // Folga para latência de rede e pequenas diferenças de relógio entre o clique
 // em "Começar" e a chegada do pedido de início no servidor.
 const FOLGA_SEGUNDOS = 5;
@@ -103,6 +107,7 @@ function limiteDePontuacao(jogo, segundosDePartida) {
 module.exports = {
   JOGOS,
   CHAVES_JOGOS,
+  PARTIDAS_VALENDO_POR_DIA,
   MICO_MAX_ENVIOS,
   limiteDePontuacao,
 };
