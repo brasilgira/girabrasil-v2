@@ -721,7 +721,7 @@ function aposEscolha() {
     }
 
     /* ── ANIMAÇÃO: a carta voa até a mão de quem pegou e depois gira, se revelando ── */
-    const VOO_MS = 520, VIRA_MS = 420;
+    const VOO_MS = 520, VIRA_MS = 410;
     function voar(cfg, fim) {   // cfg: { carta, lado, x0, y0, x1, y1, faceIni, faceFim }
       voo = { ...cfg, ini: agora(), fim };
     }
@@ -1208,14 +1208,152 @@ treeImg.src = 'assets/games/arvore.png';
 const groundImg = new Image();
 groundImg.src = 'assets/games/chao.png';
 
+/* 🌿 CHÃO: versão pronta, escurecida com o mesmo verde da floresta — feita uma vez só */
+const CHAO_ESCURECER = 0.35;            // força da camada verde escura (0 = original · 0.4 = igual à floresta)
+const CHAO_COR_ESCURA = '6,40,24';      // cor da camada (R,G,B)
+let groundPronto = null;
+
+function prepararChao() {
+  const c = document.createElement('canvas');
+  c.width = groundImg.naturalWidth; c.height = groundImg.naturalHeight;
+  const cc = c.getContext('2d');
+  cc.drawImage(groundImg, 0, 0);
+  cc.globalCompositeOperation = 'source-atop';   // só pinta onde já tem imagem
+  cc.fillStyle = `rgba(${CHAO_COR_ESCURA},${CHAO_ESCURECER})`;
+  cc.fillRect(0, 0, c.width, c.height);
+  return c;
+}
+
+/* 🌑 SOMBRA DE CONTATO: escurece a base da floresta onde ela encontra o chão */
+const SOMBRA_CHAO_ALTURA = 70;          // altura da sombra acima do chão (px)
+const SOMBRA_CHAO_FORCA = 0.5;          // força da sombra (0 = nenhuma · 1 = preta)
+const SOMBRA_CHAO_COR = '3,20,12';      // cor da sombra (R,G,B)
+
+
 //FUNDO
 const fundoImg = new Image();
 fundoImg.src = 'assets/games/fundoonca.png';
 let fundoX = 0;
 
+/* 🌲 FUNDO COM ÁRVORES: versão pronta, mais escura (camada verde escura por cima) — feita uma vez só */
+const FUNDO_ESCURECER = 0.4;            // força da camada verde escura (0 = original · 0.4 = escuro · 0.6 = bem escuro)
+const FUNDO_COR_ESCURA = '6,40,24';     // cor da camada (R,G,B): verde bem escuro
+const FUNDO_BLUR = 4;                   // borrão do fundo no topo (px da imagem original · 0 = sem borrão)
+const FUNDO_BLUR_ATE = 0.8;             // até que altura o borrão vai (0 = só o topo · 1 = a imagem toda)
+let fundoPronto = null;
+
+/* ☀️ LUZ DO SOL NA FLORESTA: tom quente nas copas perto do sol (sem contorno) */
+const FUNDO_SOL_FORCA = 0.35;           // força do tom quente nas copas (0 = nenhum · 1 = forte)
+const FUNDO_SOL_ALCANCE = 340;          // até que distância do sol a luz chega
+const FUNDO_SOL_COR = '255,170,80';     // cor da luz (R,G,B)
+let fundoSolTmp = null;
+
+/* ☀️ LUZ POR TRÁS DA FLORESTA (contraluz): brilho laranja entre o céu e as árvores */
+const SOL_ATRAS_FORCA = 0.28;           // força do brilho atrás das árvores (0 = nenhum · 1 = forte)
+const SOL_ATRAS_RAIO = 300;             // tamanho do brilho atrás das árvores
+
+function prepararFundo() {
+  const w = fundoImg.naturalWidth;
+  const h = fundoImg.naturalHeight - 2;   // corta a linha clara do último pixel da imagem
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cc = c.getContext('2d');
+  cc.drawImage(fundoImg, 0, 0, w, h, 0, 0, w, h);
+
+  if (FUNDO_BLUR > 0) {
+    /* tira com 3 cópias (espelhada · normal · espelhada), igual ao que acontece no jogo:
+       assim o borrão das laterais usa a imagem vizinha e não aparece costura */
+    const tira = document.createElement('canvas');
+    tira.width = w * 3; tira.height = h;
+    const tc = tira.getContext('2d');
+    for (let i = 0; i < 3; i++) {
+      tc.save();
+      if (i % 2 === 0) { tc.translate((i + 1) * w, 0); tc.scale(-1, 1); }
+      else { tc.translate(i * w, 0); }
+      tc.drawImage(fundoImg, 0, 0, w, h, 0, 0, w, h);
+      tc.restore();
+    }
+    const borrada = borrarCanvas(tira, FUNDO_BLUR);
+
+    /* parte borrada: só a cópia do meio, forte em cima e some conforme desce */
+    const bl = document.createElement('canvas');
+    bl.width = w; bl.height = h;
+    const bc = bl.getContext('2d');
+    bc.drawImage(borrada, -w, 0);
+    bc.globalCompositeOperation = 'destination-in';
+    const gb = bc.createLinearGradient(0, 0, 0, h * FUNDO_BLUR_ATE);
+    gb.addColorStop(0, 'rgba(0,0,0,1)');
+    gb.addColorStop(1, 'rgba(0,0,0,0)');
+    bc.fillStyle = gb;
+    bc.fillRect(0, 0, w, h);
+
+    /* parte nítida: o contrário (some em cima, aparece embaixo) */
+    cc.globalCompositeOperation = 'destination-in';
+    const gn = cc.createLinearGradient(0, 0, 0, h * FUNDO_BLUR_ATE);
+    gn.addColorStop(0, 'rgba(0,0,0,0)');
+    gn.addColorStop(1, 'rgba(0,0,0,1)');
+    cc.fillStyle = gn;
+    cc.fillRect(0, 0, w, h);
+
+    cc.globalCompositeOperation = 'lighter';   // soma as duas (cruzamento suave)
+    cc.drawImage(bl, 0, 0);
+  }
+
+  cc.globalCompositeOperation = 'source-atop';   // só pinta onde já tem imagem
+  cc.fillStyle = `rgba(${FUNDO_COR_ESCURA},${FUNDO_ESCURECER})`;
+  cc.fillRect(0, 0, w, h);
+  return c;
+}
+
+
 //CÉU (imagem parada, fica atrás do fundo)
 const ceuImg = new Image();
-ceuImg.src = 'assets/games/ceuonca.png';
+ceuImg.src = 'assets/games/ceuonca2.png';
+
+/* ☀️ SOL: desfoque de luz + brilho em volta dele (a posição é relativa à imagem do céu) */
+const SOL_X = 0.658;           // posição do sol na imagem do céu (0 = esquerda · 1 = direita)
+const SOL_Y = 0.564;           // (0 = topo · 1 = base)
+const SOL_DESFOQUE = 3;        // quanto o sol é borrado (0 = sem desfoque)
+const SOL_RAIO_DESFOQUE = 85;  // até onde, ao redor do sol, vai o desfoque
+const SOL_BRILHO = 0.3;       // força do brilho de luz (0 = nenhum · 1 = bem forte)
+const SOL_RAIO_BRILHO = 210;   // tamanho do brilho em volta do sol
+let ceuPronto = null;
+let solMundoX = null, solMundoY = null;   // onde o sol está na tela (atualizado a cada quadro)
+
+function prepararCeu(cw, ch) {
+  const k = ZOOM;                              // desenha na resolução da tela, pra não perder nitidez
+  const w = Math.round(cw * k), h = Math.round(ch * k);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cc = c.getContext('2d');
+  cc.drawImage(ceuImg, 0, 0, w, h);
+  const sx = SOL_X * w, sy = SOL_Y * h;
+
+  if (SOL_DESFOQUE > 0) {                      // cópia borrada, visível só perto do sol
+    const borrada = borrarCanvas(c, SOL_DESFOQUE * k);
+    const bb = borrada.getContext('2d');
+    bb.globalCompositeOperation = 'destination-in';
+    const m = bb.createRadialGradient(sx, sy, 0, sx, sy, SOL_RAIO_DESFOQUE * k);
+    m.addColorStop(0, 'rgba(0,0,0,1)');
+    m.addColorStop(0.6, 'rgba(0,0,0,0.8)');
+    m.addColorStop(1, 'rgba(0,0,0,0)');
+    bb.fillStyle = m;
+    bb.fillRect(0, 0, w, h);
+    cc.drawImage(borrada, 0, 0);
+  }
+
+  if (SOL_BRILHO > 0) {                        // brilho de luz em volta do sol
+    cc.globalCompositeOperation = 'lighter';
+    const g = cc.createRadialGradient(sx, sy, 0, sx, sy, SOL_RAIO_BRILHO * k);
+    g.addColorStop(0, `rgba(255,236,170,${SOL_BRILHO})`);
+    g.addColorStop(0.3, `rgba(255,205,110,${SOL_BRILHO * 0.45})`);
+    g.addColorStop(1, 'rgba(255,170,60,0)');
+    cc.fillStyle = g;
+    cc.fillRect(0, 0, w, h);
+    cc.globalCompositeOperation = 'source-over';
+  }
+  return c;
+}
 
 // NUVENS — ficam na frente do céu e atrás da floresta
 const nuvemImg = new Image();
@@ -1223,6 +1361,78 @@ nuvemImg.src = 'assets/games/nuvemonca.png';
 
 let nuvemX = 0;
 
+/* ☁️ NUVENS: versão pronta (borrão variável + esmaecida embaixo), feita uma vez só */
+const NUVEM_BLUR = 2;            // borrão na parte de baixo (px)
+const NUVEM_BLUR_TOPO = 0.8;     // borrão no topo (px): menor = topo mais nítido
+const NUVEM_BLUR_ATE = 0.6;      // até que altura o topo ainda é mais nítido (0 = topo, 1 = base)
+const NUVEM_FADE_INICIO = 0.55;  // a partir de que altura começa a ficar transparente
+const NUVEM_ALFA_BASE = 0.4;     // opacidade na base (1 = opaca, 0 = invisível)
+let nuvemPronta = null;
+
+function borrarCanvas(origem, px) {
+  const b = document.createElement('canvas');
+  b.width = origem.width; b.height = origem.height;
+  const bc = b.getContext('2d');
+  if (px <= 0) {
+    bc.drawImage(origem, 0, 0);
+  } else if ('filter' in bc) {
+    bc.filter = `blur(${px}px)`;
+    bc.drawImage(origem, 0, 0);
+  } else {
+    // navegador sem ctx.filter: encolhe e estica a imagem, o que também suaviza
+    const f = 1 + px / 2;
+    const p = document.createElement('canvas');
+    p.width = Math.max(1, Math.round(origem.width / f));
+    p.height = Math.max(1, Math.round(origem.height / f));
+    p.getContext('2d').drawImage(origem, 0, 0, p.width, p.height);
+    bc.imageSmoothingEnabled = true;
+    bc.imageSmoothingQuality = 'high';
+    bc.drawImage(p, 0, 0, origem.width, origem.height);
+  }
+  return b;
+}
+
+function prepararNuvens(w, h) {
+  w = Math.round(w); h = Math.round(h);
+
+  // 3 cópias lado a lado: o borrão da emenda usa a imagem vizinha, então o loop não mostra costura
+  const tira = document.createElement('canvas');
+  tira.width = w * 3; tira.height = h;
+  const tiraCtx = tira.getContext('2d');
+  for (let i = 0; i < 3; i++) tiraCtx.drawImage(nuvemImg, i * w, 0, w, h);
+
+  const forte = borrarCanvas(tira, NUVEM_BLUR);        // borrão da parte de baixo
+  const leve  = borrarCanvas(tira, NUVEM_BLUR_TOPO);   // borrão do topo
+
+  // base: a versão mais borrada (só a cópia do meio)
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cc = c.getContext('2d');
+  cc.drawImage(forte, -w, 0);
+
+  // por cima: a versão menos borrada, que some conforme desce
+  const topo = document.createElement('canvas');
+  topo.width = w; topo.height = h;
+  const topoCtx = topo.getContext('2d');
+  topoCtx.drawImage(leve, -w, 0);
+  topoCtx.globalCompositeOperation = 'destination-in';
+  const gTopo = topoCtx.createLinearGradient(0, 0, 0, h * NUVEM_BLUR_ATE);
+  gTopo.addColorStop(0, 'rgba(0,0,0,1)');
+  gTopo.addColorStop(1, 'rgba(0,0,0,0)');
+  topoCtx.fillStyle = gTopo;
+  topoCtx.fillRect(0, 0, w, h);
+  cc.drawImage(topo, 0, 0);
+
+  // gradiente de transparência: opaca em cima, mais transparente embaixo
+  cc.globalCompositeOperation = 'destination-in';
+  const g = cc.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, 'rgba(0,0,0,1)');
+  g.addColorStop(NUVEM_FADE_INICIO, 'rgba(0,0,0,1)');
+  g.addColorStop(1, `rgba(0,0,0,${NUVEM_ALFA_BASE})`);
+  cc.fillStyle = g;
+  cc.fillRect(0, 0, w, h);
+  return c;
+}
 /*
  * Guarda as máscaras de transparência já calculadas.
  *
@@ -2061,7 +2271,10 @@ if (t.type === 'tree') {
         const ceuAlt = GH - ceuTopo;                 // altura visível
         const cs = Math.max(VIEW_W / ceuImg.naturalWidth, ceuAlt / ceuImg.naturalHeight);
         const cw = ceuImg.naturalWidth * cs, ch = ceuImg.naturalHeight * cs;
-        ctx.drawImage(ceuImg, (VIEW_W - cw) / 2, ceuTopo + (ceuAlt - ch) / 2, cw, ch);
+        if (!ceuPronto) ceuPronto = prepararCeu(cw, ch);
+        const cx0 = (VIEW_W - cw) / 2, cy0 = ceuTopo + (ceuAlt - ch) / 2;
+        ctx.drawImage(ceuPronto, cx0, cy0, cw, ch);
+        solMundoX = cx0 + SOL_X * cw; solMundoY = cy0 + SOL_Y * ch;   // posição do sol no mundo
       }
 
 /* ☁️ NUVENS DISTANTES
@@ -2072,9 +2285,10 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
 
   const NUVEM_W = VIEW_W * 1.7;
   const NUVEM_H = NUVEM_W * (nuvemImg.naturalHeight / nuvemImg.naturalWidth);
+  if (!nuvemPronta) nuvemPronta = prepararNuvens(NUVEM_W, NUVEM_H);
 
   // Movimento muito lento = nuvens parecem distantes
-  nuvemX -= speed * 0.10 * dt;
+  nuvemX -= speed * 0.04 * dt;   // velocidade das nuvens (menor = mais lento)
 
   // Quando a primeira imagem sai, reposiciona para criar loop
   if (nuvemX <= -NUVEM_W) {
@@ -2082,41 +2296,83 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
   }
 
   // Duas cópias para não aparecer buraco
-  ctx.drawImage(
-    nuvemImg,
-    nuvemX,
-    -20,
-    NUVEM_W,
-    NUVEM_H
-  );
-
-  ctx.drawImage(
-    nuvemImg,
-    nuvemX + NUVEM_W,
-    -20,
-    NUVEM_W,
-    NUVEM_H
-  );
+  ctx.drawImage(nuvemPronta, nuvemX, -20, NUVEM_W, NUVEM_H);
+  ctx.drawImage(nuvemPronta, nuvemX + NUVEM_W, -20, NUVEM_W, NUVEM_H);
 }
 
+      /* ☀️ brilho laranja por trás da floresta (contraluz) */
+      if (solMundoX !== null && SOL_ATRAS_FORCA > 0) {
+        const R = SOL_ATRAS_RAIO;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const ga = ctx.createRadialGradient(solMundoX, solMundoY, 0, solMundoX, solMundoY, R);
+        ga.addColorStop(0, `rgba(255,190,90,${SOL_ATRAS_FORCA})`);
+        ga.addColorStop(0.5, `rgba(255,150,60,${SOL_ATRAS_FORCA * 0.4})`);
+        ga.addColorStop(1, 'rgba(255,120,40,0)');
+        ctx.fillStyle = ga;
+        ctx.fillRect(solMundoX - R, solMundoY - R, 2 * R, 2 * R);
+        ctx.restore();
+      }
+
       if (fundoImg.complete && fundoImg.naturalWidth > 0) {
-        const fh = 400;                      // altura da imagem no jogo (maior = floresta maior)
+        if (!fundoPronto) fundoPronto = prepararFundo();
+        const fh = 420;                      // ALTURA do fundo no jogo (maior = floresta maior; a largura acompanha sozinha)
         const fy = (GROUND + 20) - fh;       // base da floresta fica escondida atrás do chão
         const fw = Math.round(fh * fundoImg.naturalWidth / fundoImg.naturalHeight);
-        const srcH = fundoImg.naturalHeight - 2;   // corta a linha clara do último pixel da imagem
-        fundoX -= speed * 0.25 * dt;         // paralaxe: mais lento que o chão
+        const srcW = fundoPronto.width, srcH = fundoPronto.height;
+        fundoX -= speed * 0.03 * dt;         // paralaxe do fundo com árvores
         if (fundoX <= -2 * fw) fundoX += 2 * fw;
-        for (let k = 0; fundoX + k * fw < VIEW_W + fw; k++) {
-          const x = Math.round(fundoX + k * fw);
-          if (k % 2) {
-            ctx.save(); ctx.translate(x + fw + 1, 0); ctx.scale(-1, 1);
-            ctx.drawImage(fundoImg, 0, 0, fundoImg.naturalWidth, srcH, 0, fy, fw + 1, fh);
-            ctx.restore();
-          } else {
-            ctx.drawImage(fundoImg, 0, 0, fundoImg.naturalWidth, srcH, x, fy, fw + 1, fh);
+
+        /* desenha as repetições do fundo (normal / espelhada) em qualquer canvas */
+        const desenharTiles = (c, img) => {
+          for (let k = 0; fundoX + k * fw < VIEW_W + fw; k++) {
+            const x = fundoX + k * fw;       // sem arredondar: movimento suave
+            if (k % 2) {
+              c.save(); c.translate(x + fw + 1, 0); c.scale(-1, 1);
+              c.drawImage(img, 0, 0, srcW, srcH, 0, fy, fw + 1, fh);
+              c.restore();
+            } else {
+              c.drawImage(img, 0, 0, srcW, srcH, x, fy, fw + 1, fh);
+            }
           }
+        };
+        desenharTiles(ctx, fundoPronto);
+
+        /* ☀️ tom quente do sol nas copas (só nas árvores perto dele, sem contorno) */
+        if (solMundoX !== null && FUNDO_SOL_FORCA > 0) {
+          const R = FUNDO_SOL_ALCANCE, S = Math.round(2 * R * ZOOM);
+          if (!fundoSolTmp) { fundoSolTmp = document.createElement('canvas'); fundoSolTmp.width = S; fundoSolTmp.height = S; }
+          const bc = fundoSolTmp.getContext('2d');
+          bc.setTransform(1, 0, 0, 1, 0, 0);
+          bc.globalCompositeOperation = 'source-over';
+          bc.clearRect(0, 0, S, S);
+          bc.setTransform(ZOOM, 0, 0, ZOOM, -(solMundoX - R) * ZOOM, -(solMundoY - R) * ZOOM);
+          desenharTiles(bc, fundoPronto);
+          bc.setTransform(1, 0, 0, 1, 0, 0);
+          bc.globalCompositeOperation = 'source-atop';   // pinta só onde tem árvore
+          const gr = bc.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+          gr.addColorStop(0, `rgba(${FUNDO_SOL_COR},1)`);
+          gr.addColorStop(0.4, `rgba(${FUNDO_SOL_COR},0.55)`);
+          gr.addColorStop(1, `rgba(${FUNDO_SOL_COR},0)`);
+          bc.fillStyle = gr;
+          bc.fillRect(0, 0, S, S);
+          ctx.save();
+          ctx.globalAlpha = FUNDO_SOL_FORCA;
+          ctx.drawImage(fundoSolTmp, solMundoX - R, solMundoY - R, 2 * R, 2 * R);
+          ctx.restore();
         }
       }
+
+
+/* 🌑 SOMBRA DE CONTATO: base da floresta escurece onde encontra o chão */
+if (SOMBRA_CHAO_FORCA > 0) {
+  const topoChao = GROUND + 10;                 // y onde começa a grama
+  const gs = ctx.createLinearGradient(0, topoChao - SOMBRA_CHAO_ALTURA, 0, topoChao);
+  gs.addColorStop(0, `rgba(${SOMBRA_CHAO_COR},0)`);
+  gs.addColorStop(1, `rgba(${SOMBRA_CHAO_COR},${SOMBRA_CHAO_FORCA})`);
+  ctx.fillStyle = gs;
+  ctx.fillRect(0, topoChao - SOMBRA_CHAO_ALTURA, VIEW_W, SOMBRA_CHAO_ALTURA);
+}
 
 /* 🆕 CHÃO COM IMAGEM AJUSTADO */
 const groundHeight = 320;
@@ -2129,6 +2385,9 @@ groundX -= speed * dt;
 if (groundX <= -groundImg.width) {
   groundX += groundImg.width;
 }
+
+if (!groundPronto && groundImg.complete && groundImg.naturalWidth > 0) groundPronto = prepararChao();
+const chaoImg = groundPronto || groundImg;
 
 ctx.drawImage(
   groundImg,
@@ -2596,15 +2855,25 @@ function desenharTronco(x, y, w, dir) {
 const imgSapo = new Image();
 imgSapo.src = 'assets/games/sapofrente.png';
 
+const imgSapoVolta = new Image();
+imgSapoVolta.src = 'assets/games/sapofrente2.png';   // sapo de frente (sem fundo), usado ao voltar
+
 function desenharSapo(cx, cy, ang, esticar, sx, sy) {
   if (!imgSapo.complete || !imgSapo.naturalWidth) return;
-  const w = 40, h = w * 310 / 386;   // largura do sapo na tela (mude o 40 pra ajustar)
+  const voltando = Math.abs(ang - Math.PI) < 0.01 && imgSapoVolta.complete && imgSapoVolta.naturalWidth;
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(ang);                   // <- vira o sapo conforme a direção
   ctx.scale(sx, sy * (1 + esticar * 0.15));
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(imgSapo, 732, 444, 386, 310, -w / 2, -h / 2, w, h);
+  if (voltando) {
+    // ao voltar (seta pra baixo) usa o sapo de frente, sem girar
+    const w = 42, h = w * imgSapoVolta.naturalHeight / imgSapoVolta.naturalWidth;   // largura na tela (mude o 42 pra ajustar)
+    ctx.drawImage(imgSapoVolta, -w / 2, -h / 2, w, h);
+  } else {
+    const w = 40, h = w * 310 / 386;   // largura do sapo na tela (mude o 40 pra ajustar)
+    ctx.rotate(ang);                   // <- vira o sapo conforme a direção
+    ctx.drawImage(imgSapo, 732, 444, 386, 310, -w / 2, -h / 2, w, h);
+  }
   ctx.restore();
 }
 
