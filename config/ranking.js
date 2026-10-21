@@ -86,22 +86,23 @@ const MICO_PONTUACAO_MAXIMA = 31000;
 // Pontuação máxima por segundo de partida. Uma rodada vencida muito rápido
 // rende ~500 pontos/s; 700 deixa folga para jogadores muito bons.
 const MICO_PONTOS_POR_SEGUNDO = 700;
-// A partida do Mico tem no máximo 5 checkpoints (um ao fim de cada rodada vencida).
-const MICO_MAX_ENVIOS = 5;
+// A jogada do Mico envia a pontuação ao fim de cada rodada (5 rodadas + a derrota).
+const MICO_MAX_ENVIOS = 12;
 
 function limiteMico(segundos) {
   const porTempo = Math.floor((segundos + FOLGA_SEGUNDOS) * MICO_PONTOS_POR_SEGUNDO);
   return Math.min(MICO_PONTUACAO_MAXIMA, porTempo);
 }
 
-function limiteDePontuacao(jogo, segundosDePartida) {
-  const segundos = Math.max(0, Math.min(TEMPO_MAXIMO_SEGUNDOS, segundosDePartida));
-  switch (jogo) {
-    case 'sapo': return limiteSapo(segundos);
-    case 'onca': return limiteOnca(segundos);
-    case 'mico': return limiteMico(segundos);
-    default: return 0;
-  }
+// Trava de SANIDADE apenas (impede número absurdo/estouro do banco). Não tenta
+// adivinhar o que é "possível" em cada jogo: uma versão anterior fazia isso e
+// recusou pontuações legítimas altas. Os resultados são sempre aceitos; o
+// histórico (jogo_partida: início, fim e pontuação) fica para a equipe conferir
+// os primeiros colocados antes de premiar.
+const PONTUACAO_MAXIMA_ABSURDA = 2000000;
+
+function limiteDePontuacao() {
+  return PONTUACAO_MAXIMA_ABSURDA;
 }
 
 module.exports = {
