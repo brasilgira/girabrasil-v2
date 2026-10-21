@@ -115,8 +115,8 @@
   // Seções do índice
   // --------------------------------------------------------------------------
   const SECOES = [
-    ['panorama', 'Panorama'], ['tempo', 'Tempo'], ['especies', 'Espécies'], ['cadeia', 'Cadeia'],
-    ['ameacas', 'Ameaças'], ['pessoas', 'Pessoas'], ['curiosidades', 'Curiosidades'], ['biomas', 'Biomas']
+    ['panorama', 'Panorama'], ['tempo', 'Tempo'], ['especies', 'Espécies'],
+    ['ameacas', 'Ameaças'], ['pessoas', 'Pessoas'], ['curiosidades', 'Curiosidades']
   ];
 
   // --------------------------------------------------------------------------
@@ -125,7 +125,7 @@
   const htmlHero = `
     <section class="bz-hero" aria-labelledby="bz-titulo">
       <div class="bz-hero-texto">
-        <a href="../index.html#biomas" class="link-voltar">${ICONES.voltar} Voltar para Biomas</a>
+        <a href="../index.html#atlas-biomas" class="link-voltar" id="bz-voltar">${ICONES.voltar} Voltar</a>
         <div>
           <p class="bz-loc">${ICONES.pino}<span>${esc(bioma.localizacao)}</span></p>
           <h1 class="bz-nome" id="bz-titulo">${esc(bioma.nome)}</h1>
@@ -158,10 +158,9 @@
   // --------------------------------------------------------------------------
   const regioesDestaque = (bioma.mapaDestaque || []).map((r) => NOMES_REGIAO[r] || r);
   const perfil = bioma.perfilVisual || {};
+  // Fauna, flora, pessoas e pressões já têm seção própria mais abaixo: aqui ficam só 3 linhas.
   const linhasPerfil = [
-    ['Clima', perfil.clima], ['Vegetação', perfil.vegetacao], ['Fauna', perfil.fauna],
-    ['Flora', perfil.flora], ['Água', perfil.agua], ['Presença humana', perfil.presencaHumana],
-    ['Pressões ambientais', perfil.pressoesAmbientais]
+    ['Clima', perfil.clima], ['Vegetação', perfil.vegetacao], ['Água', perfil.agua]
   ].filter(([, v]) => v);
 
   const htmlPanorama = `
@@ -184,9 +183,6 @@
   // --------------------------------------------------------------------------
   // TEMPO: linha do tempo + passado/presente/futuro
   // --------------------------------------------------------------------------
-  const ppf = bioma.passadoPresenteFuturo || {};
-  const ABAS_PPF = [['passado', 'Passado'], ['presente', 'Presente'], ['futuro', 'Futuro possível']];
-
   const htmlTempo = `
     <section class="bz-sec bz-sec--soft" id="tempo" aria-labelledby="t-tempo">
       <div class="bz-wrap">
@@ -206,17 +202,6 @@
           </ol>
         </div>
 
-        <div class="bz-ppf">
-          <div class="bz-ppf-topo">
-            <h2>O bioma através do tempo</h2>
-            <div class="bz-abas" role="tablist" aria-label="Período" id="bz-abas-ppf">
-              ${ABAS_PPF.map(([k, nome]) => `<button type="button" role="tab" id="ppf-tab-${k}" aria-controls="bz-ppf-painel" aria-selected="${k === 'presente'}" tabindex="${k === 'presente' ? 0 : -1}" data-k="${k}">${nome}</button>`).join('')}
-            </div>
-          </div>
-          <div class="bz-ppf-painel" id="bz-ppf-painel" role="tabpanel" aria-labelledby="ppf-tab-presente" tabindex="0">
-            <p>${esc(ppf.presente)}</p>
-          </div>
-        </div>
       </div>
     </section>`;
 
@@ -260,33 +245,6 @@
         <ul class="bz-esp-grid" id="esp-painel-flora" role="tabpanel" aria-labelledby="esp-tab-flora" hidden>
           ${bioma.flora.map((f, i) => cartaoEspecie(f, 'flora', i)).join('')}
         </ul>
-      </div>
-    </section>`;
-
-  // --------------------------------------------------------------------------
-  // CADEIA ALIMENTAR
-  // --------------------------------------------------------------------------
-  const rede = bioma.redeDeVida;
-  const CAMADAS = [
-    ['produtores', 'Produtores'], ['herbivoros', 'Herbívoros'],
-    ['predadores', 'Predadores'], ['decompositores', 'Decompositores']
-  ];
-
-  const htmlCadeia = `
-    <section class="bz-sec bz-sec--soft" id="cadeia" aria-labelledby="t-cadeia">
-      <div class="bz-wrap">
-        <h2 id="t-cadeia">Uma rede de vida</h2>
-        <p class="bz-intro">Toque em um organismo para ver quem se conecta a ele na cadeia alimentar.</p>
-        <div class="bz-rede" id="bz-rede">
-          ${CAMADAS.map(([k, nome]) => `
-            <div class="bz-camada" data-camada="${k}">
-              <h3>${nome}</h3>
-              <div class="bz-camada-itens">
-                ${(rede[k] || []).map((n) => `<button type="button" class="bz-rede-item" data-camada="${k}" aria-pressed="false">${esc(n)}</button>`).join('')}
-              </div>
-            </div>`).join('')}
-        </div>
-        <p class="bz-rede-texto" id="bz-rede-texto" aria-live="polite"></p>
       </div>
     </section>`;
 
@@ -367,31 +325,9 @@
     </section>` : '';
 
   // --------------------------------------------------------------------------
-  // OUTROS BIOMAS (os seis, com o atual marcado)
-  // --------------------------------------------------------------------------
-  const htmlBiomas = `
-    <section class="bz-sec" id="biomas" aria-labelledby="t-biomas">
-      <div class="bz-wrap">
-        <h2 id="t-biomas">Os seis biomas brasileiros</h2>
-        <div class="bz-bio-grid">
-          ${Object.values(window.BIOMAS).map((b) => {
-            const atual = b.slug === slug;
-            const miolo = `
-              <img src="${esc(b.heroImagem)}" alt="" loading="lazy" width="1024" height="1280">
-              ${atual ? '<span class="bz-bio-aqui">Você está aqui</span>' : ''}
-              <span class="bz-bio-nome">${esc(b.nome)}</span>`;
-            return atual
-              ? `<div class="bz-bio" aria-current="page">${miolo}</div>`
-              : `<a class="bz-bio" href="${esc(b.slug)}.html" aria-label="Ver o bioma ${esc(b.nome)}">${miolo}</a>`;
-          }).join('')}
-        </div>
-      </div>
-    </section>`;
-
-  // --------------------------------------------------------------------------
   // Monta tudo
   // --------------------------------------------------------------------------
-  const secoesCorpo = [htmlPanorama, htmlTempo, htmlEspecies, htmlCadeia, htmlAmeacas, htmlPessoas, htmlFatos, htmlBiomas].join('');
+  const secoesCorpo = [htmlPanorama, htmlTempo, htmlEspecies, htmlAmeacas, htmlPessoas, htmlFatos].join('');
   const idsPresentes = new Set((secoesCorpo.match(/id="([a-z]+)" aria-labelledby/g) || []).map((s) => s.slice(4, s.indexOf('"', 4))));
 
   root.innerHTML = `
@@ -446,16 +382,6 @@
       });
     });
   }
-
-  // ---- Passado / Presente / Futuro ------------------------------------------
-  const painelPpf = document.getElementById('bz-ppf-painel');
-  ativarAbas(document.getElementById('bz-abas-ppf'), (k) => {
-    painelPpf.setAttribute('aria-labelledby', `ppf-tab-${k}`);
-    painelPpf.querySelector('p').textContent = ppf[k] || '';
-    painelPpf.classList.remove('troca');
-    void painelPpf.offsetWidth; // reinicia a animação
-    painelPpf.classList.add('troca');
-  });
 
   // ---- Linha do tempo: a linha acompanha o scroll ---------------------------
   const tl = document.getElementById('bz-tl');
@@ -599,47 +525,6 @@
     btn.addEventListener('click', () => abrirModal(btn.dataset.tipo, Number(btn.dataset.idx), btn));
   });
 
-  // ---- Cadeia alimentar -----------------------------------------------------
-  // Os dados não dizem "quem come quem" espécie por espécie, então a conexão
-  // é por camada (produtores → herbívoros → predadores → decompositores),
-  // que é o nível de precisão que o conteúdo realmente sustenta.
-  const CONEXOES = {
-    produtores: ['herbivoros'],
-    herbivoros: ['produtores', 'predadores'],
-    predadores: ['herbivoros', 'decompositores'],
-    decompositores: ['produtores', 'herbivoros', 'predadores']
-  };
-  const EXPLICACAO = {
-    produtores: 'produz a própria energia a partir da luz do sol e alimenta os herbívoros do bioma.',
-    herbivoros: 'se alimenta de plantas e, por sua vez, serve de alimento para os predadores.',
-    predadores: 'caça herbívoros para se alimentar; quando morre, é reciclado pelos decompositores.',
-    decompositores: 'decompõe a matéria orgânica de todos os outros níveis e devolve nutrientes ao solo.'
-  };
-  const redeEl = document.getElementById('bz-rede');
-  const redeTexto = document.getElementById('bz-rede-texto');
-  if (redeEl) {
-    redeEl.querySelectorAll('.bz-rede-item').forEach((item) => {
-      item.addEventListener('click', () => {
-        const jaAtivo = item.getAttribute('aria-pressed') === 'true';
-        redeEl.querySelectorAll('.bz-rede-item').forEach((i) => { i.setAttribute('aria-pressed', 'false'); i.classList.remove('conectado'); });
-        redeEl.querySelectorAll('.bz-camada').forEach((c) => c.classList.remove('em-foco'));
-        redeEl.classList.remove('selecionado');
-        if (jaAtivo) { redeTexto.textContent = ''; return; }
-
-        const camada = item.dataset.camada;
-        const alvos = CONEXOES[camada] || [];
-        item.setAttribute('aria-pressed', 'true');
-        redeEl.classList.add('selecionado');
-        redeEl.querySelector(`.bz-camada[data-camada="${camada}"]`).classList.add('em-foco');
-        alvos.forEach((c) => {
-          const bloco = redeEl.querySelector(`.bz-camada[data-camada="${c}"]`);
-          if (bloco) { bloco.classList.add('em-foco'); bloco.querySelectorAll('.bz-rede-item').forEach((i) => i.classList.add('conectado')); }
-        });
-        redeTexto.innerHTML = `<strong>${esc(item.textContent)}</strong> ${esc(EXPLICACAO[camada] || '')}`;
-      });
-    });
-  }
-
   // ---- Você sabia? ----------------------------------------------------------
   if (fatos.length) {
     let atual = 0;
@@ -655,6 +540,16 @@
     }
     document.getElementById('bz-fato-ant').addEventListener('click', () => mostrarFato(atual - 1));
     document.getElementById('bz-fato-prox').addEventListener('click', () => mostrarFato(atual + 1));
+  }
+
+  // ---- Voltar: retorna à página de onde a pessoa veio (início ou região) ----
+  const voltarEl = document.getElementById('bz-voltar');
+  if (voltarEl) {
+    voltarEl.addEventListener('click', (e) => {
+      let mesmaOrigem = false;
+      try { mesmaOrigem = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (_) {}
+      if (mesmaOrigem && history.length > 1) { e.preventDefault(); history.back(); }
+    });
   }
 
   // ---- Som ambiente (nunca toca sozinho) ------------------------------------

@@ -92,6 +92,72 @@
   document.getElementById('btn-confirm-continue').addEventListener('click', cancelarFechar);
   document.getElementById('btn-confirm-close').addEventListener('click', () => closeOverlay());
   /* ════════════════════════════════════
+     GIRE O CELULAR: os jogos só rodam na horizontal em telas pequenas.
+     Em pé → aviso por cima de tudo, o jogo não inicia e, se já estiver rolando, pausa.
+     Ao deitar de novo, o jogo continua pausado até a pessoa tocar em "Continuar".
+  ════════════════════════════════════ */
+  const mqRetrato = window.matchMedia('(orientation: portrait) and (max-width: 820px)');
+  let pausadoPorGiro = false;
+  const avisoEl = document.createElement('div');
+  avisoEl.className = 'game-gire';
+  avisoEl.style.display = 'none';
+  avisoEl.setAttribute('role', 'alertdialog');
+  avisoEl.setAttribute('aria-live', 'assertive');
+  avisoEl.innerHTML =
+    '<div class="game-gire-box">' +
+      '<svg class="game-gire-icone" viewBox="0 0 64 64" width="84" height="84" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<rect x="20" y="6" width="24" height="42" rx="4"/><line x1="29" y1="42" x2="35" y2="42"/>' +
+        '<path d="M8 40a24 24 0 0 0 14 18"/><path d="M22 58l-7-1 2-7"/></svg>' +
+      '<h3 id="game-gire-titulo">Gire o celular</h3>' +
+      '<p id="game-gire-texto">Os jogos são jogados na horizontal. Deite o celular para começar.</p>' +
+      '<div class="game-confirm-btns">' +
+        '<button type="button" class="btn-start-game" id="btn-gire-continuar" style="display:none">Continuar</button>' +
+        '<button type="button" class="btn-start-game btn-fechar-jogo" id="btn-gire-fechar">Sair do jogo</button>' +
+      '</div>' +
+    '</div>';
+  overlay.appendChild(avisoEl);
+  const gireTitulo = avisoEl.querySelector('#game-gire-titulo');
+  const gireTexto = avisoEl.querySelector('#game-gire-texto');
+  const gireContinuar = avisoEl.querySelector('#btn-gire-continuar');
+
+  function atualizarGiro() {
+    const noJogo = overlay.classList.contains('active') && panelEl.style.display !== 'none';
+    if (!noJogo) { avisoEl.style.display = 'none'; return; }
+    if (mqRetrato.matches) {
+      avisoEl.style.display = 'flex';
+      gireContinuar.style.display = 'none';
+      gireTitulo.textContent = 'Gire o celular';
+      gireTexto.textContent = pausadoPorGiro
+        ? 'O jogo foi pausado. Deite o celular para continuar.'
+        : 'Os jogos são jogados na horizontal. Deite o celular para começar.';
+      /* partida em andamento (a tela de início/fim está escondida) e ainda não pausada: pausa */
+      if (screenEl.style.display === 'none' && !paused && confirmEl.style.display === 'none') {
+        pausar(); pausadoPorGiro = true;
+        gireTexto.textContent = 'O jogo foi pausado. Deite o celular para continuar.';
+      }
+    } else if (pausadoPorGiro) {
+      avisoEl.style.display = 'flex';
+      gireTitulo.textContent = 'Jogo pausado';
+      gireTexto.textContent = 'Toque em continuar para voltar de onde parou.';
+      gireContinuar.style.display = '';
+    } else {
+      avisoEl.style.display = 'none';
+    }
+  }
+  gireContinuar.addEventListener('click', () => {
+    pausadoPorGiro = false;
+    avisoEl.style.display = 'none';
+    retomar();
+  });
+  document.getElementById('btn-gire-fechar').addEventListener('click', () => closeOverlay());
+  (mqRetrato.addEventListener ? mqRetrato.addEventListener('change', atualizarGiro) : mqRetrato.addListener(atualizarGiro));
+  window.addEventListener('orientationchange', () => setTimeout(atualizarGiro, 150));
+  /* nada de iniciar em pé (nem por teclado): o clique no "Começar!" é barrado antes de chegar ao jogo */
+  screenEl.addEventListener('click', e => {
+    if (mqRetrato.matches) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
+
+  /* ════════════════════════════════════
      NAVEGAÇÃO MENU ↔ JOGO
   ════════════════════════════════════ */
   function openOverlay() {
@@ -101,6 +167,8 @@
   }
   function closeOverlay() {
     resetPausa();
+    pausadoPorGiro = false;
+    avisoEl.style.display = 'none';
     overlay.classList.remove('active');
     document.body.style.overflow = '';
     stopCurrentGame();
@@ -116,6 +184,7 @@
     menuEl.style.display = 'none';
     panelEl.style.display = '';
     loadGame(gameId);
+    atualizarGiro();
   }
   function stopCurrentGame() {
     if (raf) { cancelAnimationFrame(raf); raf = null; }
@@ -1250,6 +1319,12 @@ for (let i = 1; i <= FIRE_FRAMES; i++) {
 const treeImg = new Image();
 treeImg.src = 'assets/games/arvore.png';
 
+// TRONCO DEITADO (no lugar do antigo trator)
+const logImg = new Image();
+logImg.src = 'assets/games/arvoredeitada.png';
+const LOG_PNG_W = 1452, LOG_PNG_H = 528;   // tamanho do PNG (33 x 12 blocos de 44 px)
+const LOG_SCALE = 0.06;                    // mesma escala da árvore: os pixels ficam do mesmo tamanho
+
 //CHÃO
 const groundImg = new Image();
 groundImg.src = 'assets/games/chao.png';
@@ -1457,8 +1532,8 @@ const CHAO_LINHAS = 16;                  // altura do chão em "pixels" do desen
 const CHAO_LINHA_GRAMA = 2;              // quantos "pixels" a grama sobe acima da linha do chão (folhinhas irregulares)
 const CHAO_CORES = {
   grama: { brilho: '#7fb445', claro: '#4f9640', medio: '#37803a', escuro: '#215f2d', sombra: '#154425' },
-  terra: ['#5e3d28', '#4b2e20', '#38231d', '#271c21', '#1a151b'],     // da mais clara (em cima) à mais escura (embaixo)
-  pedra: '#7a5c48',
+  terra: ['#3f2616', '#33200f', '#27180f', '#1d1210', '#130d0d'],     // marrom ESCURO · da mais clara (em cima) à mais escura (embaixo)
+  pedra: '#5a4030',
 };
 let chaoNovo = null;
 
@@ -2245,8 +2320,169 @@ const OBS_TYPES=[
   {type:'tree'},
   {type:'tree'},
   {type:'fire'},
-  {w:52,h:28,c:'#607d8b',label:'🚜',type:'machine'},
+  {type:'log'},
 ];
+
+    /* 🌗 DIA E NOITE: muda pelo TEMPO REAL de jogo (não pelos metros) e nunca para.
+       O jogo começa no ápice do dia; em DN_METADE_S segundos chega ao ápice da noite e em mais
+       DN_METADE_S segundos volta ao ápice do dia — e assim por diante. Pausar o jogo pausa o relógio.
+       Tudo feito por código em cima das imagens que já existem (céu, nuvens, floresta, moitas, chão). */
+    const DN_METADE_S = 45;                // segundos do ápice do dia até o ápice da noite (e da noite de volta ao dia)
+    const DN_MULT_FUNDO  = '158,178,235';  // escurece céu + nuvens + floresta + moitas (R,G,B · 255 = não escurece)
+    const DN_MULT_CHAO   = '199,217,255';  // escurece também o chão
+    const DN_MULT_FRENTE = '230,240,255';  // toque final em tudo (a onça e os obstáculos só levam este: continuam fáceis de ver)
+    const DN_CEU_COR = ['#0a1236', '#16285e', '#35508f'];   // céu da noite: topo, meio, horizonte
+    let noite = 0;                         // 0 = dia · 1 = noite (atualizado a cada quadro)
+
+    let dnInicio = null;                   // instante (ms, já descontando as pausas) em que a partida começou
+    function calcNoite(segundos) {
+      /* cosseno: 0 (ápice do dia) em 0 s → 1 (ápice da noite) em DN_METADE_S → 0 em 2×DN_METADE_S → ...
+         começa e termina cada fase devagar, sem "degrau" nos ápices */
+      return 0.5 - 0.5 * Math.cos(Math.PI * segundos / DN_METADE_S);
+    }
+
+    /* escurece tudo o que já foi desenhado, multiplicando pela cor (forca = 0 não faz nada) */
+    function noiteCamada(cor, forca) {
+      if (forca <= 0.002) return;
+      ctx.save();
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.globalAlpha = forca;
+      ctx.fillStyle = `rgb(${cor})`;
+      ctx.fillRect(0, 0, VIEW_W, GH);
+      ctx.restore();
+    }
+
+    /* estrelas (posições fixas, sempre as mesmas) */
+    const ESTRELAS = [];
+    (function () {
+      let sd = 4242; const r = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+      const topo = GH * (ZOOM - 1) / ZOOM;
+      for (let i = 0; i < 70; i++) ESTRELAS.push({ x: r() * VIEW_W, y: topo + 6 + r() * (GROUND - 150 - topo), fase: r() * 6.28, grande: r() < 0.18 });
+    })();
+
+    /* lua em pixel art (feita uma vez só) */
+    let luaPronta = null;
+    function prepararLua() {
+      const R = 6, Q = DEC_PX, c = document.createElement('canvas');
+      c.width = c.height = (2 * R + 1) * Q;
+      const lc = c.getContext('2d');
+      const cel = (i, j, col) => { lc.fillStyle = col; lc.fillRect((i + R) * Q, (j + R) * Q, Q, Q); };
+      for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) {
+        if (i * i + j * j > R * R + R * 0.6) continue;
+        cel(i, j, (i + j) > R * 0.9 ? '#d9d4b2' : '#f4f0d4');           // lado de baixo/direita um pouco mais escuro
+      }
+      [[-2, -2], [-1, -2], [1, 1], [2, 1], [-1, 3], [3, -2], [-3, 1]].forEach(([i, j]) => cel(i, j, '#cdc7a4'));   // crateras
+      return c;
+    }
+
+    /* céu da noite: aparece por cima do céu do dia (e esconde o sol), com pôr do sol, estrelas e lua */
+    function noiteCeu() {
+      const topo = GH * (ZOOM - 1) / ZOOM;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, noite * 1.15);
+      const g = ctx.createLinearGradient(0, topo, 0, GROUND);
+      g.addColorStop(0, DN_CEU_COR[0]); g.addColorStop(0.55, DN_CEU_COR[1]); g.addColorStop(1, DN_CEU_COR[2]);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, topo - 1, VIEW_W, GH - topo + 1);
+      ctx.restore();
+
+      /* pôr / nascer do sol: brilho laranja que aparece só no meio da mudança */
+      const cre = Math.sin(Math.PI * noite);
+      if (cre > 0.01 && solMundoX !== null) {
+        const R = 420;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const gl = ctx.createRadialGradient(solMundoX, solMundoY + 40, 0, solMundoX, solMundoY + 40, R);
+        gl.addColorStop(0, `rgba(255,120,50,${0.55 * cre})`);
+        gl.addColorStop(0.5, `rgba(235,80,70,${0.25 * cre})`);
+        gl.addColorStop(1, 'rgba(200,60,90,0)');
+        ctx.fillStyle = gl;
+        ctx.fillRect(solMundoX - R, solMundoY + 40 - R, 2 * R, 2 * R);
+        ctx.restore();
+      }
+
+      /* estrelas: aparecem quando já está bem escuro e piscam devagar */
+      const ae = Math.max(0, (noite - 0.35) / 0.65);
+      if (ae > 0) {
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ESTRELAS.forEach(st => {
+          const pisca = 0.55 + 0.45 * Math.sin(tick * 0.045 + st.fase);
+          ctx.globalAlpha = ae * pisca * (st.grande ? 1 : 0.8);
+          const t = st.grande ? 3 : 2;
+          ctx.fillRect(Math.round(st.x), Math.round(st.y), t, t);
+        });
+        ctx.restore();
+      }
+
+      /* lua no lugar onde o sol estava */
+      const al = Math.max(0, (noite - 0.2) / 0.8);
+      if (solMundoX !== null && al > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const R = 150;
+        const hg = ctx.createRadialGradient(solMundoX, solMundoY, 0, solMundoX, solMundoY, R);
+        hg.addColorStop(0, `rgba(190,210,255,${0.28 * al})`);
+        hg.addColorStop(1, 'rgba(120,150,230,0)');
+        ctx.fillStyle = hg;
+        ctx.fillRect(solMundoX - R, solMundoY - R, 2 * R, 2 * R);
+        ctx.restore();
+        if (!luaPronta) luaPronta = prepararLua();
+        ctx.save();
+        ctx.globalAlpha = al;
+        ctx.drawImage(luaPronta, Math.round(solMundoX - luaPronta.width / 2), Math.round(solMundoY - luaPronta.height / 2));
+        ctx.restore();
+      }
+    }
+
+    /* 🕊️ GAIVOTAS: silhuetas pretas simples, bem ao longe, aparecem só de vez em quando (só de dia) */
+    const GAIVOTA_DIST_MIN = 900;          // tempo mínimo entre uma aparição e a próxima (ticks · 60 ≈ 1 segundo)
+    const GAIVOTA_DIST_MAX = 2400;         // tempo máximo
+    const GAIVOTA_QUADROS = [              // 3 posições da asa ('x' = pixel preto)
+      ['x...........x', 'xx.........xx', '.xx.......xx.', '..xxx...xxx..', '....xxxxx....'],
+      ['.............', 'xx.........xx', '.xxxx...xxxx.', '...xxxxxxx...', '.....xxx.....'],
+      ['.............', '.............', 'xxxx.....xxxx', '..xxxxxxxxx..', '....xxxxx....'],
+    ];
+    const gaivotas = [];
+    let gaivotaT = GAIVOTA_DIST_MIN;
+    function gaivotasAtualizar(dt) {
+      gaivotaT -= dt;
+      if (gaivotaT <= 0) {
+        gaivotaT = GAIVOTA_DIST_MIN + Math.random() * (GAIVOTA_DIST_MAX - GAIVOTA_DIST_MIN);
+        if (noite < 0.3) {
+          const topo = GH * (ZOOM - 1) / ZOOM;
+          const n = 1 + Math.floor(Math.random() * 3);              // 1 a 3 gaivotas
+          const y0 = topo + 40 + Math.random() * 60;
+          const px = Math.random() < 0.7 ? 2 : 3;                   // tamanho de cada pixel (pequeno = parece mais longe)
+          const vx = -(0.45 + Math.random() * 0.3);
+          for (let i = 0; i < n; i++) {
+            gaivotas.push({ x: VIEW_W + 20 + i * (26 + Math.random() * 14), y: y0 + (i % 2 ? 1 : -1) * i * (8 + Math.random() * 6), vx, px, fase: Math.random() * 6.28 });
+          }
+        }
+      }
+      for (let i = gaivotas.length - 1; i >= 0; i--) {
+        const g = gaivotas[i];
+        g.x += (g.vx - speed * 0.02) * dt;
+        g.fase += 0.13 * dt;                                         // bater de asas
+        if (g.x < -50) gaivotas.splice(i, 1);
+      }
+    }
+    function gaivotasDesenhar() {
+      if (!gaivotas.length) return;
+      ctx.save();
+      ctx.fillStyle = '#0b0d14';
+      ctx.globalAlpha = 0.85 * (1 - noite);
+      gaivotas.forEach(g => {
+        const q = GAIVOTA_QUADROS[[0, 1, 2, 1][Math.floor(g.fase) % 4]];
+        const bob = Math.round(Math.sin(g.fase * 0.5) * 2);
+        q.forEach((row, j) => {
+          for (let i = 0; i < row.length; i++) {
+            if (row[i] === 'x') ctx.fillRect(Math.round(g.x + i * g.px), Math.round(g.y + bob + j * g.px), g.px, g.px);
+          }
+        });
+      });
+      ctx.restore();
+    }
 
     /* ✨ EFEITOS: poeira, folhas, pirilampos, brasas e sombra
        Tudo em quadradinhos de 3 px (o mesmo "pixel" da floresta e do chão). */
@@ -2281,7 +2517,7 @@ const OBS_TYPES=[
           col: cores[(Math.random() * cores.length) | 0], sz: FX_PX });
       }
       /* pirilampos / pólen dourado perto do sol */
-      if (Math.random() < 0.02 * dt) {
+      if (Math.random() < (0.02 + 0.07 * noite) * dt) {
         fxAdd({ folha: true, pisca: true, t: 0, fase: Math.random() * 6.28, x: VIEW_W + 10, y: GROUND - 170 + Math.random() * 130,
           vx: -(0.3 + Math.random() * 0.4), vy: (Math.random() - 0.5) * 0.15, life: 700, max: 700, col: '#ffd682', sz: FX_PX });
       }
@@ -2359,7 +2595,10 @@ function drawFire(ob) {
   /*
    * Escolhe o frame atual da animação do fogo.
    */
-  const frame = Math.floor(tick / FIRE_FRAME_TICKS) % FIRE_FRAMES;
+  const ft = (tick + (ob.fase || 0)) / FIRE_FRAME_TICKS;     // cada fogo começa num ponto diferente da animação
+  const frame = Math.floor(ft) % FIRE_FRAMES;
+  const proximo = (frame + 1) % FIRE_FRAMES;
+  const mistura = ft - Math.floor(ft);                        // 0 → 1: o quadro atual vai se dissolvendo no próximo
   const img = fireImgs[frame];
    /*
    * Desenha a imagem inteira (1920x1080) reduzida pela escala do fogo.
@@ -2403,7 +2642,60 @@ function drawFire(ob) {
       w,
       h
     );
+
+    /* o próximo quadro aparece aos poucos por cima: a chama "dança" em vez de trocar de figurinha */
+    const img2 = fireImgs[proximo];
+    if (mistura > 0.02 && img2.complete && img2.naturalWidth > 0) {
+      ctx.globalAlpha = mistura;
+      ctx.drawImage(img2, ob.x, y, w, h);
+      ctx.globalAlpha = 1;
+    }
   }
+}
+
+/* 🔥 LUZ DO FOGO: brilho laranja no chão e no ar em volta (pisca de leve). À noite fica mais forte. */
+const FOGO_LUZ_FORCA = 0.5;        // brilho de dia (0 = nenhum)
+const FOGO_LUZ_NOITE = 0.9;        // brilho a mais quando é noite
+const FOGO_LUZ_RAIO = 110;         // tamanho do brilho (px)
+function drawFireLight(ob) {
+  if (ob.x < -150 || ob.x > VIEW_W + 150) return;
+  const cx = ob.x + ob.w / 2;
+  const f = ob.fase || 0;
+  const pisca = 0.82 + 0.12 * Math.sin(tick * 0.31 + f) + 0.06 * Math.sin(tick * 0.83 + f * 2.1);
+  const k = (FOGO_LUZ_FORCA + FOGO_LUZ_NOITE * noite) * pisca;
+  const R = FOGO_LUZ_RAIO;
+
+  /* poça de luz no chão (elipse achatada) */
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.translate(cx, GROUND + 12);
+  ctx.scale(1, 0.3);
+  let g = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 1.15);
+  g.addColorStop(0, `rgba(255,150,50,${0.55 * k})`);
+  g.addColorStop(0.5, `rgba(255,110,30,${0.25 * k})`);
+  g.addColorStop(1, 'rgba(255,90,20,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(-R * 1.15, -R * 1.15, R * 2.3, R * 2.3);
+  ctx.restore();
+
+  /* brilho no ar (acende a onça quando ela passa por cima) */
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const cy = GROUND - ob.h * 0.35;
+  g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+  g.addColorStop(0, `rgba(255,170,70,${0.30 * k})`);
+  g.addColorStop(1, 'rgba(255,110,30,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(cx - R, cy - R, 2 * R, 2 * R);
+  ctx.restore();
+}
+
+/* tronco deitado: o PNG não tem margem, então a base encosta no chão igual à base da árvore */
+function drawLog(ob) {
+  if (!logImg.complete || logImg.naturalWidth <= 0) return;
+  const y = GROUND - ob.h + OBSTACLE_SINK;
+  ob.sprite = { img: logImg, x: ob.x, y, w: ob.w, h: ob.h };   // a colisão usa os pixels deste mesmo desenho
+  ctx.drawImage(logImg, ob.x, y, ob.w, ob.h);
 }
 
 function drawTree(ob) {
@@ -2548,6 +2840,10 @@ function drawObstacle(ob) {
 
     drawFire(ob);
 
+  } else if (ob.type === 'log') {
+
+    drawLog(ob);
+
   } else {
 
     ctx.font = `${ob.w}px serif`;
@@ -2652,8 +2948,20 @@ if (t.type === 'tree') {
           oy: GROUND,
           w: FIRE_RENDER_WIDTH,
           h: FIRE_RENDER_HEIGHT,
-          type: 'fire'
+          type: 'fire',
+          fase: Math.random() * FIRE_FRAMES * FIRE_FRAME_TICKS   // cada fogo dança num ritmo diferente
         });
+
+} else if (t.type === 'log') {
+  const dw = LOG_PNG_W * LOG_SCALE;
+  const dh = LOG_PNG_H * LOG_SCALE;
+  obstacles.push({
+    x: VIEW_W + 20,
+    oy: GROUND - dh,
+    w: dw,
+    h: dh,
+    type: 'log'
+  });
 
 } else {
   const isLow = t.type==='low'||t.type==='machine';
@@ -2676,6 +2984,8 @@ if (t.type === 'tree') {
       dist+=speed*dt; score=~~(dist/6);
       speed=4.8+level*0.4; if(dist>level*1700)level++;
       updateHUD(score,velTxt(),lives);
+      if (dnInicio === null) dnInicio = ts;
+      noite = calcNoite((ts - dnInicio) / 1000);   // 0 = ápice do dia · 1 = ápice da noite (tempo real de jogo, em segundos)
       clrCanvas();
             ctx.save();
       ctx.translate(0, H * (1 - ZOOM));
@@ -2696,6 +3006,9 @@ if (t.type === 'tree') {
         solMundoX = cx0 + SOL_X * cw; solMundoY = cy0 + SOL_Y * ch;   // posição do sol no mundo
       }
 
+      /* 🌙 céu da noite por cima do céu do dia */
+      if (noite > 0.003) noiteCeu();
+
 /* ☁️ NUVENS DISTANTES
    Ficam na frente do céu, mas atrás da floresta.
    Movem-se bem mais devagar para dar sensação de distância.
@@ -2714,19 +3027,25 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
     nuvemX += NUVEM_W;
   }
 
-  // Duas cópias para não aparecer buraco
+  // Duas cópias para não aparecer buraco (à noite ficam mais apagadas)
+  ctx.globalAlpha = 1 - 0.7 * noite;
   ctx.drawImage(nuvemPronta, nuvemX, -20, NUVEM_W, NUVEM_H);
   ctx.drawImage(nuvemPronta, nuvemX + NUVEM_W, -20, NUVEM_W, NUVEM_H);
+  ctx.globalAlpha = 1;
 }
 
+/* 🕊️ gaivotas lá longe: ficam na frente das nuvens e atrás da floresta */
+gaivotasAtualizar(dt);
+gaivotasDesenhar();
+
       /* ☀️ brilho laranja por trás da floresta (contraluz) */
-      if (solMundoX !== null && SOL_ATRAS_FORCA > 0) {
+      if (solMundoX !== null && SOL_ATRAS_FORCA > 0 && noite < 0.995) {
         const R = SOL_ATRAS_RAIO;
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const ga = ctx.createRadialGradient(solMundoX, solMundoY, 0, solMundoX, solMundoY, R);
-        ga.addColorStop(0, `rgba(255,190,90,${SOL_ATRAS_FORCA})`);
-        ga.addColorStop(0.5, `rgba(255,150,60,${SOL_ATRAS_FORCA * 0.4})`);
+        ga.addColorStop(0, `rgba(255,190,90,${SOL_ATRAS_FORCA * (1 - noite)})`);
+        ga.addColorStop(0.5, `rgba(255,150,60,${SOL_ATRAS_FORCA * 0.4 * (1 - noite)})`);
         ga.addColorStop(1, 'rgba(255,120,40,0)');
         ctx.fillStyle = ga;
         ctx.fillRect(solMundoX - R, solMundoY - R, 2 * R, 2 * R);
@@ -2758,7 +3077,7 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
         desenharTiles(ctx, fundoPronto);
 
         /* ☀️ tom quente do sol nas copas (só nas árvores perto dele, sem contorno) */
-        if (solMundoX !== null && FUNDO_SOL_FORCA > 0) {
+        if (solMundoX !== null && FUNDO_SOL_FORCA > 0 && noite < 0.995) {
           const R = FUNDO_SOL_ALCANCE, S = Math.round(2 * R * ZOOM);
           if (!fundoSolTmp) { fundoSolTmp = document.createElement('canvas'); fundoSolTmp.width = S; fundoSolTmp.height = S; }
           const bc = fundoSolTmp.getContext('2d');
@@ -2776,13 +3095,13 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
           bc.fillStyle = gr;
           bc.fillRect(0, 0, S, S);
           ctx.save();
-          ctx.globalAlpha = FUNDO_SOL_FORCA;
+          ctx.globalAlpha = FUNDO_SOL_FORCA * (1 - noite);
           ctx.drawImage(fundoSolTmp, solMundoX - R, solMundoY - R, 2 * R, 2 * R);
           ctx.restore();
         }
 
         /* ☀️ pontinhos de sol nas pontas de copa perto do sol */
-        if (PONTOS_SOL_ATIVO && solMundoX !== null) {
+        if (PONTOS_SOL_ATIVO && solMundoX !== null && noite < 0.995) {
           if (!pontosSol) pontosSol = prepararPontosSol();
           const ex = fw / srcW, ey = fh / srcH;                       // escala da imagem no jogo
           const T = PONTOS_SOL_TAM, R2 = PONTOS_SOL_ALCANCE;
@@ -2797,7 +3116,7 @@ if (nuvemImg.complete && nuvemImg.naturalWidth > 0) {
               if (d > R2 || xw < -T || xw > VIEW_W) continue;
               const f = 1 - d / R2;                                    // 1 perto do sol · 0 longe
               const pisca = 1 - PONTOS_SOL_PISCA * (0.5 + 0.5 * Math.sin(tick * 0.04 + pt.fase));
-              ctx.fillStyle = `rgba(${PONTOS_SOL_COR},${PONTOS_SOL_FORCA * f * f * pisca})`;
+              ctx.fillStyle = `rgba(${PONTOS_SOL_COR},${PONTOS_SOL_FORCA * f * f * pisca * (1 - noite)})`;
               ctx.fillRect(xw - T / 2, yw - T / 2, T, T);
             }
           }
@@ -2823,6 +3142,9 @@ if (SOMBRA_CHAO_FORCA > 0) {
   ctx.fillRect(0, topoChao - SOMBRA_CHAO_ALTURA, VIEW_W, SOMBRA_CHAO_ALTURA);
 }
 
+/* 🌙 NOITE (1/3): escurece céu, nuvens, floresta e moitas */
+noiteCamada(DN_MULT_FUNDO, noite);
+
 /* 🟫 CHÃO NOVO (desenhado por código, pixel quadrado) */
 groundX -= speed * dt;
 if (groundX <= -CHAO_PERIODO) groundX += CHAO_PERIODO;
@@ -2834,6 +3156,9 @@ ctx.drawImage(chaoNovo, groundX + CHAO_PERIODO, chaoTopo);
 
 /* 🌱 TUFOS E PEDRINHAS: rolam junto com o chão, na linha da grama */
 if (TUFOS_ATIVO && decoracao) decDesenhar(decoracao.tufos, groundX, CHAO_PERIODO, GROUND + 14);
+
+/* 🌙 NOITE (2/3): escurece também o chão (a onça e os obstáculos vêm depois, então ficam mais claros e fáceis de ver) */
+noiteCamada(DN_MULT_CHAO, noite);
 
 
 
@@ -2918,7 +3243,8 @@ obstacles.forEach(ob => {
  */
 if (
   ob.type === 'fire' ||
-  ob.type === 'tree'
+  ob.type === 'tree' ||
+  ob.type === 'log'
 ) {
 
   collided = pixelPerfectCollision(
@@ -3010,6 +3336,12 @@ if (FRENTE_ATIVO && decoracao) {
   decDesenhar(decoracao.frente, frenteX, FRENTE_PERIODO, GH + DEC_PX);   // a base fica cortada embaixo da tela
 }
 
+/* 🌙 NOITE (3/3): toque final em tudo */
+noiteCamada(DN_MULT_FRENTE, noite);
+
+/* 🔥 luz do fogo: por cima da escuridão, então brilha mais à noite */
+obstacles.forEach(ob => { if (ob.type === 'fire') drawFireLight(ob); });
+
 ctx.restore();
 
       /* clarão vermelho rápido ao levar dano */
@@ -3033,6 +3365,7 @@ ctx.restore();
     function start(){partidaRanking=iniciarRanking('onca');holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
       obstacles=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
       fx=[];fxFolhaT=0;poeiraT=0;oncaEraNoChao=true;oncaPiscar=0;hitFlash=0;
+      gaivotas.length=0;gaivotaT=GAIVOTA_DIST_MIN*0.7+Math.random()*GAIVOTA_DIST_MIN;noite=0;dnInicio=null;
       running=true;hideScreen();updateHUD(0,'1,0x',3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
     activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onpointerdown=null;canvas.onpointerup=null;canvas.onpointercancel=null;canvas.style.touchAction='';}};
@@ -3136,7 +3469,7 @@ ctx.restore();
     function atualizarHud() { updateHUD(rowMax - 1, nivel, 3, true, false); }
     function resetar() {
       lanes = []; gen = { limite: 0, seguidos: 0, mesmo: 1 };
-      frog = { x: (COLS / 2) * T + T / 2, r: 1, hop: null, ang: 0 };
+      frog = { x: (COLS / 2) * T + T / 2, r: 1, hop: null, ang: 0 };   // ang 0 = sapo DE COSTAS (olhando pra frente do jogo)
       camY = 0; rowMax = 1; nivel = 1; comecou = false; fila = null; morte = null; tick = 0;
       estado = 'parado';
     }
@@ -3212,7 +3545,7 @@ ctx.restore();
       /* câmera: acompanha o sapo e também sobe sozinha (cada vez mais rápido) */
       const alvo = rowMax - 3.4;
       if (alvo > camY) camY += (alvo - camY) * Math.min(1, 0.12 * dt);
-      if (comecou || tick > 240) camY += (0.0045 + Math.min(0.014, rowMax * 0.00007)) * dt;
+      if (comecou) camY += (0.0045 + Math.min(0.014, rowMax * 0.00007)) * dt;
       const rv = frog.hop ? frog.hop.r0 + (frog.hop.r1 - frog.hop.r0) * Math.min(1, frog.hop.t) : frog.r;
       if (rv < camY - 0.12) morrer('deixado');
     }
@@ -3295,17 +3628,16 @@ ctx.restore();
     function desenharSapo(cx, cy, ang, pulando, sx, sy) {
       if (!sapoSprites) montarSapos();
       const dir = ((Math.round(ang / (Math.PI / 2)) % 4) + 4) % 4;
-      let sp = sapoSprites[pulando ? 'pulo' : 'parado'][dir], sp2 = null, mistura = 0;
+      let sp = sapoSprites[pulando ? 'pulo' : 'parado'][dir];
       if (Array.isArray(sp)) {
-        /* de lado: o olhinho troca devagar e suave (um quadro se dissolve no outro) */
+        /* de lado: o olhinho troca de um quadro pro outro de uma vez (sem dissolver) */
         const SAPO_LADO_PERIODO = 100;   // ticks de um vai-e-vem completo (maior = mais lento)
-        mistura = 0.5 - 0.5 * Math.cos(tick / SAPO_LADO_PERIODO * 2 * Math.PI);   // 0 → 1 → 0, sem trancos
-        sp2 = sp[1]; sp = sp[0];
+        const olhoB = Math.sin(tick / SAPO_LADO_PERIODO * 2 * Math.PI) > 0;   // metade do tempo em cada quadro
+        sp = olhoB ? sp[1] : sp[0];
       }
       if (pulando) { sx = sy = 1; }   // o pulo já estica o desenho em pixels inteiros
       ctx.save(); ctx.translate(Math.round(cx / P) * P, Math.round(cy / P) * P); ctx.scale(sx, sy);
       ctx.imageSmoothingEnabled = false; ctx.drawImage(sp, -sp.width / 2, -sp.height / 2);
-      if (sp2 && mistura > 0.01) { const a = ctx.globalAlpha; ctx.globalAlpha = a * mistura; ctx.drawImage(sp2, -sp2.width / 2, -sp2.height / 2); ctx.globalAlpha = a; }
       ctx.restore();
     }
 

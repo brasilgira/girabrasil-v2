@@ -179,7 +179,7 @@ function nomesDasRegioes(chaves) {
 function criarBlocoBioma(bioma) {
   const link = document.createElement('a');
   link.className = 'bioma-bloco';
-  link.href = bioma.slug ? `biomas/${bioma.slug}.html` : 'biomas.html';
+  if (bioma.slug) link.href = `biomas/${bioma.slug}.html`;
   link.style.setProperty('--cor-bioma', bioma.corDestaque || 'var(--cor-floresta)');
   link.setAttribute('aria-label', `Saiba mais sobre o bioma ${bioma.nome}`);
 
