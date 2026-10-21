@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/auth.css">
+  <link rel="icon" type="image/png" sizes="96x96" href="assets/logo/favicon.png">
+  <link rel="icon" type="image/svg+xml" sizes="any" href="assets/logo/favicon.svg">
 </head>
 <!-- Biblioteca do Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -21,11 +23,12 @@
   <div class="header-inner">
     <a href="index.html" class="logo-site">Gira Brasil</a>
     <nav class="nav-site">
+      <div class="indicador-verde" id="indicador"></div>
       <a href="index.html">Início</a>
       <a href="noticias.html">Notícias</a>
       <a href="regioes.html">Regiões</a>
       <a href="jogos.html">Jogos</a>
-      <a href="girabot.html">GiraBot</a>
+      <a href="girabot.html">Gira-Bot</a>
       <a href="sobre.html">Sobre</a>
     </nav>
     <div class="header-acoes">
@@ -126,5 +129,6 @@
   });
 </script>
 
+<script src="js/nav-indicador.js"></script>
 </body>
 </html>
