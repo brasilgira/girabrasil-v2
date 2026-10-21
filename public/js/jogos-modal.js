@@ -3295,11 +3295,18 @@ ctx.restore();
     function desenharSapo(cx, cy, ang, pulando, sx, sy) {
       if (!sapoSprites) montarSapos();
       const dir = ((Math.round(ang / (Math.PI / 2)) % 4) + 4) % 4;
-      let sp = sapoSprites[pulando ? 'pulo' : 'parado'][dir];
-      if (Array.isArray(sp)) sp = sp[Math.floor(tick / 24) % 2];   // de lado: o olhinho alterna com o tempo
+      let sp = sapoSprites[pulando ? 'pulo' : 'parado'][dir], sp2 = null, mistura = 0;
+      if (Array.isArray(sp)) {
+        /* de lado: o olhinho troca devagar e suave (um quadro se dissolve no outro) */
+        const SAPO_LADO_PERIODO = 100;   // ticks de um vai-e-vem completo (maior = mais lento)
+        mistura = 0.5 - 0.5 * Math.cos(tick / SAPO_LADO_PERIODO * 2 * Math.PI);   // 0 → 1 → 0, sem trancos
+        sp2 = sp[1]; sp = sp[0];
+      }
       if (pulando) { sx = sy = 1; }   // o pulo já estica o desenho em pixels inteiros
       ctx.save(); ctx.translate(Math.round(cx / P) * P, Math.round(cy / P) * P); ctx.scale(sx, sy);
-      ctx.imageSmoothingEnabled = false; ctx.drawImage(sp, -sp.width / 2, -sp.height / 2); ctx.restore();
+      ctx.imageSmoothingEnabled = false; ctx.drawImage(sp, -sp.width / 2, -sp.height / 2);
+      if (sp2 && mistura > 0.01) { const a = ctx.globalAlpha; ctx.globalAlpha = a * mistura; ctx.drawImage(sp2, -sp2.width / 2, -sp2.height / 2); ctx.globalAlpha = a; }
+      ctx.restore();
     }
 
     /* ── 🌳 ÁRVORES E TOCOS ── */

@@ -33,7 +33,6 @@
   <a href="jogos.html" class="ativo">Jogos</a> <!-- Ativo movido para cá -->
   <a href="girabot.html">Gira-Bot</a>
   <a href="sobre.html">Sobre</a>
-  <a href="ranking.html">Ranking</a>
 </nav>
     <div class="header-acoes">
       <a href="login.html" class="link-entrar">Entrar</a>
@@ -41,6 +40,19 @@
     </div>
   </div>
 </header>
+
+<!-- Bola do ranking (troféu) — fica no topo da página, no lugar do link do cabeçalho -->
+<a href="ranking.html" class="ranking-bola" id="ranking-bola" aria-label="Ver o ranking dos jogos" title="Ranking dos jogos">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+    <path d="M4 22h16"/>
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+  </svg>
+  <span class="ranking-bola-rotulo">Ranking</span>
+</a>
 
 <section class="secao-jogos">
   <!-- Cada card abaixo é só design + estrutura. A lógica de cada jogo
@@ -115,11 +127,7 @@
 
   </div>
   <p class="sr-only" aria-live="polite">Selecione um jogo</p>
-  <p class="jogos-ranking-link">
-    <a href="ranking.html" class="link-voltar">Ver o ranking dos jogos
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </a>
-  </p>
+
 </section>
 
 <!-- ═══════════════════════════════════
