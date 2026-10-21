@@ -281,6 +281,11 @@ fecharBtn.onclick = () => pedirFechar();   // fecha direto, exceto entre rodadas
   function loadGame(id) {
     stopCurrentGame();
         scoreEmMetros = false;
+    /* o jogo do sapo desliga o suavizado do canvas (pixel art) e o canvas é compartilhado:
+       sem religar aqui, os outros jogos (ex.: Mico) ficam pixelados depois de jogar o sapo */
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    canvas.style.imageRendering = 'auto';
             hudLives.firstChild.nodeValue = 'Vidas: ';
     hudLevel.firstChild.nodeValue = 'Nível ';
 
@@ -717,7 +722,12 @@ function aposEscolha() {
       if (n > 1 && n * CW + (n - 1) * 8 > MAO_W) step = (MAO_W - CW) / (n - 1);
       const total = n > 0 ? CW + (n - 1) * step : 0;
       const x0 = (W - total) / 2;
-      return mao.map((c, i) => ({ c, x: x0 + i * step, y, w: CW, h: CH }));
+      /* leve curva em leque: as cartas das pontas ficam um pouco mais longe do centro da mesa */
+      const dir = y === TOP_Y ? -1 : 1;
+      return mao.map((c, i) => {
+        const t = n > 1 ? (i - (n - 1) / 2) / ((n - 1) / 2) : 0;
+        return { c, x: x0 + i * step, y: y + dir * 8 * t * t, w: CW, h: CH };
+      });
     }
 
     /* ── ANIMAÇÃO: a carta voa até a mão de quem pegou e depois gira, se revelando ── */
@@ -813,7 +823,16 @@ function desenharEfeitosPar() {
       /* corpo da carta (com sombra) */
       ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 4;
       rr(0, 0, CW, CH, 12);
-      ctx.fillStyle = faceUp ? (mico ? '#fde8e8' : '#fbf5e4') : '#0f3d22';
+      if (faceUp) {   // papel com leve degradê (mais claro em cima, creme embaixo)
+        const gp = ctx.createLinearGradient(0, 0, 0, CH);
+        if (mico) { gp.addColorStop(0, '#fff1f1'); gp.addColorStop(1, '#f9cfcf'); }
+        else { gp.addColorStop(0, '#fffaf0'); gp.addColorStop(1, '#efe3c3'); }
+        ctx.fillStyle = gp;
+      } else {
+        const gv = ctx.createLinearGradient(0, 0, CW, CH);
+        gv.addColorStop(0, '#14532d'); gv.addColorStop(1, '#0a2e18');
+        ctx.fillStyle = gv;
+      }
       ctx.fill();
       ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
@@ -827,12 +846,27 @@ function desenharEfeitosPar() {
           const w = img.naturalWidth * s, h = img.naturalHeight * s;
           ctx.drawImage(img, M + (IW - w) / 2, M + (IH - h) / 2, w, h);
         } else { ctx.fillStyle = '#1a5c35'; ctx.fillRect(M, M, IW, IH); }
+        /* sombra suave nas bordas da foto (dá profundidade) */
+        const gs = ctx.createLinearGradient(0, M + IH * 0.6, 0, M + IH);
+        gs.addColorStop(0, 'rgba(0,0,0,0)'); gs.addColorStop(1, 'rgba(0,0,0,0.38)');
+        ctx.fillStyle = gs; ctx.fillRect(M, M, IW, IH);
+        const gt = ctx.createLinearGradient(0, M, 0, M + IH * 0.25);
+        gt.addColorStop(0, 'rgba(255,255,255,0.14)'); gt.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = gt; ctx.fillRect(M, M, IW, IH);
+        /* brilho diagonal, como carta plastificada */
+        ctx.beginPath(); ctx.moveTo(M, M); ctx.lineTo(M + IW * 0.55, M); ctx.lineTo(M, M + IH * 0.42); ctx.closePath();
+        ctx.fillStyle = 'rgba(255,255,255,0.11)'; ctx.fill();
         ctx.restore();
         rr(M, M, IW, IH, 6); ctx.lineWidth = 2; ctx.strokeStyle = mico ? '#991b1b' : '#145228'; ctx.stroke();
+        rr(M + 1.5, M + 1.5, IW - 3, IH - 3, 5); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.stroke();
 
         /* faixa do nome */
         rr(M, NY, IW, NH, 5);
-        ctx.fillStyle = mico ? '#dc2626' : '#1a3d26'; ctx.fill();
+        const gn = ctx.createLinearGradient(0, NY, 0, NY + NH);
+        if (mico) { gn.addColorStop(0, '#ef4444'); gn.addColorStop(1, '#b91c1c'); }
+        else { gn.addColorStop(0, '#2a5c3a'); gn.addColorStop(1, '#14301f'); }
+        ctx.fillStyle = gn; ctx.fill();
+        ctx.fillStyle = mico ? 'rgba(255,255,255,0.35)' : 'rgba(201,162,74,0.7)'; ctx.fillRect(M + 4, NY + 1, IW - 8, 1);   // filete dourado no topo da faixa
         ctx.fillStyle = mico ? '#fff' : '#f6edd4';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         const txt = (mico ? 'MICO' : card.nome).toUpperCase();
@@ -850,8 +884,16 @@ function desenharEfeitosPar() {
           ctx.beginPath(); ctx.moveTo(d, M); ctx.lineTo(d + CH, M + BH); ctx.stroke();
           ctx.beginPath(); ctx.moveTo(d + CH, M); ctx.lineTo(d, M + BH); ctx.stroke();
         }
+        const gr = ctx.createRadialGradient(CW / 2, CH / 2, 4, CW / 2, CH / 2, CH * 0.55);   // luz suave no centro do verso
+        gr.addColorStop(0, 'rgba(143,201,166,0.30)'); gr.addColorStop(1, 'rgba(143,201,166,0)');
+        ctx.fillStyle = gr; ctx.fillRect(M, M, IW, BH);
         ctx.restore();
         rr(M, M, IW, BH, 6); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(246,237,212,0.6)'; ctx.stroke();
+        rr(M + 4, M + 4, IW - 8, BH - 8, 4); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(201,162,74,0.55)'; ctx.stroke();   // filete dourado interno
+        ctx.fillStyle = 'rgba(201,162,74,0.8)';                                                                              // losangos nos cantos
+        [[M + 4, M + 4], [CW - M - 4, M + 4], [M + 4, CH - M - 4], [CW - M - 4, CH - M - 4]].forEach(([px, py]) => {
+          ctx.beginPath(); ctx.moveTo(px, py - 3); ctx.lineTo(px + 3, py); ctx.lineTo(px, py + 3); ctx.lineTo(px - 3, py); ctx.closePath(); ctx.fill();
+        });
 if (imgLogo.complete && imgLogo.naturalWidth) {   // logo no meio do verso (recorte 506x717 da imagem 1920x1080)
   const lh = CH * 0.46, lw = lh * 506 / 717;
   ctx.drawImage(imgLogo, 699, 181, 506, 717, (CW - lw) / 2, (CH - lh) / 2, lw, lh);
@@ -872,6 +914,10 @@ if (imgLogo.complete && imgLogo.naturalWidth) {   // logo no meio do verso (reco
         const s = Math.max(W / fundoImg.naturalWidth, H / fundoImg.naturalHeight);
         const w = fundoImg.naturalWidth * s, h = fundoImg.naturalHeight * s;
         ctx.drawImage(fundoImg, (W - w) / 2, (H - h) / 2, w, h);
+        /* vinheta: escurece os cantos e deixa o centro da mesa mais claro, pra destacar as cartas */
+        const gv = ctx.createRadialGradient(W / 2, H / 2, H * 0.25, W / 2, H / 2, W * 0.62);
+        gv.addColorStop(0, 'rgba(0,0,0,0)'); gv.addColorStop(1, 'rgba(0,0,0,0.38)');
+        ctx.fillStyle = gv; ctx.fillRect(0, 0, W, H);
       } else {
         /* fundo vazio, só cor lisa, até a imagem carregar */
         ctx.fillStyle = '#0d2e16';
@@ -2202,10 +2248,86 @@ const OBS_TYPES=[
   {w:52,h:28,c:'#607d8b',label:'🚜',type:'machine'},
 ];
 
+    /* ✨ EFEITOS: poeira, folhas, pirilampos, brasas e sombra
+       Tudo em quadradinhos de 3 px (o mesmo "pixel" da floresta e do chão). */
+    const FX_PX = 3;
+    let fx = [], fxFolhaT = 0, poeiraT = 0, oncaEraNoChao = true, oncaPiscar = 0, hitFlash = 0;
+    function fxAdd(p) { if (fx.length < 260) fx.push(p); }
+    function fxPoeira(x, y, n, forca) {
+      const cores = ['#6b4a30', '#8a6a48', '#4f9640', '#37803a'];
+      for (let i = 0; i < n; i++) {
+        const l = 22 + Math.random() * 14;
+        fxAdd({ x: x + (Math.random() - 0.5) * 10, y: y - Math.random() * 4,
+          vx: -(0.6 + Math.random() * 1.2) * forca - speed * 0.35, vy: -(0.2 + Math.random() * 0.9) * forca, g: 0.04,
+          life: l, max: l, col: cores[(Math.random() * cores.length) | 0], sz: Math.random() < 0.35 ? FX_PX * 2 : FX_PX });
+      }
+    }
+    function fxExplosao(x, y) {
+      const cores = ['#f59e0b', '#fde68a', '#ff6a1a', '#1c0a00', '#43a047'];
+      for (let i = 0; i < 18; i++) {
+        const l = 30 + Math.random() * 16;
+        fxAdd({ x, y, vx: (Math.random() - 0.5) * 7, vy: -1 - Math.random() * 4, g: 0.18, life: l, max: l,
+          col: cores[(Math.random() * cores.length) | 0], sz: FX_PX * (Math.random() < 0.3 ? 2 : 1) });
+      }
+    }
+    function fxAmbiente(dt) {
+      /* folhas caindo da copa das árvores */
+      fxFolhaT += dt;
+      if (fxFolhaT >= 26) {
+        fxFolhaT = 0;
+        const cores = ['#1f6b2e', '#2f8a3c', '#43a047', '#8fb04a'];
+        fxAdd({ folha: true, t: 0, fase: Math.random() * 6.28, x: VIEW_W + 10, y: 20 + Math.random() * (GROUND - 190),
+          vx: -(0.5 + Math.random() * 0.7), vy: 0.22 + Math.random() * 0.3, life: 700, max: 700,
+          col: cores[(Math.random() * cores.length) | 0], sz: FX_PX });
+      }
+      /* pirilampos / pólen dourado perto do sol */
+      if (Math.random() < 0.02 * dt) {
+        fxAdd({ folha: true, pisca: true, t: 0, fase: Math.random() * 6.28, x: VIEW_W + 10, y: GROUND - 170 + Math.random() * 130,
+          vx: -(0.3 + Math.random() * 0.4), vy: (Math.random() - 0.5) * 0.15, life: 700, max: 700, col: '#ffd682', sz: FX_PX });
+      }
+      /* brasas subindo do fogo */
+      obstacles.forEach(ob => {
+        if (ob.type === 'fire' && ob.x > -20 && ob.x < VIEW_W && Math.random() < 0.3 * dt) {
+          const cores = ['#ffb02e', '#ff6a1a', '#ffe08a'], l = 26 + Math.random() * 14;
+          fxAdd({ x: ob.x + ob.w * (0.3 + Math.random() * 0.4), y: GROUND + OBSTACLE_SINK - ob.h * 0.75,
+            vx: (Math.random() - 0.5) * 0.6, vy: -(0.5 + Math.random() * 1.1), g: -0.004, life: l, max: l,
+            col: cores[(Math.random() * cores.length) | 0], sz: FX_PX });
+        }
+      });
+    }
+    function fxUpdate(dt) {
+      for (let i = fx.length - 1; i >= 0; i--) {
+        const p = fx[i]; p.life -= dt;
+        if (p.life <= 0 || p.x < -20 || p.y > GH + 20) { fx.splice(i, 1); continue; }
+        if (p.folha) { p.t += dt; p.x += (p.vx - speed * 0.12) * dt + Math.sin(p.t * 0.08 + p.fase) * 0.4 * dt; p.y += p.vy * dt; }
+        else { p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; }
+      }
+    }
+    function fxDraw() {
+      fx.forEach(p => {
+        let a = Math.min(1, p.life / p.max * 1.8);
+        if (p.pisca) a *= 0.55 + 0.45 * Math.sin(tick * 0.12 + p.fase);
+        ctx.globalAlpha = Math.max(0, a);
+        ctx.fillStyle = p.col;
+        ctx.fillRect(Math.round(p.x / FX_PX) * FX_PX, Math.round(p.y / FX_PX) * FX_PX, p.sz, p.sz);
+      });
+      ctx.globalAlpha = 1;
+    }
+    /* sombra no chão: encolhe e some um pouco quando a onça pula */
+    function drawOncaSombra() {
+      const alt = Math.max(0, GROUND - onca.y), k = Math.max(0.35, 1 - alt / 140);
+      const sw = Math.round(ONCA_RENDER_WIDTH * 0.55 * k / FX_PX) * FX_PX;
+      const sx = Math.round((onca.x - sw / 2) / FX_PX) * FX_PX, sy = Math.round((GROUND + 11) / FX_PX) * FX_PX;
+      ctx.fillStyle = `rgba(3,20,12,${0.35 * k})`;
+      ctx.fillRect(sx, sy, sw, FX_PX);
+      ctx.fillRect(sx + FX_PX, sy + FX_PX, sw - 2 * FX_PX, FX_PX);
+    }
+
     function jump(){
   if(running && onca.onGround){
     onca.vy = JUMP_V;
     onca.onGround = false;
+    fxPoeira(onca.x - 12, GROUND + 12, 5, 1.1);
     jumpTime = 0; // 👈 importante
   }
 }
@@ -2740,6 +2862,16 @@ if (onca.y >= GROUND) {
   jumpTime = 0;
 }
 
+/* poeira: pouso, e passinhos enquanto corre */
+if (onca.onGround && !oncaEraNoChao) fxPoeira(onca.x - 5, GROUND + 12, 8, 1.4);
+oncaEraNoChao = onca.onGround;
+if (onca.onGround) {
+  poeiraT += dt;
+  if (poeiraT >= 7) { poeiraT = 0; fxPoeira(onca.x - 28, GROUND + 12, 2, 0.6); }
+}
+if (oncaPiscar > 0) oncaPiscar = Math.max(0, oncaPiscar - dt);
+if (hitFlash > 0) hitFlash = Math.max(0, hitFlash - dt);
+
 /*
  * Prepara o frame atual da onça antes da colisão.
  *
@@ -2831,6 +2963,10 @@ else {
 
     lives--;
 
+    fxExplosao(onca.x, onca.y - 20);
+    hitFlash = 18;
+    oncaPiscar = 60;
+
     shakePanel();
 
     updateHUD(
@@ -2860,7 +2996,12 @@ obstacles = obstacles.filter(
  * A função desenhará o mesmo frame que foi
  * preparado em updateOncaSprite().
  */
-drawOnca();
+drawOncaSombra();
+/* depois de levar dano, a onça pisca por um instante */
+if (!(oncaPiscar > 0 && Math.floor(oncaPiscar / 4) % 2)) drawOnca();
+
+/* ✨ poeira, folhas, pirilampos e brasas */
+fxAmbiente(dt); fxUpdate(dt); fxDraw();
 
 /* 🌿 CAPIM DA FRENTE: passa na frente da onça, mais rápido que o chão */
 if (FRENTE_ATIVO && decoracao) {
@@ -2870,6 +3011,10 @@ if (FRENTE_ATIVO && decoracao) {
 }
 
 ctx.restore();
+
+      /* clarão vermelho rápido ao levar dano */
+      if (hitFlash > 0) { ctx.fillStyle = `rgba(200,30,30,${0.28 * hitFlash / 18})`; ctx.fillRect(0, 0, W, H); }
+
       /* spawn obs */
       obsTick+=dt; if(obsTick>=obsInterval){obsTick=0;obsInterval=Math.max(55,110-level*8);spawnObs();}
 
@@ -2887,6 +3032,7 @@ ctx.restore();
     }
     function start(){partidaRanking=iniciarRanking('onca');holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
       obstacles=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
+      fx=[];fxFolhaT=0;poeiraT=0;oncaEraNoChao=true;oncaPiscar=0;hitFlash=0;
       running=true;hideScreen();updateHUD(0,'1,0x',3);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
     activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onpointerdown=null;canvas.onpointerup=null;canvas.onpointercancel=null;canvas.style.touchAction='';}};
@@ -3071,230 +3217,370 @@ ctx.restore();
       if (rv < camY - 0.12) morrer('deixado');
     }
 
-    /* ── DESENHO ── */
-    const yLane = r => H - (r - camY + 1) * T;
+    /* ══════════════════════════════════════════════════════════════
+       🎨 VISUAL PIXEL ART — tudo desenhado por código (sem PNG).
+       1 "pixel de arte" = P pixels na tela. Mude P pra deixar mais
+       grosso (4) ou mais fino (2). Ajuste as paletas em PAL / cores.
+    ══════════════════════════════════════════════════════════════ */
+    const P = 3, AW = W / P;                       // AW = 320 colunas de pixel de arte
+    const rnd = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const mkc = (wa, ha, m = 0) => {                // canvas em "pixels de arte" (+ margem m pro contorno)
+      const c = document.createElement('canvas'); c.width = (wa + 2 * m) * P; c.height = (ha + 2 * m) * P;
+      const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+      const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect((a + m) * P, (b + m) * P, w * P, h * P); };
+      return { c, x, R };
+    };
+    const disco = (R, cx, cy, r, col) => { for (let j = -r; j <= r; j++) for (let i = -r; i <= r; i++) if (i * i + j * j <= r * r + r * 0.6) R(cx + i, cy + j, 1, 1, col); };
+    const contorno = (c, cor) => {                  // contorno de 1 pixel de arte em volta do desenho
+      const x = c.getContext('2d'), w = c.width, h = c.height, a = x.getImageData(0, 0, w, h).data, nw = w / P, nh = h / P;
+      const A = (i, j) => i >= 0 && j >= 0 && i < nw && j < nh && a[((j * P + 1) * w + i * P + 1) * 4 + 3] > 10;
+      x.fillStyle = cor;
+      for (let j = 0; j < nh; j++) for (let i = 0; i < nw; i++)
+        if (!A(i, j) && (A(i - 1, j) || A(i + 1, j) || A(i, j - 1) || A(i, j + 1))) x.fillRect(i * P, j * P, P, P);
+    };
+    const escolher = (r, arr) => arr[Math.floor(r() * arr.length)];
 
-    function desenharArvore(cx, cy) {
-      ctx.fillStyle = '#5b3a1e'; ctx.fillRect(cx - 4, cy + 4, 8, 17);
-      ctx.fillStyle = '#1f6b2e'; ctx.beginPath(); ctx.arc(cx, cy - 6, 15, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#256f33';
-      ctx.beginPath(); ctx.arc(cx - 10, cy + 1, 11, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx + 10, cy + 1, 11, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#2f8a3e'; ctx.beginPath(); ctx.arc(cx - 3, cy - 10, 6, 0, Math.PI * 2); ctx.fill();
+    /* ── 🐸 SAPO (o sapo original, redesenhado em pixel art na mesma grade do cenário) ──
+       Andando pra frente/lados usa o sapo "de costas" (girado de 90 em 90°, sem borrar);
+       ao voltar (seta pra baixo) usa o sapo de frente, com os olhões. */
+    const PAL = { k: '#0b1f14', g: '#b8b346', h: '#e2dc74', G: '#5e7a4b', w: '#eef0c8', y: '#ffd84a', p: '#0b1f14' };
+    const SAPO_COSTAS = [          // metade esquerda (a direita é espelhada)
+      '...kkkk.', '..kghgGk', '..kghggg', '..kggggg', '.kgggggg', '.kgggggg', 'kkGggggg', 'kGGkkggg', 'kkGGkggg', 'kkGGkGGG', 'kkkkkkkk'];
+    const SAPO_FRENTE = [
+      '...kkkk.', '..kwwwwk', '..kwkkwg', '..kwkkwg', '.kkwwwwg', '.kgggggg', 'kkgggggg', 'kGgggyyy', 'kkGggyyy', 'kkGgyyyy', 'kkkkggkk', '....kk..'];
+    /* sapo de LADO (virado pra direita; pra esquerda é espelhado) */
+    /* sapo de LADO (virado pra direita; pra esquerda é espelhado).
+       Dois quadros que se alternam com o tempo: só o olhinho muda. */
+    const SAPO_LADO_A = [
+      '..........kkkk...',
+      '.........kwwwwk..',
+      '....kkkkkkwwkkk..',
+      '...kgggggkwwkkk..',
+      '..kghhgggkwwwwk..',
+      '.kggggggggkkkkgk.',
+      'kggggggggggggGggk',
+      'kGGgggggggggggggk',
+      'kGGGGgggggyyyyggk',
+      'kGGGGGkgggyyyyyk.',
+      'kkGGGGGkggyyyyk..',
+      '.kkkkkkkkkkkkkk..'];
+    const SAPO_LADO_B = [
+      '..........kkkkk..',
+      '.........kwwwwwk.',
+      '....kkkkkkwwkkwk.',
+      '...kgggggkwwkkwk.',
+      '..kghhgggkwwwwwk.',
+      '.kggggggggkkkkkgk',
+      'kgggggggggggggGgk',
+      'kGGgggggggggggggk',
+      'kGGGGgggggyyyyggk',
+      'kGGGGGkgggyyyyyk.',
+      'kkGGGGGkggyyyyk..',
+      '.kkkkkkkkkkkkkk..'];
+    const espelha = m => m.map(r => r + [...r].reverse().join(''));
+    const espelhaLado = m => m.map(r => [...r].reverse().join(''));
+    const gira = m => { const h = m.length, w = m[0].length, o = []; for (let j = 0; j < w; j++) { let s = ''; for (let i = h - 1; i >= 0; i--) s += m[i][j]; o.push(s); } return o; };
+    const estica = (m, linha) => { const o = m.slice(); o.splice(linha, 0, m[linha]); return o; };   // +1 pixel de altura (pulo)
+    const matParaCanvas = m => { const { c, R } = mkc(m[0].length, m.length, 1); m.forEach((row, j) => [...row].forEach((ch, i) => { if (ch !== '.') R(i, j, 1, 1, PAL[ch]); })); return c; };
+    let sapoSprites = null;
+    function montarSapos() {
+      sapoSprites = {};
+      [['parado', 0], ['pulo', 1]].forEach(([q, pulo]) => {
+        const A = espelha(pulo ? estica(SAPO_COSTAS, 4) : SAPO_COSTAS), B = espelha(pulo ? estica(SAPO_FRENTE, 5) : SAPO_FRENTE);
+        const LA = pulo ? estica(SAPO_LADO_A, 6) : SAPO_LADO_A, LB = pulo ? estica(SAPO_LADO_B, 6) : SAPO_LADO_B;   // sapo de lado (direita), 2 quadros
+        const [cA, cB] = [A, B].map(matParaCanvas);
+        sapoSprites[q] = [cA, [LA, LB].map(matParaCanvas), cB, [LA, LB].map(m => matParaCanvas(espelhaLado(m)))];   // 0 cima · 1 direita · 2 baixo (de frente) · 3 esquerda
+      });
     }
-    function desenharToco(cx, cy) {
-      ctx.fillStyle = '#4a2f18'; ctx.beginPath(); ctx.ellipse(cx, cy + 12, 17, 6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#7a4e24'; ctx.fillRect(cx - 14, cy - 2, 28, 14);
-      ctx.fillStyle = '#d2a56b'; ctx.beginPath(); ctx.ellipse(cx, cy - 2, 14, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#a97c45'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.ellipse(cx, cy - 2, 9, 4.5, 0, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.ellipse(cx, cy - 2, 4, 2, 0, 0, Math.PI * 2); ctx.stroke();
-    }
-    function roda(x, y, r) {
-      ctx.fillStyle = '#1b1b1b'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#8a8a8a'; ctx.beginPath(); ctx.arc(x, y, r * 0.38, 0, Math.PI * 2); ctx.fill();
-    }
-    /* veículos: desenhados virados pra direita; se for pra esquerda, espelha */
-    function comEspelho(x, y, w, dir, fn) {
-      ctx.save(); ctx.translate(x, y);
-      if (dir < 0) { ctx.translate(w, 0); ctx.scale(-1, 1); }
-      fn(); ctx.restore();
-    }
-    function desenharCaminhao() {
-      ctx.fillStyle = '#2b2b2b'; ctx.fillRect(0, 30, 140, 6);
-      ctx.fillStyle = '#8b5a2b'; ctx.fillRect(2, 9, 98, 21);
-      ctx.strokeStyle = '#4a2f18'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(2, 16); ctx.lineTo(100, 16); ctx.moveTo(2, 23); ctx.lineTo(100, 23); ctx.stroke();
-      ctx.fillStyle = '#3b2a1a'; [6, 50, 94].forEach(x => ctx.fillRect(x, 6, 4, 24));
-      ctx.fillStyle = '#c0392b'; ctx.fillRect(104, 14, 36, 22);
-      ctx.fillStyle = '#bde3f2'; ctx.fillRect(122, 17, 14, 9);
-      ctx.fillStyle = '#ffe9a8'; ctx.fillRect(138, 28, 3, 4);
-      roda(16, 38, 6); roda(34, 38, 6); roda(116, 38, 6);
-    }
-    function desenharTrator() {
-      ctx.fillStyle = '#555'; ctx.fillRect(88, 18, 6, 20);
-      ctx.fillStyle = '#f1c40f'; ctx.fillRect(28, 18, 52, 14);
-      ctx.fillStyle = '#e0b30c'; ctx.fillRect(34, 6, 28, 14);
-      ctx.fillStyle = '#bde3f2'; ctx.fillRect(38, 9, 20, 8);
-      ctx.fillStyle = '#333'; ctx.fillRect(70, 4, 3, 14);
-      roda(26, 32, 13); roda(80, 37, 8);
-    }
-    function desenharCaminhonete() {
-      ctx.fillStyle = '#d35400'; ctx.fillRect(4, 20, 88, 14);
-      ctx.fillStyle = '#b84600'; ctx.fillRect(4, 16, 44, 5);
-      ctx.fillStyle = '#d35400'; ctx.fillRect(52, 9, 30, 13);
-      ctx.fillStyle = '#bde3f2'; ctx.fillRect(60, 11, 18, 8);
-      ctx.fillStyle = '#ffe9a8'; ctx.fillRect(90, 24, 3, 4);
-      roda(22, 36, 7); roda(72, 36, 7);
-    }
-    function retArred(x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
+    function desenharSapo(cx, cy, ang, pulando, sx, sy) {
+      if (!sapoSprites) montarSapos();
+      const dir = ((Math.round(ang / (Math.PI / 2)) % 4) + 4) % 4;
+      let sp = sapoSprites[pulando ? 'pulo' : 'parado'][dir];
+      if (Array.isArray(sp)) sp = sp[Math.floor(tick / 24) % 2];   // de lado: o olhinho alterna com o tempo
+      if (pulando) { sx = sy = 1; }   // o pulo já estica o desenho em pixels inteiros
+      ctx.save(); ctx.translate(Math.round(cx / P) * P, Math.round(cy / P) * P); ctx.scale(sx, sy);
+      ctx.imageSmoothingEnabled = false; ctx.drawImage(sp, -sp.width / 2, -sp.height / 2); ctx.restore();
     }
 
+    /* ── 🌳 ÁRVORES E TOCOS ── */
+    function montarArvore(seed, c1, c2, c3) {
+      const { c, R } = mkc(20, 22, 1), r = rnd(seed);
+      R(8, 14, 4, 8, '#6b4423'); R(8, 14, 1, 8, '#4a2d15'); R(11, 14, 1, 8, '#85562c'); R(6, 20, 8, 2, '#5b3a1e'); R(5, 21, 2, 1, '#5b3a1e'); R(13, 21, 2, 1, '#5b3a1e');
+      disco(R, 10, 9, 9, c1); disco(R, 9, 8, 8, c2); disco(R, 7, 5, 4, c3);
+      for (let n = 0; n < 70; n++) {
+        const i = 2 + Math.floor(r() * 16), j = 1 + Math.floor(r() * 16);
+        if ((i - 10) ** 2 + (j - 9) ** 2 > 60) continue;
+        R(i, j, 2, 1, (i + j < 14 && r() < .55) ? c3 : (r() < .5 ? c1 : c2));
+      }
+      for (let n = 0; n < 5; n++) R(3 + Math.floor(r() * 13), 13 + Math.floor(r() * 4), 2, 1, c1);
+      contorno(c, '#0d2a15'); return c;
+    }
+    function montarToco() {
+      const { c, R, x } = mkc(16, 13, 1);
+      R(0, 9, 3, 2, '#5f3b1a'); R(13, 9, 3, 2, '#5f3b1a'); R(1, 10, 14, 2, '#4a2d15');
+      R(2, 4, 12, 7, '#7a4e24'); R(2, 4, 2, 7, '#5f3b1a'); R(12, 4, 2, 7, '#93602d'); R(6, 5, 1, 5, '#5f3b1a'); R(9, 6, 1, 4, '#63401e');
+      for (let j = -3; j <= 3; j++) for (let i = -7; i <= 7; i++) if ((i / 7) ** 2 + (j / 3.4) ** 2 <= 1) R(8 + i, 3 + j, 1, 1, '#dcb078');
+      for (let j = -2; j <= 2; j++) for (let i = -5; i <= 5; i++) { const e = (i / 5) ** 2 + (j / 2.2) ** 2; if (e <= 1 && e > .6) R(8 + i, 3 + j, 1, 1, '#b8884f'); }
+      R(8, 3, 1, 1, '#9a6b3a'); R(3, 1, 4, 1, '#f0cf9a');
+      contorno(c, '#2a170c'); return c;
+    }
 
-const imgTronco = new Image();
-imgTronco.src = 'assets/games/troncosapo.png';
+    /* ── 🚛 VEÍCULOS DOS MADEIREIROS (2 quadros: as rodas giram) ── */
+    const roda = (R, cx, cy, f) => {
+      R(cx - 2, cy - 3, 4, 6, '#1a1a1f'); R(cx - 3, cy - 2, 6, 4, '#1a1a1f'); R(cx - 1, cy - 1, 2, 2, '#aab3bb');
+      if (f) { R(cx, cy - 2, 1, 1, '#aab3bb'); R(cx - 1, cy + 1, 1, 1, '#aab3bb'); } else { R(cx - 2, cy, 1, 1, '#aab3bb'); R(cx + 1, cy - 1, 1, 1, '#aab3bb'); }
+    };
+    const sombraVeic = c => { const x = c.getContext('2d'); x.fillStyle = 'rgba(0,0,0,.32)'; x.fillRect(2 * P, c.height - P, c.width - 4 * P, P); };
+    function montarCaminhao(f) {
+      const { c, R } = mkc(48, 14, 1);
+      R(1, 9, 47, 2, '#23232b');
+      for (let k = 0; k < 3; k++) { const y = 1 + k * 3; R(1, y, 32, 3, k % 2 ? '#8a5a32' : '#9d6a3a'); R(1, y, 32, 1, '#b98450'); R(1, y + 2, 32, 1, '#6a4224'); R(1, y, 1, 3, '#e6c086'); R(10 + k * 7, y + 1, 4, 1, '#6a4224'); }
+      [3, 17, 32].forEach(px => R(px, 0, 1, 10, '#2b1a0e'));
+      R(34, 3, 13, 7, '#c0392b'); R(34, 3, 13, 1, '#e8604c'); R(34, 9, 13, 1, '#8e2b21'); R(37, 4, 7, 3, '#a6dcf0'); R(37, 4, 7, 1, '#e4f7fd'); R(34, 5, 2, 1, '#8e2b21');
+      R(46, 7, 1, 3, '#2a2a2a'); R(47, 8, 1, 1, '#ffe9a8'); R(46, 10, 2, 1, '#9aa3ab');
+      R(35, 0, 1, 4, '#444'); R(34, 0, 3, 1, '#777');
+      roda(R, 8, 11, f); roda(R, 15, 11, f); roda(R, 38, 11, f);
+      contorno(c, '#1a0f08'); sombraVeic(c); return c;
+    }
+    function montarTrator(f) {
+      const { c, R } = mkc(32, 14, 1);
+      R(3, 9, 22, 5, '#2a2a30'); R(4, 10, 20, 3, '#3a3a44');
+      for (let k = 0; k < 10; k++) { R(4 + k * 2 + f, 9, 1, 1, '#5a5a66'); R(4 + k * 2 + (1 - f), 13, 1, 1, '#5a5a66'); }
+      R(6, 11, 2, 1, '#8a929a'); R(22, 11, 2, 1, '#8a929a'); R(13, 11, 2, 1, '#8a929a');
+      R(6, 4, 17, 6, '#f1c40f'); R(6, 4, 17, 1, '#ffe066'); R(6, 9, 17, 1, '#c79a08'); R(17, 3, 6, 2, '#e0b30c');
+      R(9, 0, 8, 5, '#e0b30c'); R(10, 1, 6, 3, '#a6dcf0'); R(10, 1, 6, 1, '#e4f7fd'); R(9, 0, 8, 1, '#c99a08');
+      R(19, 0, 1, 4, '#333'); R(18, 0, 3, 1, '#666');
+      R(25, 2, 2, 11, '#9aa3ab'); R(27, 2, 1, 11, '#6e7780'); R(24, 6, 2, 2, '#555'); R(25, 2, 2, 1, '#d6dde2');
+      contorno(c, '#1a1408'); sombraVeic(c); return c;
+    }
+    function montarCaminhonete(f) {
+      const { c, R } = mkc(32, 14, 1);
+      R(1, 7, 30, 4, '#d35400'); R(1, 7, 30, 1, '#f0701a'); R(1, 10, 30, 1, '#9a3d00');
+      R(1, 4, 15, 4, '#b84600'); R(1, 4, 15, 1, '#8e3600'); R(2, 5, 13, 2, '#7a2f00');
+      R(17, 1, 10, 7, '#d35400'); R(17, 1, 10, 1, '#f0701a'); R(19, 2, 6, 3, '#a6dcf0'); R(19, 2, 6, 1, '#e4f7fd'); R(26, 5, 4, 3, '#d35400');
+      R(31, 8, 1, 1, '#ffe9a8'); R(30, 10, 2, 1, '#9aa3ab'); R(0, 10, 1, 1, '#9aa3ab');
+      roda(R, 7, 10, f); roda(R, 24, 10, f);
+      contorno(c, '#1f0e02'); sombraVeic(c); return c;
+    }
 
-function desenharTronco(x, y, w, dir) {
-  if (!imgTronco.complete || !imgTronco.naturalWidth) return;
+    /* ── 🪵 TRONCOS (gerados no tamanho certo de cada um) ── */
+    const cacheTronco = new Map();
+    function montarTronco(wa) {
+      const { c, R } = mkc(wa, 11, 1), r = rnd(wa * 7 + 3);
+      R(2, 1, wa - 3, 9, '#7b4a2a'); R(2, 1, wa - 3, 2, '#9c6a3e'); R(2, 3, wa - 3, 1, '#8a5a33'); R(2, 8, wa - 3, 2, '#593620'); R(wa - 2, 2, 1, 7, '#6a4126');
+      R(0, 2, 3, 7, '#e9c68a'); R(1, 1, 2, 9, '#e9c68a'); R(1, 3, 1, 5, '#c99a5a'); R(1, 5, 1, 1, '#a87a40');
+      for (let n = 0; n < wa / 5; n++) R(4 + Math.floor(r() * (wa - 10)), 4 + Math.floor(r() * 4), 3 + Math.floor(r() * 5), 1, '#5a3820');
+      for (let n = 0; n < wa / 12; n++) { const mx = 5 + Math.floor(r() * (wa - 12)), ln = 3 + Math.floor(r() * 3); R(mx, 1, ln, 1, '#4e8f3b'); R(mx + 1, 2, ln - 2, 1, '#6cb04a'); }
+      const kx = 8 + Math.floor(r() * (wa - 16)); R(kx, 4, 2, 2, '#4a2c18'); R(kx, 4, 1, 1, '#2e1a0c');
+      contorno(c, '#24120a'); return c;
+    }
 
-  // região do tronco dentro da imagem 1920x1080
-  const SX = 713, SY = 484, SW = 486, SH = 136;
-  const CAP = 90;   // ponta com os anéis (lado esquerdo da imagem)
-  const FIM = 29;   // ponta lisa (lado direito da imagem)
+    /* ── 🟩 TEXTURAS DAS FAIXAS (pré-renderizadas) ── */
+    const TEX = {};
+    function montarTexturas() {
+      const grama = (seca, seed) => {
+        const { c, R } = mkc(AW, 16), r = rnd(seed);
+        const pal = seca ? ['#8a933f', '#7f8a3a', '#97a048', '#6f7a32'] : ['#3f8f3a', '#378535', '#48993f', '#2f7530'];
+        for (let j = 0; j < 16; j++) for (let i = 0; i < AW; i++) { const k = r(); R(i, j, 1, 1, k < .16 ? pal[1] : k < .28 ? pal[2] : k < .32 ? pal[3] : pal[0]); }
+        for (let n = 0; n < 26; n++) { const i = Math.floor(r() * AW), j = 2 + Math.floor(r() * 12); R(i, j, 3, 1, pal[1]); R(i + 1, j - 1, 1, 1, pal[2]); }
+        return c;
+      };
+      TEX.grama = [[1, 2, 3].map(s => grama(false, s * 11)), [1, 2, 3].map(s => grama(true, s * 17))];
+      TEX.estrada = [1, 2, 3].map(s => {
+        const { c, R } = mkc(AW, 16), r = rnd(s * 31);
+        for (let j = 0; j < 16; j++) for (let i = 0; i < AW; i++) { const k = r(); R(i, j, 1, 1, k < .1 ? '#94744d' : k < .16 ? '#ad8d63' : '#a2825a'); }
+        [4, 5, 10, 11].forEach(j => { for (let i = 0; i < AW; i++) if (r() > .12) R(i, j, 1, 1, j % 2 ? '#7d5f3d' : '#8c6d48'); });
+        for (let n = 0; n < 22; n++) { const i = Math.floor(r() * AW), j = Math.floor(r() * 16); R(i, j, 1, 1, r() < .5 ? '#c9ac80' : '#5f4630'); R(i + 1, j, 1, 1, '#6b5236'); }
+        for (let i = 0; i < AW; i++) { if (r() < .45) R(i, 0, 1, 1, '#3b7a33'); if (r() < .4) R(i, 15, 1, 1, '#337030'); if (r() < .15) R(i, 1, 1, 1, '#4a8a3a'); }
+        return c;
+      });
+      const agua = (seed) => {
+        const { c, R } = mkc(64, 16), r = rnd(seed);
+        for (let j = 0; j < 16; j++) for (let i = 0; i < 64; i++) R(i, j, 1, 1, j < 2 || j > 13 ? '#2f7098' : ((i + j) % 7 === 0 && r() < .5 ? '#3a80ad' : '#3584b6'));
+        for (let n = 0; n < 7; n++) { const wx = Math.floor(r() * 64), wy = 3 + Math.floor(r() * 10), ln = 4 + Math.floor(r() * 5);
+          for (let k = 0; k < ln; k++) { R((wx + k) % 64, wy + (k > ln / 2 ? 0 : 1), 1, 1, '#63abd4'); R((wx + k) % 64, wy + (k > ln / 2 ? 1 : 2), 1, 1, '#2b6a93'); } }
+        return c;
+      };
+      TEX.aguaA = agua(5);
+      const { c: cb, R: Rb } = mkc(80, 16), r = rnd(91);
+      for (let n = 0; n < 16; n++) { const sx = Math.floor(r() * 80), sy = 2 + Math.floor(r() * 12); Rb(sx, sy, 1 + Math.floor(r() * 2), 1, r() < .6 ? '#bfe6f7' : '#8fd0ea'); }
+      TEX.aguaB = cb;
+      const banco = (cima) => {
+        const { c, R } = mkc(AW, 4), r = rnd(cima ? 7 : 8);
+        for (let i = 0; i < AW; i++) { const h = 1 + Math.floor(r() * 3); for (let j = 0; j < h; j++) R(i, cima ? j : 3 - j, 1, 1, j === h - 1 ? '#a8925f' : '#cdb680'); }
+        return c;
+      };
+      TEX.bancoTopo = banco(true); TEX.bancoBase = banco(false);
+      TEX.arvore = [montarArvore(3, '#17542a', '#1f6b2e', '#43a047'), montarArvore(8, '#1a5e2a', '#26793a', '#58b94a'), montarArvore(14, '#134a2c', '#1b6a3c', '#3f9a5a')];
+      TEX.toco = montarToco();
+      TEX.veic = { caminhao: [montarCaminhao(0), montarCaminhao(1)], trator: [montarTrator(0), montarTrator(1)], caminhonete: [montarCaminhonete(0), montarCaminhonete(1)] };
+      const { c: v, x: vx } = mkc(AW, Math.ceil(H / P));
+      for (let k = 0; k < 6; k++) { vx.fillStyle = 'rgba(5,20,10,' + (0.045 * (6 - k)) + ')'; const o = k * 2 * P, t = 2 * P;
+        vx.fillRect(o, o, W - 2 * o, t); vx.fillRect(o, H - o - t, W - 2 * o, t); vx.fillRect(o, o, t, H - 2 * o); vx.fillRect(W - o - t, o, t, H - 2 * o); }
+      for (let k = 0; k < 5; k++) { vx.fillStyle = 'rgba(210,240,225,' + (0.13 - k * 0.026) + ')'; vx.fillRect(0, k * 3 * P, W, 3 * P); }
+      TEX.vinheta = v;
+    }
+    montarTexturas();
+    const yP = r => Math.round((H - (r - camY + 1) * T) / P) * P;   // y da faixa, alinhado à grade de pixels
 
-  const ty = y + 9, th = 30;                 // posição e altura do tronco na tela
-  const k = th / SH;
-  const capW = CAP * k, fimW = FIM * k;
-  const meioW = w - capW - fimW;             // o miolo estica conforme o tamanho do tronco
+    /* ── ✨ PARTÍCULAS ── */
+    let fx = [], lastTick = 0, prevHop = false;
+    function solta(x, y, n, cols, o) {
+      o = o || {};
+      for (let i = 0; i < n && fx.length < 320; i++) {
+        const l = (o.life || 24) * (0.6 + Math.random() * 0.8);
+        fx.push({ x, y, vx: (Math.random() - .5) * (o.v || 2), vy: (o.vy0 || 0) - Math.random() * (o.up || 1), g: o.g || 0.1, life: l, max: l, col: cols[Math.floor(Math.random() * cols.length)], sz: (o.sz || 1) * P * (Math.random() < .3 ? 2 : 1) });
+      }
+    }
+    const anel = (x, y) => fx.push({ x, y, ring: true, r: 3, life: 26, max: 26 });
+    function atualizarFx(dt) {
+      for (let i = fx.length - 1; i >= 0; i--) {
+        const p = fx[i]; p.life -= dt;
+        if (p.life <= 0) { fx.splice(i, 1); continue; }
+        if (p.ring) { p.r += 0.55 * dt; continue; }
+        p.x += p.vx * dt; p.vy += p.g * dt; p.y += p.vy * dt;
+      }
+    }
+    function desenharFx() {
+      fx.forEach(p => {
+        ctx.globalAlpha = Math.min(1, p.life / p.max * 1.6);
+        if (p.ring) {
+          const rx = Math.round(p.r / P) * P, ry = Math.round(p.r * 0.5 / P) * P, gx = Math.round(p.x / P) * P, gy = Math.round(p.y / P) * P, s = Math.max(P, Math.round(rx * 0.55 / P) * P);
+          ctx.fillStyle = '#dff6fc';
+          ctx.fillRect(gx - s / 2, gy - ry, s, P); ctx.fillRect(gx - s / 2, gy + ry, s, P); ctx.fillRect(gx - rx, gy - ry / 2, P, Math.max(P, ry)); ctx.fillRect(gx + rx, gy - ry / 2, P, Math.max(P, ry));
+        } else { ctx.fillStyle = p.col; ctx.fillRect(Math.round(p.x / P) * P, Math.round(p.y / P) * P, p.sz, p.sz); }
+      });
+      ctx.globalAlpha = 1;
+    }
 
-  ctx.save();
-  ctx.imageSmoothingEnabled = false;         // mantém o pixel art nítido
-  let x0 = x;
-  if (dir > 0) {                             // esquerda -> direita: imagem invertida
-    ctx.translate(x + w, 0);
-    ctx.scale(-1, 1);
-    x0 = 0;
-  }                                          // direita -> esquerda: imagem normal
-  ctx.drawImage(imgTronco, SX, SY, CAP, SH, x0, ty, capW, th);
-  ctx.drawImage(imgTronco, SX + CAP, SY, SW - CAP - FIM, SH, x0 + capW, ty, meioW, th);
-  ctx.drawImage(imgTronco, SX + SW - FIM, SY, FIM, SH, x0 + capW + meioW, ty, fimW, th);
-  ctx.restore();
-}
-
-const imgSapo = new Image();
-imgSapo.src = 'assets/games/sapofrente.png';
-
-const imgSapoVolta = new Image();
-imgSapoVolta.src = 'assets/games/sapofrente2.png';   // sapo de frente (sem fundo), usado ao voltar
-
-/* 🐸 SAPO: os PNGs novos (967×720) têm área transparente em volta, então só a parte com o sapo é recortada */
-const SAPO_W = 40;                                      // largura do sapo andando na tela (mude pra ajustar)
-const SAPO_VOLTA_W = 42;                                // largura do sapo de frente (ao voltar) na tela
-const SAPO_CORTE = { x: 199, y: 175, w: 547, h: 376 };  // onde está o sapo dentro do sapofrente.png
-const SAPO_VOLTA_CORTE = { x: 199, y: 175, w: 552, h: 406 };   // onde está o sapo dentro do sapofrente2.png
-const SAPO_QUALIDADE = 3;                               // o sapo é reduzido uma vez só, nessa resolução (3 = nítido mesmo girando)
-let sapoAnda = null, sapoVolta = null;
-
-function recortarSapo(img, corte, largura) {            // recorta e reduz com suavização boa (1 vez só)
-  const c = document.createElement('canvas');
-  c.width = Math.round(largura * SAPO_QUALIDADE);
-  c.height = Math.round(largura * SAPO_QUALIDADE * corte.h / corte.w);
-  const cc = c.getContext('2d');
-  cc.imageSmoothingEnabled = true;
-  cc.imageSmoothingQuality = 'high';
-  cc.drawImage(img, corte.x, corte.y, corte.w, corte.h, 0, 0, c.width, c.height);
-  return c;
-}
-
-function desenharSapo(cx, cy, ang, esticar, sx, sy) {
-  if (!imgSapo.complete || !imgSapo.naturalWidth) return;
-  const voltando = Math.abs(ang - Math.PI) < 0.01 && imgSapoVolta.complete && imgSapoVolta.naturalWidth;
-  if (!sapoAnda) sapoAnda = recortarSapo(imgSapo, SAPO_CORTE, SAPO_W);
-  if (voltando && !sapoVolta) sapoVolta = recortarSapo(imgSapoVolta, SAPO_VOLTA_CORTE, SAPO_VOLTA_W);
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.scale(sx, sy * (1 + esticar * 0.15));
-  ctx.imageSmoothingEnabled = true;          // o sapo já foi reduzido com qualidade, então aqui suaviza
-  if (voltando) {
-    // ao voltar (seta pra baixo) usa o sapo de frente, sem girar
-    const w = SAPO_VOLTA_W, h = sapoVolta.height / SAPO_QUALIDADE;
-    ctx.drawImage(sapoVolta, -w / 2, -h / 2, w, h);
-  } else {
-    const w = SAPO_W, h = sapoAnda.height / SAPO_QUALIDADE;
-    ctx.rotate(ang);                   // <- vira o sapo conforme a direção
-    ctx.drawImage(sapoAnda, -w / 2, -h / 2, w, h);
-  }
-  ctx.restore();
-}
-
-const imgAgua = new Image();
-imgAgua.src = 'assets/games/aguasapo2.png';
-const VEL_AGUA = 0.6;   // velocidade da água (aumente ou diminua à vontade)
+    /* ── 🎬 DESENHO DAS FAIXAS ── */
+    const scrollar = (img, y, off) => { const w = img.width; let xx = -((((Math.round(off / P) * P) % w) + w) % w); for (; xx < W; xx += w) ctx.drawImage(img, xx, y); };
+    function desenharDeco(l, y) {
+      l.deco.forEach((d, i) => {
+        const gx = Math.round(d.x / P) * P, gy = y + Math.round(d.y / P) * P, sw = Math.sin(tick * 0.05 + d.x) > 0.4 ? P : 0, t = i % 4;
+        if (t === 1 && !l.seca) {
+          const cor = ['#ffffff', '#ffd23f', '#ff7fb0'][Math.floor(d.x) % 3];
+          ctx.fillStyle = '#2c7a2f'; ctx.fillRect(gx, gy, P, P * 2);
+          ctx.fillStyle = cor; ctx.fillRect(gx - P + sw / 3, gy - P, P * 3, P); ctx.fillRect(gx + sw / 3, gy - P * 2, P, P * 3); ctx.fillStyle = '#ffb02e'; ctx.fillRect(gx, gy - P, P, P);
+        } else if (t === 1) { ctx.fillStyle = '#6b5a36'; ctx.fillRect(gx, gy, P * 3, P); ctx.fillRect(gx + P, gy - P, P, P); }
+        else if (t === 3 && !l.seca && Math.floor(d.x) % 7 < 3) {
+          ctx.fillStyle = '#e8dcc0'; ctx.fillRect(gx, gy, P, P * 2); ctx.fillStyle = '#d6342a'; ctx.fillRect(gx - P, gy - P, P * 3, P * 2); ctx.fillStyle = '#fff'; ctx.fillRect(gx, gy - P, P, P);
+        } else {
+          ctx.fillStyle = l.seca ? '#6b7430' : '#2a6b2b'; ctx.fillRect(gx, gy, P, P * 2);
+          ctx.fillStyle = l.seca ? '#a8b052' : '#7fd05a'; ctx.fillRect(gx - P + sw, gy - P, P, P); ctx.fillRect(gx + P + sw / 2, gy - P, P, P); ctx.fillStyle = l.seca ? '#8a933f' : '#58b04a'; ctx.fillRect(gx, gy - P, P, P);
+        }
+      });
+    }
     function desenharBase(l, r, y) {
+      const dn = r > 0 ? getLane(r - 1) : null, up = getLane(r + 1);
       if (l.tipo === 'grama') {
-        ctx.fillStyle = l.seca ? (r % 2 ? '#7c8a3d' : '#85933f') : (r % 2 ? '#3b8636' : '#41903a');
-        ctx.fillRect(0, y, W, T);
-        ctx.strokeStyle = l.seca ? '#5f6b2c' : '#2c6a29'; ctx.lineWidth = 2;
-        l.deco.forEach(d => {
-          ctx.beginPath(); ctx.moveTo(d.x, y + d.y); ctx.lineTo(d.x - 2, y + d.y - 5);
-          ctx.moveTo(d.x, y + d.y); ctx.lineTo(d.x + 2, y + d.y - 5); ctx.stroke();
-        });
+        ctx.drawImage(TEX.grama[l.seca ? 1 : 0][r % 3], 0, y);
+        if (r % 2) { ctx.fillStyle = 'rgba(0,0,0,.05)'; ctx.fillRect(0, y, W, T); }
+        if (up && up.tipo === 'riacho') ctx.drawImage(TEX.bancoTopo, 0, y);
+        if (dn && dn.tipo === 'riacho') ctx.drawImage(TEX.bancoBase, 0, y + T - 4 * P);
+        desenharDeco(l, y);
       } else if (l.tipo === 'estrada') {
-        ctx.fillStyle = '#8a6d4b'; ctx.fillRect(0, y, W, T);
-        ctx.fillStyle = '#7a5e3f'; ctx.fillRect(0, y + 13, W, 6); ctx.fillRect(0, y + 30, W, 5);
-        ctx.fillStyle = '#6e553a';
-        l.deco.forEach(d => ctx.fillRect(d.x, y + d.y, 3, 2));
-} else {
-  ctx.fillStyle = '#3a78a8'; ctx.fillRect(0, y, W, T);   // cor de fundo enquanto a imagem carrega
-  if (imgAgua.complete && imgAgua.naturalWidth) {
-    const tw = T * imgAgua.naturalWidth / imgAgua.naturalHeight;   // largura de cada repetição, na proporção certa
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.beginPath(); ctx.rect(0, y, W, T); ctx.clip();
-    const fase = r * 37;                                           // cada faixa começa em um ponto diferente
-const off = (((tick * l.v * l.dir + fase) % tw) + tw) % tw;
-    for (let xx = -tw + off; xx < W; xx += tw) {
-      ctx.drawImage(imgAgua, xx, y, tw, T);
-    }
-    ctx.restore();
-  }
-}
-    }
-    function desenharObjetos(l, y) {
-      if (l.tipo === 'grama') {
-        l.blocos.forEach(c => { if (l.seca) desenharToco(c * T + T / 2, y + T / 2); else desenharArvore(c * T + T / 2, y + T / 2); });
-      } else if (l.tipo === 'estrada') {
-        l.itens.forEach(it => {
-          const fn = it.k === 'caminhao' ? desenharCaminhao : it.k === 'trator' ? desenharTrator : desenharCaminhonete;
-          comEspelho(it.pos, y, it.w, l.dir, fn);
-        });
+        ctx.drawImage(TEX.estrada[r % 3], 0, y);
+        ctx.fillStyle = '#6e553a'; l.deco.forEach(d => ctx.fillRect(Math.round(d.x / P) * P, y + Math.round(d.y / P) * P, P * 2, P));
       } else {
-l.itens.forEach(it => desenharTronco(it.pos, y, it.w, l.dir));
-      }
-    }
-
-    function desenhar() {
-      clrCanvas();
-      const r0 = Math.max(0, Math.floor(camY) - 1), r1 = Math.ceil(camY + H / T) + 1;
-      for (let r = r0; r <= r1; r++) desenharBase(getLane(r), r, yLane(r));
-      for (let r = r1; r >= r0; r--) desenharObjetos(getLane(r), yLane(r));   // de cima pra baixo: o de baixo fica na frente
-
-      /* sapo */
-      let rv = frog.r, x = frog.x, arco = 0, esticar = 0;
-      if (frog.hop) {
-        const h = frog.hop, p = Math.min(1, h.t);
-        rv = h.r0 + (h.r1 - h.r0) * p; x = h.x0 + (h.x1 - h.x0) * p;
-        arco = Math.sin(Math.PI * p); esticar = arco;
-      }
-      let cy = yLane(rv) + T / 2 - arco * 14;
-      if (!frog.hop && estado === 'jogando' && getLane(frog.r).tipo === 'riacho') cy += Math.sin(tick * 0.12) * 1.5;   // balança no tronco
-      let sx = 1 + 0.12 * arco, sy = sx, alfa = 1;
-      if (estado === 'morrendo') {
-        const t = morte.t;
-        if (morte.tipo === 'atropelou') { sx = 1.4; sy = 0.25; alfa = Math.max(0, 1 - Math.max(0, t - 25) / 20); }
-        else if (morte.tipo === 'afogou' || morte.tipo === 'levado') {
-          sx = sy = Math.max(0, 1 - t / 30);
-          ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2;
-          for (let k = 0; k < 3; k++) {
-            const rad = (t * 0.8 + k * 9) % 28 + 4;
-            ctx.globalAlpha = Math.max(0, 1 - rad / 32);
-            ctx.beginPath(); ctx.arc(x, cy, rad, 0, Math.PI * 2); ctx.stroke();
-          }
-          ctx.globalAlpha = 1;
+        const off = tick * l.v * l.dir * 0.5 + r * 37;
+        scrollar(TEX.aguaA, y, off); scrollar(TEX.aguaB, y, -off * 0.6 + r * 11);
+        if (!dn || dn.tipo !== 'riacho') {
+          ctx.fillStyle = '#1d4f73'; ctx.fillRect(0, y + T - P, W, P); ctx.fillStyle = '#e6f7fb';
+          for (let i = 0; i < AW; i += 2) if (Math.sin(tick * 0.06 + i * 0.7 + r) > 0.25) ctx.fillRect(i * P, y + T - 2 * P, P * 2, P);
+        }
+        if (!up || up.tipo !== 'riacho') {
+          ctx.fillStyle = '#1d4f73'; ctx.fillRect(0, y, W, P); ctx.fillStyle = '#e6f7fb';
+          for (let i = 1; i < AW; i += 2) if (Math.sin(tick * 0.06 + i * 0.9 + r * 2) > 0.3) ctx.fillRect(i * P, y + P, P * 2, P);
         }
       }
-      if (sx > 0.02 && alfa > 0) { ctx.globalAlpha = alfa; desenharSapo(x, cy, frog.ang, esticar, sx, sy); ctx.globalAlpha = 1; }
-      if (estado === 'morrendo') {
-        ctx.fillStyle = 'rgba(200,30,30,' + (0.28 * Math.max(0, 1 - morte.t / 45)) + ')';
-        ctx.fillRect(0, 0, W, H);
+    }
+    function desenharObjetos(l, y, r) {
+      if (l.tipo === 'grama') {
+        l.blocos.forEach(col => {
+          const cx = col * T + T / 2;
+          ctx.fillStyle = 'rgba(0,0,0,.24)'; ctx.fillRect(cx - 18, y + T - 9, 36, 6); ctx.fillRect(cx - 12, y + T - 12, 24, 3);
+          if (l.seca) { const s = TEX.toco; ctx.drawImage(s, cx - s.width / 2, y + T - s.height + P); }
+          else { const s = TEX.arvore[(col + r) % 3]; ctx.drawImage(s, Math.round((cx - s.width / 2) / P) * P, y + T - s.height + P); }
+        });
+      } else if (l.tipo === 'estrada') {
+        l.itens.forEach(it => {
+          const f = Math.floor(tick / 5 + it.pos / 20) & 1, s = TEX.veic[it.k][f], px = Math.round(it.pos / P) * P;
+          if (l.dir < 0) { ctx.save(); ctx.translate(px + it.w + P, y); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); ctx.restore(); }
+          else ctx.drawImage(s, px - P, y);
+          if (px > -40 && px < W) {   // fumaça do escapamento e poeira da estrada
+            if (it.k !== 'caminhonete' && Math.random() < 0.05) solta(l.dir > 0 ? px + 36 * P - 2 * P : px + it.w - 36 * P + P, y + 2 * P, 1, ['#8d8d96', '#b4b4bc', '#6f6f78'], { v: 0.4, up: 0.5, vy0: -0.3, g: -0.004, life: 40, sz: 1 });
+            if (Math.random() < 0.06) solta(l.dir > 0 ? px + 6 : px + it.w - 6, y + T - 8, 1, ['#c9ac80', '#a88a60'], { v: 1, up: 0.4, g: 0.01, life: 18, sz: 1 });
+          }
+        });
+      } else {
+        l.itens.forEach(it => {
+          const wa = Math.round(it.w / P);
+          let s = cacheTronco.get(wa); if (!s) { s = montarTronco(wa); cacheTronco.set(wa, s); }
+          const px = Math.round(it.pos / P) * P, bob = Math.sin(tick * 0.05 + it.pos * 0.02) > 0.6 ? P : 0;
+          ctx.fillStyle = 'rgba(8,38,66,.38)'; ctx.fillRect(px + 3 * P, y + 12 * P + bob, it.w - 5 * P, 2 * P);
+          if (l.dir < 0) ctx.drawImage(s, px - P, y + P + bob);
+          else { ctx.save(); ctx.translate(px + it.w + P, y + P + bob); ctx.scale(-1, 1); ctx.drawImage(s, 0, 0); ctx.restore(); }
+          const lead = l.dir < 0 ? px - P : px + it.w, fo = Math.sin(tick * 0.2 + it.pos) > 0 ? P : 0;   // espuma na proa
+          ctx.fillStyle = '#e6f7fb'; ctx.fillRect(lead - (l.dir < 0 ? 0 : P) + l.dir * fo, y + 5 * P, P, P); ctx.fillRect(lead + l.dir * (P + fo), y + 9 * P, P, P); ctx.fillRect(lead - l.dir * P, y + 12 * P, P, P);
+        });
       }
+    }
+
+    /* ── 🎬 CENA COMPLETA ── */
+    function desenhar() {
+      clrCanvas(); ctx.imageSmoothingEnabled = false;
+      if (tick < lastTick) { fx.length = 0; prevHop = false; }
+      const dtf = Math.min(4, tick - lastTick); lastTick = tick;
+      const r0 = Math.max(0, Math.floor(camY) - 1), r1 = Math.ceil(camY + H / T) + 1;
+      for (let r = r0; r <= r1; r++) desenharBase(getLane(r), r, yP(r));
+      for (let r = r1; r >= r0; r--) desenharObjetos(getLane(r), yP(r), r);   // de cima pra baixo: o de baixo fica na frente
+
+      /* sapo */
+      let rv = frog.r, x = frog.x, arco = 0;
+      if (frog.hop) { const h = frog.hop, p = Math.min(1, h.t); rv = h.r0 + (h.r1 - h.r0) * p; x = h.x0 + (h.x1 - h.x0) * p; arco = Math.sin(Math.PI * p); }
+      const chaoY = H - (rv - camY + 1) * T + T / 2;
+      let cy = chaoY - arco * 14;
+      const lm = getLane(frog.r), noRio = !frog.hop && lm.tipo === 'riacho';
+      if (noRio && estado === 'jogando') cy += Math.sin(tick * 0.12) * 1.5;
+      /* efeitos de decolagem e pouso */
+      if (frog.hop && !prevHop) solta(x, chaoY + 8, 4, lm.tipo === 'riacho' ? ['#e6f7fb', '#9fd8ee'] : ['#c9ac80', '#7fd05a', '#a88a60'], { v: 2.4, up: 1.2, life: 16 });
+      if (!frog.hop && prevHop && estado === 'jogando') {
+        if (lm.tipo === 'riacho') { anel(x, chaoY + 6); solta(x, chaoY, 5, ['#e6f7fb', '#9fd8ee', '#fff'], { v: 2.2, up: 2.2, g: 0.2, life: 20 }); }
+        else solta(x, chaoY + 8, 5, lm.tipo === 'estrada' ? ['#c9ac80', '#a88a60'] : ['#7fd05a', '#58b04a', '#c9ac80'], { v: 2.6, up: 0.8, life: 18 });
+      }
+      prevHop = !!frog.hop;
+      let sx = 1 + 0.1 * arco, sy = sx, alfa = 1;
+      if (estado === 'morrendo') {
+        const t = morte.t;
+        if (!morte.fx) {
+          morte.fx = true;
+          if (morte.tipo === 'atropelou') solta(x, cy, 16, ['#5ccf3e', '#9cf06a', '#ffd23f', '#2f8f3a', '#c8c1a8'], { v: 7, up: 3.5, g: 0.16, life: 34 });
+          else { anel(x, cy + 6); anel(x, cy + 6); solta(x, cy, 16, ['#e6f7fb', '#9fd8ee', '#fff', '#5ea8d0'], { v: 5, up: 5, g: 0.22, life: 30 }); }
+        }
+        if (morte.tipo === 'atropelou') { sx = 1.45; sy = 0.25; alfa = Math.max(0, 1 - Math.max(0, t - 25) / 20); }
+        else {
+          sx = sy = Math.max(0, 1 - t / 30);
+          if (t < 32 && Math.random() < 0.35) solta(x + (Math.random() - .5) * 16, cy, 1, ['#e6f7fb', '#bfe6f7'], { v: 0.6, up: 0.3, vy0: -0.5, g: -0.01, life: 26, sz: 1 });
+          if (t % 9 < 1) anel(x, cy + 6);
+        }
+      }
+      if (estado !== 'morrendo') {
+        const sw = Math.round((11 - arco * 4) / 1) * P;
+        ctx.fillStyle = 'rgba(0,0,0,' + (noRio ? 0.18 : 0.28) + ')';
+        ctx.fillRect(Math.round((x - sw / 2) / P) * P, Math.round((chaoY + 12) / P) * P, sw, P); ctx.fillRect(Math.round((x - sw / 2 + P) / P) * P, Math.round((chaoY + 12 + P) / P) * P, sw - 2 * P, P);
+      }
+      if (sx > 0.02 && alfa > 0) { ctx.globalAlpha = alfa; desenharSapo(x, cy, frog.ang, !!frog.hop, sx, sy); ctx.globalAlpha = 1; }
+
+      /* partículas, ambiente e acabamento */
+      if (Math.random() < 0.035 && fx.length < 120) fx.push({ x: Math.random() * W, y: -6, vx: 0.3 + Math.random() * 0.4, vy: 0.2, g: 0.002, life: 380, max: 380, col: ['#7ac35a', '#c9d86a', '#4f9f45'][Math.floor(Math.random() * 3)], sz: P });
+      atualizarFx(dtf); desenharFx();
+      ctx.drawImage(TEX.vinheta, 0, 0);
+      if (estado === 'jogando') {      // alerta: a tela está quase deixando o sapo pra trás
+        const pr = rv - camY;
+        if (pr < 1.7) { const a = (1.7 - pr) / 1.7 * (0.4 + 0.15 * Math.sin(tick * 0.3)); for (let k = 0; k < 5; k++) { ctx.fillStyle = 'rgba(220,40,30,' + (a * (5 - k) / 5) + ')'; ctx.fillRect(0, H - (k + 1) * 3 * P, W, 3 * P); } }
+      }
+      if (estado === 'morrendo') { ctx.fillStyle = 'rgba(200,30,30,' + (0.28 * Math.max(0, 1 - morte.t / 45)) + ')'; ctx.fillRect(0, 0, W, H); }
     }
 
     /* ── LOOP / FIM / INÍCIO ── */

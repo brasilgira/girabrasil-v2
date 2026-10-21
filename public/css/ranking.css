@@ -26,7 +26,7 @@ body.pagina-ranking .header-site { flex: none; }
   --rk-ouro: #E3B95C;
   --rk-prata: #C9D1CD;
   --rk-bronze: #CD8B5A;
-  --rk-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --rk-mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   flex: 1; min-height: 0;
   width: 100%; max-width: 1240px; margin: 0 auto;

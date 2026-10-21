@@ -23,8 +23,8 @@
   --radius-m:14px;
   --radius-l:22px;
   --font-display:'Fraunces', serif;
-  --font-body:'Inter', sans-serif;
-  --font-mono:'Space Mono', monospace;
+  --font-body:'Plus Jakarta Sans','Inter', sans-serif;
+  --font-mono:'DM Mono', ui-monospace, monospace;
   --reading-scale:1;
   --maxw-article:720px;
   --maxw-page:1180px;

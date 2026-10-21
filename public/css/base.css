@@ -27,7 +27,8 @@
 
   /* Tipografia */
   --fonte-titulo: 'Fraunces', serif;
-  --fonte-corpo: 'Inter', sans-serif;
+  --fonte-corpo: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --fonte-mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* Espaçamento e forma */
   --raio: 10px;
@@ -60,11 +61,11 @@ ul { list-style: none; }
 
 /* --- Cabeçalho / rótulos de seção (eyebrows) --- */
 .eyebrow {
-  font-family: var(--fonte-corpo);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-family: var(--fonte-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   color: var(--cor-destaque);
 }
 .eyebrow.claro { color: #8FC9A6; }

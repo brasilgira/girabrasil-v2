@@ -1,0 +1,442 @@
+/* ==========================================================================
+   Gira-Brasil — Páginas de bioma (redesign)
+   Usado SOMENTE por biomas/*.html. A home continua usando css/biomas.css.
+
+   Cada bioma ganha a paleta da própria foto: o JS (js/bioma-pagina.js)
+   escreve as variáveis abaixo em :root. Os valores aqui são só o padrão
+   de segurança caso o JS demore.
+   ========================================================================== */
+
+:root {
+  --paper: #F0F3EA;        /* fundo da página */
+  --soft: #DFE8D8;         /* faixas e superfícies secundárias */
+  --line: #CBD6C4;         /* linhas finas */
+  --ink: #0F1F15;          /* texto principal */
+  --ink-soft: #4B5A4F;     /* texto secundário */
+  --deep: #0C2016;         /* faixas escuras */
+  --deep-ink: #E8F0E4;     /* texto sobre faixa escura */
+  --deep-soft: #9DB5A2;    /* texto secundário sobre faixa escura */
+  --acc: #2F7A4B;          /* cor de destaque (preenchimentos) */
+  --acc-ink: #FFFFFF;      /* texto sobre --acc */
+  --acc-text: #23603A;     /* destaque usado como texto sobre --paper */
+  --acc-on-deep: #8FD0A3;  /* destaque usado sobre --deep */
+  --hdr: 78px;             /* altura do header fixo (o JS mede de verdade) */
+  --bz-largura: 1240px;
+}
+
+body.bz { background: var(--paper); color: var(--ink); }
+
+.bz-wrap {
+  max-width: var(--bz-largura);
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.bz-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.bz-vazio { padding: 120px 32px; text-align: center; color: var(--ink-soft); }
+.bz-vazio a { text-decoration: underline; }
+
+/* Foco visível em tudo que é clicável */
+.bz :focus-visible { outline: 3px solid var(--acc-text); outline-offset: 3px; border-radius: 4px; }
+.bz-sec--deep :focus-visible, .bz-ficha :focus-visible { outline-color: var(--acc-on-deep); }
+
+/* --------------------------------------------------------------------------
+   Tipografia dos blocos
+   -------------------------------------------------------------------------- */
+.bz h2 {
+  font-family: var(--fonte-titulo);
+  font-weight: 500;
+  font-size: clamp(2rem, 4.2vw, 3.3rem);
+  line-height: 1.05;
+  letter-spacing: -0.022em;
+  color: inherit;
+}
+.bz h3 { font-family: var(--fonte-titulo); font-weight: 500; letter-spacing: -0.01em; }
+.bz-intro { margin-top: 18px; max-width: 46ch; color: var(--ink-soft); font-size: 1.0625rem; line-height: 1.6; }
+.bz-sec--deep .bz-intro { color: var(--deep-soft); }
+
+/* --------------------------------------------------------------------------
+   HERO — o nome do bioma é o elemento principal
+   -------------------------------------------------------------------------- */
+.bz-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  min-height: min(780px, calc(100svh - var(--hdr)));
+  background: var(--paper);
+}
+
+.bz-hero-texto {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 36px clamp(24px, 4vw, 64px) clamp(40px, 6vw, 72px) max(32px, calc((100vw - var(--bz-largura)) / 2 + 32px));
+}
+
+.bz-hero .link-voltar.link-voltar { align-self: flex-start; color: var(--ink); border-bottom-color: var(--ink); }
+.bz-hero .link-voltar.link-voltar:hover { color: var(--acc-text); border-bottom-color: var(--acc-text); }
+
+.bz-loc {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.95rem; font-weight: 600; color: var(--acc-text);
+  margin-bottom: 18px;
+}
+.bz-loc svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+.bz-nome {
+  font-family: var(--fonte-titulo);
+  font-weight: 600;
+  font-size: clamp(3.4rem, 9.2vw, 8.4rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  text-wrap: balance;
+  overflow-wrap: normal;
+}
+
+.bz-sub {
+  margin-top: 26px;
+  max-width: 24ch;
+  font-family: var(--fonte-titulo);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.35rem, 2.3vw, 1.9rem);
+  line-height: 1.25;
+  color: var(--ink-soft);
+}
+
+/* Botão de som (nunca toca sozinho) */
+.bz-som {
+  margin-top: 34px;
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 10px 20px 10px 10px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit; font-size: 0.95rem; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.bz-som:hover { background: var(--ink); color: var(--paper); }
+.bz-som[hidden] { display: none; }
+.bz-som-icone {
+  display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--acc); color: var(--acc-ink);
+}
+.bz-som-icone svg { width: 16px; height: 16px; }
+.bz-som-onda { display: none; align-items: flex-end; gap: 3px; height: 16px; }
+.bz-som-onda i { width: 3px; height: 100%; background: currentColor; border-radius: 2px; transform-origin: bottom; animation: bz-onda 0.9s ease-in-out infinite; }
+.bz-som-onda i:nth-child(2) { animation-delay: -0.3s; }
+.bz-som-onda i:nth-child(3) { animation-delay: -0.6s; }
+.bz-som-onda i:nth-child(4) { animation-delay: -0.15s; }
+.bz-som[aria-pressed="true"] .bz-som-onda { display: inline-flex; }
+@keyframes bz-onda { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+
+.bz-hero-foto { position: relative; margin: 0; overflow: hidden; min-height: 420px; background: var(--soft); }
+.bz-hero-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* Única sequência de entrada da página: a foto se revela e o nome sobe */
+@media (prefers-reduced-motion: no-preference) {
+  .bz-hero-foto { animation: bz-revela 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .bz-nome { animation: bz-sobe 0.9s 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .bz-sub { animation: bz-sobe 0.9s 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+}
+@keyframes bz-revela { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes bz-sobe { from { opacity: 0; transform: translateY(0.18em); } to { opacity: 1; transform: none; } }
+
+/* --------------------------------------------------------------------------
+   FICHA — 4 números em faixa escura
+   -------------------------------------------------------------------------- */
+.bz-ficha { background: var(--deep); color: var(--deep-ink); }
+.bz-ficha ul {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: var(--bz-largura); margin: 0 auto; padding: 0 32px;
+}
+.bz-ficha li { padding: 34px 24px 38px 28px; border-left: 1px solid rgba(255, 255, 255, 0.14); }
+.bz-ficha li:first-child { padding-left: 0; border-left: 0; }
+.bz-ficha .rotulo { font-size: 0.875rem; font-weight: 600; color: var(--deep-soft); }
+.bz-ficha .valor {
+  display: block; margin: 8px 0 6px;
+  font-family: var(--fonte-titulo); font-weight: 500;
+  font-size: clamp(1.5rem, 2.7vw, 2.3rem); line-height: 1.1; letter-spacing: -0.02em;
+}
+.bz-ficha .detalhe { font-size: 0.9rem; color: var(--deep-soft); line-height: 1.4; }
+
+/* --------------------------------------------------------------------------
+   ÍNDICE fixo — substitui a barra de "exploração"
+   -------------------------------------------------------------------------- */
+.bz-indice {
+  position: sticky; top: var(--hdr); z-index: 50;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+@supports (background: color-mix(in srgb, red 50%, blue)) {
+  .bz-indice { background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); }
+}
+.bz-indice ul {
+  display: flex; gap: 2px;
+  max-width: var(--bz-largura); margin: 0 auto; padding: 0 24px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.bz-indice ul::-webkit-scrollbar { display: none; }
+.bz-indice a {
+  display: block; padding: 15px 14px 13px;
+  font-size: 0.9rem; font-weight: 500; white-space: nowrap;
+  color: var(--ink-soft);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.bz-indice a:hover { color: var(--ink); }
+.bz-indice a[aria-current="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--acc); }
+
+/* --------------------------------------------------------------------------
+   SEÇÕES
+   -------------------------------------------------------------------------- */
+.bz-sec { padding: clamp(64px, 9vw, 120px) 0; scroll-margin-top: calc(var(--hdr) + 54px); }
+.bz-sec--soft { background: var(--soft); }
+.bz-sec--deep { background: var(--deep); color: var(--deep-ink); }
+
+/* Panorama */
+.bz-lead {
+  max-width: 26em;
+  font-family: var(--fonte-titulo); font-weight: 400;
+  font-size: clamp(1.5rem, 2.8vw, 2.3rem); line-height: 1.3; letter-spacing: -0.012em;
+}
+.bz-pan-grid {
+  display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(40px, 7vw, 96px); align-items: center;
+  margin-top: clamp(48px, 7vw, 88px);
+}
+.bz-mapa { margin: 0; }
+.bz-mapa-svg { max-width: 460px; }
+.bz-mapa-svg svg { display: block; width: 100%; height: auto; }
+.bz-mapa .regiao-mapa-path {
+  fill: var(--line); stroke: var(--paper); stroke-width: 1.2; vector-effect: non-scaling-stroke;
+}
+.bz-mapa .regiao-mapa.destaque .regiao-mapa-path { fill: var(--acc); }
+.bz-mapa figcaption { margin-top: 16px; font-size: 0.95rem; color: var(--ink-soft); }
+.bz-mapa figcaption strong { color: var(--ink); font-weight: 600; }
+
+.bz-dl { border-top: 1px solid var(--line); }
+.bz-dl > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 20px; padding: 17px 0; border-bottom: 1px solid var(--line); }
+.bz-dl dt { font-size: 0.9rem; font-weight: 600; color: var(--ink-soft); }
+.bz-dl dd { font-size: 1rem; line-height: 1.5; }
+
+/* Tempo */
+.bz-tempo-grid { display: grid; grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr); gap: clamp(40px, 7vw, 96px); align-items: start; }
+.bz-tempo-cab { position: sticky; top: calc(var(--hdr) + 90px); }
+.bz-tl { position: relative; padding-left: 40px; list-style: none; }
+.bz-tl::before { content: ""; position: absolute; left: 5px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+.bz-tl-prog { position: absolute; left: 5px; top: 10px; width: 2px; height: 0; background: var(--acc); }
+.bz-tl li { position: relative; padding-bottom: 44px; }
+.bz-tl li:last-child { padding-bottom: 0; }
+.bz-tl li::before {
+  content: ""; position: absolute; left: -40px; top: 6px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--paper); border: 2px solid var(--line);
+  transition: background 0.3s, border-color 0.3s;
+}
+.bz-tl li.em-vista::before { background: var(--acc); border-color: var(--acc); }
+.bz-tl .periodo { font-size: 0.875rem; font-weight: 600; color: var(--acc-text); }
+.bz-tl h3 { margin: 6px 0 8px; font-size: 1.6rem; line-height: 1.15; }
+.bz-tl p { max-width: 52ch; color: var(--ink-soft); line-height: 1.65; }
+
+/* Abas (segmented control) */
+.bz-abas { display: inline-flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--soft); }
+.bz-sec--soft .bz-abas { background: var(--paper); }
+.bz-abas button {
+  padding: 10px 22px; border: 0; border-radius: 999px; background: transparent;
+  font: inherit; font-size: 0.95rem; font-weight: 600; color: var(--ink-soft); cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.bz-abas button:hover { color: var(--ink); }
+.bz-abas button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+
+.bz-ppf { margin-top: clamp(64px, 9vw, 112px); }
+.bz-ppf-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; }
+.bz-ppf-painel {
+  margin-top: 28px; padding: clamp(28px, 5vw, 64px);
+  background: var(--deep); color: var(--deep-ink); border-radius: 22px;
+}
+.bz-ppf-painel p {
+  max-width: 34em;
+  font-family: var(--fonte-titulo); font-weight: 400;
+  font-size: clamp(1.3rem, 2.4vw, 1.95rem); line-height: 1.4; letter-spacing: -0.01em;
+}
+.bz-ppf-painel.troca p { animation: bz-troca 0.35s ease both; }
+@keyframes bz-troca { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Espécies */
+.bz-esp-topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 40px; }
+.bz-esp-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.bz-esp-grid[hidden] { display: none; }
+.bz-esp {
+  display: flex; flex-direction: column; text-align: left;
+  padding: 0; overflow: hidden; cursor: pointer;
+  background: var(--soft); color: inherit; font: inherit;
+  border: 1px solid var(--line); border-radius: 16px;
+  transition: border-color 0.2s;
+}
+.bz-esp:hover { border-color: var(--ink); }
+.bz-esp-img { position: relative; aspect-ratio: 4 / 3; background: var(--line); overflow: hidden; }
+.bz-esp-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bz-esp-inicial {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--fonte-titulo); font-size: 4.5rem; font-weight: 500; color: var(--acc-text); opacity: 0.55;
+}
+.bz-esp-corpo { display: flex; flex-direction: column; flex: 1; padding: 20px 22px 22px; }
+.bz-esp h3 { font-size: 1.4rem; line-height: 1.15; }
+.bz-esp .cientifico { margin-top: 4px; font-size: 0.9rem; font-style: italic; color: var(--ink-soft); }
+.bz-esp .desc { margin-top: 12px; font-size: 0.95rem; line-height: 1.55; color: var(--ink-soft); }
+.bz-esp .saiba { margin-top: auto; padding-top: 18px; font-size: 0.875rem; font-weight: 600; color: var(--acc-text); }
+
+.bz-status { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 16px; font-size: 0.875rem; font-weight: 600; }
+.bz-status i { width: 10px; height: 10px; border-radius: 50%; background: var(--c, #7A7F7A); flex-shrink: 0; }
+
+/* Cadeia alimentar */
+.bz-rede { margin-top: 44px; border-top: 1px solid var(--ink); }
+.bz-camada {
+  display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 24px; align-items: center;
+  padding: 24px 0; border-bottom: 1px solid var(--line);
+  transition: opacity 0.25s;
+}
+.bz-camada h3 { font-size: 1.3rem; }
+.bz-camada-itens { display: flex; flex-wrap: wrap; gap: 10px; }
+.bz-rede-item {
+  padding: 10px 18px; border: 1.5px solid var(--ink); border-radius: 999px;
+  background: var(--paper); color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 500; cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.bz-rede-item:hover { background: var(--ink); color: var(--paper); }
+.bz-rede-item[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.bz-rede-item.conectado { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); }
+.bz-rede.selecionado .bz-camada:not(.em-foco) { opacity: 0.32; }
+.bz-rede-texto { min-height: 3.2em; margin-top: 26px; max-width: 60ch; font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); }
+.bz-rede-texto strong { color: var(--ink); }
+
+/* Ameaças */
+.bz-pressao { margin-top: 18px; max-width: 56ch; font-size: 1.125rem; line-height: 1.5; color: var(--deep-soft); }
+.bz-pressao strong { color: var(--acc-on-deep); font-weight: 600; }
+.bz-ameacas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 52px clamp(40px, 7vw, 96px); margin-top: clamp(44px, 6vw, 72px); }
+.bz-ameacas li { padding-top: 22px; border-top: 2px solid var(--acc-on-deep); }
+.bz-ameacas h3 { font-size: clamp(1.4rem, 2.4vw, 1.8rem); line-height: 1.15; }
+.bz-ameacas p { margin-top: 10px; max-width: 42ch; color: var(--deep-soft); line-height: 1.65; }
+
+/* Pessoas e proteção */
+.bz-pessoas-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(48px, 8vw, 112px); }
+.bz-pessoas-grid h2 { margin-bottom: 28px; }
+.bz-humano-texto { max-width: 46ch; font-size: 1.0625rem; line-height: 1.7; color: var(--ink-soft); }
+.bz-pontos { margin-top: 28px; border-top: 1px solid var(--line); }
+.bz-pontos li { padding: 15px 0; border-bottom: 1px solid var(--line); font-weight: 500; line-height: 1.45; }
+.bz-protecao li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 14px; padding: 20px 0; border-top: 1px solid var(--line); }
+.bz-protecao li:last-child { border-bottom: 1px solid var(--line); }
+.bz-protecao svg { width: 22px; height: 22px; margin-top: 3px; color: var(--acc-text); }
+.bz-protecao h3 { font-size: 1.3rem; line-height: 1.2; }
+.bz-protecao p { margin-top: 6px; color: var(--ink-soft); line-height: 1.6; }
+
+/* Você sabia? */
+.bz-fato {
+  display: grid; grid-template-rows: 1fr auto; gap: 40px; min-height: 380px;
+  margin-top: 40px; padding: clamp(32px, 6vw, 80px);
+  background: var(--acc); color: var(--acc-ink); border-radius: 26px;
+}
+.bz-fato-texto {
+  align-self: center; max-width: 27em;
+  font-family: var(--fonte-titulo); font-weight: 400;
+  font-size: clamp(1.5rem, 3.1vw, 2.6rem); line-height: 1.25; letter-spacing: -0.015em;
+}
+.bz-fato-texto.troca { animation: bz-troca 0.35s ease both; }
+.bz-fato-rodape { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.bz-fato-contador { font-size: 0.95rem; font-weight: 600; }
+.bz-fato-botoes { display: flex; gap: 10px; }
+.bz-fato-botoes button {
+  display: grid; place-items: center; width: 52px; height: 52px;
+  border: 1.5px solid currentColor; border-radius: 50%; background: transparent; color: inherit; cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.bz-fato-botoes button:hover { background: var(--acc-ink); color: var(--acc); }
+.bz-fato-botoes svg { width: 20px; height: 20px; }
+.bz-fato :focus-visible { outline-color: var(--acc-ink); }
+
+/* Outros biomas */
+.bz-bio-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-top: 40px; }
+.bz-bio { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; background: var(--soft); }
+.bz-bio img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bz-bio::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(8, 14, 10, 0.78), rgba(8, 14, 10, 0) 58%); }
+.bz-bio-nome { position: absolute; left: 16px; right: 12px; bottom: 14px; z-index: 1; color: #fff; font-family: var(--fonte-titulo); font-size: 1.2rem; line-height: 1.1; font-weight: 500; }
+.bz-bio[aria-current="page"] { outline: 3px solid var(--acc); outline-offset: 3px; }
+.bz-bio-aqui { position: absolute; top: 12px; left: 12px; z-index: 1; padding: 5px 10px; border-radius: 999px; background: var(--acc); color: var(--acc-ink); font-size: 0.78rem; font-weight: 600; }
+a.bz-bio:hover .bz-bio-nome { text-decoration: underline; text-underline-offset: 4px; }
+
+/* --------------------------------------------------------------------------
+   Janela de detalhe da espécie (<dialog>)
+   -------------------------------------------------------------------------- */
+html.bz-travado { overflow: hidden; }
+.bz-modal {
+  width: min(940px, calc(100vw - 32px)); max-height: calc(100svh - 32px);
+  margin: auto; padding: 0; overflow: hidden;
+  border: 0; border-radius: 22px; background: var(--paper); color: var(--ink);
+}
+.bz-modal::backdrop { background: rgba(10, 15, 12, 0.62); }
+.bz-modal-fechar {
+  position: absolute; top: 14px; right: 14px; z-index: 2;
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border: 0; border-radius: 50%; background: var(--paper); color: var(--ink); cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+.bz-modal-fechar svg { width: 18px; height: 18px; }
+.bz-modal-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); max-height: calc(100svh - 32px); }
+.bz-modal-img { position: relative; min-height: 320px; background: var(--soft); }
+.bz-modal-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bz-modal-corpo { overflow-y: auto; padding: 44px 40px 40px; }
+.bz-modal-corpo h3 { font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1.05; letter-spacing: -0.02em; }
+.bz-modal-corpo .cientifico { display: block; margin-top: 6px; font-style: italic; color: var(--ink-soft); }
+.bz-modal-corpo .bz-status { padding-top: 16px; margin-top: 0; }
+.bz-modal-campos { margin-top: 24px; border-top: 1px solid var(--line); }
+.bz-modal-campos div { padding: 15px 0; border-bottom: 1px solid var(--line); }
+.bz-modal-campos dt { font-size: 0.85rem; font-weight: 600; color: var(--acc-text); }
+.bz-modal-campos dd { margin-top: 4px; line-height: 1.6; }
+
+/* --------------------------------------------------------------------------
+   Responsivo
+   -------------------------------------------------------------------------- */
+@media (max-width: 1000px) {
+  .bz-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .bz-hero-texto { padding: 28px 24px 44px; gap: 40px; }
+  .bz-hero-foto { min-height: 0; aspect-ratio: 4 / 3.4; }
+  .bz-ficha ul { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0 24px; }
+  .bz-ficha li:nth-child(odd) { padding-left: 0; border-left: 0; }
+  .bz-ficha li:nth-child(n+3) { border-top: 1px solid rgba(255, 255, 255, 0.14); }
+  .bz-wrap { padding: 0 24px; }
+  .bz-pan-grid, .bz-tempo-grid, .bz-pessoas-grid { grid-template-columns: minmax(0, 1fr); }
+  .bz-tempo-cab { position: static; }
+  .bz-esp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bz-bio-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bz-modal-grid { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  .bz-modal-img { min-height: 0; aspect-ratio: 16 / 10; }
+  .bz-modal-corpo { overflow: visible; padding: 28px 24px 32px; }
+}
+
+@media (max-width: 640px) {
+  .bz-wrap { padding: 0 20px; }
+  .bz-hero-texto { padding: 24px 20px 40px; }
+  .bz-esp-grid, .bz-ameacas { grid-template-columns: minmax(0, 1fr); }
+  .bz-bio-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bz-dl > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .bz-camada { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .bz-ficha li { padding: 26px 16px 28px 20px; }
+  .bz-ficha .valor { font-size: 1.4rem; }
+  .bz-fato { min-height: 320px; border-radius: 20px; }
+  .bz-abas button { padding: 9px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bz *, .bz *::before, .bz *::after { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
