@@ -1167,10 +1167,10 @@ hl = null; hover = -1; voo = null; efeitosPar = []; running = true;
     titleEl.textContent = 'Fuga pela Floresta';
     scoreEmMetros = true;
     tipEl.textContent   = 'Aperte espaço ou clique na tela para pular · Segure para pular mais alto';
-    updateHUD(0,'1,0x',3,true,true);
+    updateHUD(0,'1,0x',2,true,true);
     hudLevel.firstChild.nodeValue = 'Velocidade ';
     showScreen('Fuga pela Floresta',
-      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço, clique ou toque na tela</strong>.');
+      'Você é uma <strong>onça-pintada</strong> fugindo do desmatamento!<br>Pule obstáculos com <strong>Espaço, clique ou toque na tela</strong>.<br>Você tem <strong>2 vidas</strong>.');
 
     const GH=H; const GROUND=GH-50;
     const OBSTACLE_SINK = 12;
@@ -1188,10 +1188,11 @@ const FIRE_FRAME_TICKS = 6;       // ticks por frame (maior = fogo mais lento)
 const FIRE_SCALE = FIRE_VISIBLE_HEIGHT / FIRE_SRC_H;
 const FIRE_RENDER_WIDTH = FIRE_SRC_W * FIRE_SCALE;
 const FIRE_RENDER_HEIGHT = FIRE_SRC_H * FIRE_SCALE;
-    let score=0,lives=3,level=1,running=false,dist=0;
+    let score=0,lives=2,level=1,running=false,dist=0;   // 2 vidas
     let onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
-    let obstacles=[],bgX=0,speed=3.2,tick=0,obsTick=0,obsInterval=110;
-    const velTxt = () => (speed/5.2).toFixed(1).replace('.', ',') + 'x';   // 1,0x no começo, sobe a cada 0,4 de velocidade
+    let obstacles=[],bgX=0,speed=3.2,tick=0;
+    let tempoCorrido=0, proxSpawn=null, grupoId=0;   // controle de aparição dos obstáculos (estilo Dino do Chrome)
+    const velTxt = () => (speed/7).toFixed(1).replace('.', ',') + 'x';   // 1,0x no começo (velocidade 7), chega a ~1,9x no teto (13)
     let groundX = 0; 
     const JUMP_V=-11.5, GRAVITY=0.55;
     let jumpTime = 0;
@@ -2316,12 +2317,122 @@ const BG_TREE_WIDTH = BG_TREE_HEIGHT * (1224 / 1285);
       {x:475, scale:0.75},{x:615, scale:0.85},
     ];
 
-const OBS_TYPES=[
-  {type:'tree'},
-  {type:'tree'},
-  {type:'fire'},
-  {type:'log'},
-];
+    /* ════════════════════════════════════════════════════════════════════
+       🦖 OBSTÁCULOS NO ESTILO DO DINO DO CHROME
+       Lógica portada do jogo original (Chromium · runner.js / horizon.js) e
+       calibrada para a física da onça. As regras que foram mantidas:
+         • velocidade começa baixa, sobe um pouquinho a cada quadro e tem teto
+         • nos primeiros 3 s não aparece obstáculo (CLEAR_TIME)
+         • cada "grupo" tem de 1 a 3 peças coladas (MAX_OBSTACLE_LENGTH)
+         • grupos maiores só aparecem quando a velocidade permite
+           (no Chrome: multipleSpeed) e alguns tipos só entram mais tarde
+           (no Chrome: minSpeed do pterodáctilo)
+         • nunca repete o mesmo tipo mais de 2 vezes seguidas
+         • a distância até o próximo grupo cresce com a largura do grupo e
+           com a velocidade: gap = largura × velocidade + minGap × 0,6,
+           sorteado entre 1× e 1,5× disso (MAX_GAP_COEFFICIENT)
+       Diferença: aqui as peças podem ser de tipos diferentes (árvore + tronco
+       + fogo...), e as árvores variam de largura e altura como os cactos
+       pequeno e grande do Chrome.
+       ════════════════════════════════════════════════════════════════════ */
+    const VEL_INICIAL   = 7;       // Chrome: 6   (velocidade de partida, em px por quadro)
+    const VEL_MAX       = 13;      // Chrome: 13  (a velocidade para de subir aqui)
+    const VEL_ACEL      = 0.001;   // Chrome: 0.001 por quadro → de 7 a 13 em ~100 s
+    const TEMPO_LIVRE   = 180;     // quadros sem obstáculo no começo (Chrome: 3000 ms)
+    const MAX_PECAS     = 3;       // Chrome: MAX_OBSTACLE_LENGTH
+    const MAX_REPETIDOS = 2;       // Chrome: MAX_OBSTACLE_DUPLICATION
+    const GAP_COEF      = 0.6;     // Chrome: GAP_COEFFICIENT
+    const GAP_MAX_COEF  = 1.5;     // Chrome: MAX_GAP_COEFFICIENT
+    const GAP_BASE      = 120;     // Chrome: minGap dos cactos
+    const GAP_ESCALA    = 1.3;     // a onça pula mais longe que o dino, então o vão base é maior
+    const GAP_LARG_ESC  = 3;       // os obstáculos daqui são ~3× mais largos que os cactos do Chrome
+    const ESPACO_PECAS  = [2, 12]; // folga (px) entre as peças de um mesmo grupo
+    const CHANCE_MESMO_TIPO = 0.6; // nas peças extras: chance de repetir o tipo (senão combina com outro)
+    const TREE_PNG_W = 1339, TREE_PNG_H = 1174;   // tamanho do PNG da árvore
+
+    /* Tipos de obstáculo. sx/sy = escala da imagem (largura e altura mudam separadas).
+       minVel = só aparece depois que a velocidade passa disso (como o pterodáctilo do Chrome). */
+    const OBS_TIPOS = [
+      { id: 'arvoreP',    kind: 'tree', sx: 0.034, sy: 0.045, minVel: 0              },   // muda de árvore, pequena e fina  (≈ cacto pequeno)
+      { id: 'arvoreM',    kind: 'tree', sx: 0.048, sy: 0.055, minVel: 0              },   // árvore média
+      { id: 'arvoreG',    kind: 'tree', sx: 0.060, sy: 0.060, minVel: 0              },   // árvore grande, a de sempre      (≈ cacto grande)
+      { id: 'tronco',     kind: 'log',  sx: 0.060, sy: 0.060, minVel: 0              },   // tronco deitado comprido
+      { id: 'troncoC',    kind: 'log',  sx: 0.040, sy: 0.050, minVel: 0              },   // tronco deitado curto
+      { id: 'fogo',       kind: 'fire',                       minVel: 7.6, peso: 2.2  },   // fogo entra depois de ~10 s (≈ pterodáctilo)
+      { id: 'arvoreAlta', kind: 'tree', sx: 0.045, sy: 0.068, minVel: 8.5            },   // árvore alta e fina entra depois de ~25 s
+    ].map(t => {
+      if (t.kind === 'tree') {
+        t.w = TREE_PNG_W * t.sx; t.h = TREE_PNG_H * t.sy;
+        t.topo = (TREE_PNG_H - 59) * t.sy - OBSTACLE_SINK;   // altura (acima do chão) do ponto mais alto visível
+      } else if (t.kind === 'log') {
+        t.w = LOG_PNG_W * t.sx; t.h = LOG_PNG_H * t.sy;
+        t.topo = t.h - OBSTACLE_SINK;
+      } else {
+        t.w = FIRE_RENDER_WIDTH; t.h = FIRE_RENDER_HEIGHT;
+        t.topo = 330 * FIRE_SCALE - OBSTACLE_SINK;
+      }
+      return t;
+    });
+
+    /* Quantos quadros a onça fica por cima de uma altura h, num pulo completo. */
+    function tempoAcima(h) {
+      const v = JUMP_V * JUMP_V - 2 * GRAVITY * h;
+      return v > 0 ? 2 * Math.sqrt(v) / GRAVITY : 0;
+    }
+    /* Janela de tempo (em quadros) que o jogador tem pra decolar e passar por cima de um grupo.
+       Medida com simulação pixel a pixel contra os sprites reais (erro ≤ 2 quadros).
+       No Chrome essa janela fica entre ~15 quadros (o pior caso permitido) e ~26. */
+    const JANELA_H0 = -8.4, JANELA_L0 = 33;
+    const JANELA_MIN = 16;   // abaixo disso o grupo é encolhido (equivale ao pior caso do Chrome)
+    function janelaPrevista(vel, topo, largura) {
+      return tempoAcima(topo + JANELA_H0) - (largura + JANELA_L0) / vel;
+    }
+
+    const rand = (a, b) => a + Math.random() * (b - a);
+    let historicoObs = [];   // ids dos últimos grupos (pra não repetir demais)
+
+    function tipoRepetidoDemais(id) {
+      if (historicoObs.length < MAX_REPETIDOS) return false;
+      return historicoObs.slice(0, MAX_REPETIDOS).every(h => h === id);
+    }
+    function sortearTipo(vel, evitarRepeticao) {
+      const ok = OBS_TIPOS.filter(t => vel >= t.minVel && !(evitarRepeticao && tipoRepetidoDemais(t.id)));
+      let r = Math.random() * ok.reduce((s, t) => s + (t.peso || 1), 0);
+      for (const t of ok) { r -= (t.peso || 1); if (r <= 0) return t; }
+      return ok[ok.length - 1];
+    }
+
+    /* Monta um grupo: { pecas:[{tipo, dx}], span, gap } */
+    function planejarGrupo(vel) {
+      const primeiro = sortearTipo(vel, true);
+      let tipos = [primeiro];
+      const alvo = 1 + Math.floor(Math.random() * MAX_PECAS);   // 1 a 3 peças
+      for (let i = 1; i < alvo; i++) {
+        tipos.push(Math.random() < CHANCE_MESMO_TIPO ? primeiro : sortearTipo(vel, false));
+      }
+      let pecas, span, topoMax;
+      for (;;) {
+        pecas = []; let x = 0;
+        tipos.forEach((t, i) => {
+          if (i > 0) x += rand(ESPACO_PECAS[0], ESPACO_PECAS[1]);
+          pecas.push({ tipo: t, dx: x });
+          x += t.w;
+        });
+        span = x;
+        topoMax = Math.max(...tipos.map(t => t.topo));
+        // como o multipleSpeed do Chrome: se o grupo está largo demais pra velocidade atual, tira uma peça
+        if (tipos.length === 1 || janelaPrevista(vel, topoMax, span) >= JANELA_MIN) break;
+        tipos = tipos.slice(0, -1);
+      }
+      historicoObs.unshift(primeiro.id);
+      if (historicoObs.length > MAX_REPETIDOS) historicoObs.length = MAX_REPETIDOS;
+
+      // vão até o próximo grupo (fórmula do Chrome: largura × velocidade + minGap × coef)
+      const gapMin = Math.round((span / GAP_LARG_ESC) * vel + GAP_BASE * GAP_COEF * GAP_ESCALA);
+      const gap = Math.round(rand(gapMin, gapMin * GAP_MAX_COEF));
+      return { pecas, span, gap, topoMax };
+    }
+
 
     /* 🌗 DIA E NOITE: muda pelo TEMPO REAL de jogo (não pelos metros) e nunca para.
        O jogo começa no ápice do dia; em DN_METADE_S segundos chega ao ápice da noite e em mais
@@ -2921,60 +3032,28 @@ function getTreeBottomOffset() {
   return 0;
 }
 
-    function spawnObs(){
-      const t = OBS_TYPES[~~(Math.random() * OBS_TYPES.length)];
-if (t.type === 'tree') {
-
-  const sc = 0.06;
-
-  const dw =
-    treeImg.naturalWidth * sc;
-
-  const dh =
-    treeImg.naturalHeight * sc;
-
-  obstacles.push({
-    x: VIEW_W + 20,
-    oy: GROUND - dh,
-    w: dw,
-    h: dh,
-    type: 'tree'
-  });
-
-}
-      else if (t.type === 'fire') {
-        obstacles.push({
-          x: VIEW_W + 20,
-          oy: GROUND,
-          w: FIRE_RENDER_WIDTH,
-          h: FIRE_RENDER_HEIGHT,
-          type: 'fire',
-          fase: Math.random() * FIRE_FRAMES * FIRE_FRAME_TICKS   // cada fogo dança num ritmo diferente
-        });
-
-} else if (t.type === 'log') {
-  const dw = LOG_PNG_W * LOG_SCALE;
-  const dh = LOG_PNG_H * LOG_SCALE;
-  obstacles.push({
-    x: VIEW_W + 20,
-    oy: GROUND - dh,
-    w: dw,
-    h: dh,
-    type: 'log'
-  });
-
-} else {
-  const isLow = t.type==='low'||t.type==='machine';
-  obstacles.push({
-    x:VIEW_W+20,
-    y:isLow?GROUND-t.h/2:GROUND-t.h,
-    ...t,
-    oy:isLow?GROUND-t.h/2:GROUND-t.h
-  });
-}
-
-
-
+    /* cria um grupo de 1 a 3 peças na borda direita da tela */
+    function spawnGrupo(sobra){
+      const g = planejarGrupo(speed);
+      const x0 = VIEW_W + 20 + sobra;
+      grupoId++;
+      g.pecas.forEach(p => {
+        const t = p.tipo, x = x0 + p.dx;
+        if (t.kind === 'fire') {
+          obstacles.push({ x, oy: GROUND, w: t.w, h: t.h, type: 'fire', cluster: grupoId,
+            fase: Math.random() * FIRE_FRAMES * FIRE_FRAME_TICKS });   // cada fogo dança num ritmo diferente
+        } else {
+          obstacles.push({ x, oy: GROUND - t.h, w: t.w, h: t.h, type: t.kind, cluster: grupoId });
+        }
+      });
+      proxSpawn = g.span + g.gap;   // quanto o chão precisa rolar até o próximo grupo
+    }
+    function atualizarSpawn(dt){
+      tempoCorrido += dt;
+      if (tempoCorrido < TEMPO_LIVRE) return;          // começo livre de obstáculos
+      if (proxSpawn === null) { spawnGrupo(0); return; }
+      proxSpawn -= speed * dt;
+      if (proxSpawn <= 0) spawnGrupo(proxSpawn);
     }
 
     function loop(ts){
@@ -2982,7 +3061,8 @@ if (t.type === 'tree') {
       const dt=delta(ts);
       tick+=dt;
       dist+=speed*dt; score=~~(dist/6);
-      speed=4.8+level*0.4; if(dist>level*1700)level++;
+      if (speed < VEL_MAX) speed = Math.min(VEL_MAX, speed + VEL_ACEL * dt);   // acelera como o Dino do Chrome, com teto
+      level = 1 + Math.floor((speed - VEL_INICIAL) / 0.4);
       updateHUD(score,velTxt(),lives);
       if (dnInicio === null) dnInicio = ts;
       noite = calcNoite((ts - dnInicio) / 1000);   // 0 = ápice do dia · 1 = ápice da noite (tempo real de jogo, em segundos)
@@ -3284,6 +3364,7 @@ else {
    * Se a colisão aconteceu, perde uma vida.
    */
   if (!hit && collided) {
+    obstacles.forEach(o => { if (o.cluster === ob.cluster) o.x = -200; });   // bateu num grupo = uma vida só
     ob.x = -200;
     hit = true;
 
@@ -3348,7 +3429,7 @@ ctx.restore();
       if (hitFlash > 0) { ctx.fillStyle = `rgba(200,30,30,${0.28 * hitFlash / 18})`; ctx.fillRect(0, 0, W, H); }
 
       /* spawn obs */
-      obsTick+=dt; if(obsTick>=obsInterval){obsTick=0;obsInterval=Math.max(55,110-level*8);spawnObs();}
+      atualizarSpawn(dt);
 
 
       raf=requestAnimationFrame(loop);
@@ -3362,11 +3443,11 @@ ctx.restore();
         `Distância percorrida: <strong>${~~(dist/6)} m</strong><br>${won?'A onça escapou para a reserva!':'Tente de novo!'}`,
         'Correr de novo', true);
     }
-    function start(){partidaRanking=iniciarRanking('onca');holdingJump=false;score=0;lives=3;level=1;dist=0;speed=3.2;tick=0;obsTick=0;obsInterval=110;
+    function start(){partidaRanking=iniciarRanking('onca');holdingJump=false;score=0;lives=2;level=1;dist=0;speed=VEL_INICIAL;tick=0;tempoCorrido=0;proxSpawn=null;grupoId=0;historicoObs=[];
       obstacles=[];onca={x:90,y:GROUND,vy:0,onGround:true,w:48,h:32};
       fx=[];fxFolhaT=0;poeiraT=0;oncaEraNoChao=true;oncaPiscar=0;hitFlash=0;
       gaivotas.length=0;gaivotaT=GAIVOTA_DIST_MIN*0.7+Math.random()*GAIVOTA_DIST_MIN;noite=0;dnInicio=null;
-      running=true;hideScreen();updateHUD(0,'1,0x',3);delta.reset();raf=requestAnimationFrame(loop);}
+      running=true;hideScreen();updateHUD(0,'1,0x',2);delta.reset();raf=requestAnimationFrame(loop);}
     startBtn.onclick=start;
     activeGame={cleanup:()=>{running=false;document.removeEventListener('keydown',keyH);document.removeEventListener('keyup',keyU);canvas.onpointerdown=null;canvas.onpointerup=null;canvas.onpointercancel=null;canvas.style.touchAction='';}};
   }
