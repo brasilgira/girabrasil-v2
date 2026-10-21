@@ -258,18 +258,6 @@ body.bz { background: var(--paper); color: var(--ink); }
 .bz-abas button:hover { color: var(--ink); }
 .bz-abas button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
 
-.bz-ppf { margin-top: clamp(64px, 9vw, 112px); }
-.bz-ppf-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; }
-.bz-ppf-painel {
-  margin-top: 28px; padding: clamp(28px, 5vw, 64px);
-  background: var(--deep); color: var(--deep-ink); border-radius: 22px;
-}
-.bz-ppf-painel p {
-  max-width: 34em;
-  font-family: var(--fonte-titulo); font-weight: 400;
-  font-size: clamp(1.3rem, 2.4vw, 1.95rem); line-height: 1.4; letter-spacing: -0.01em;
-}
-.bz-ppf-painel.troca p { animation: bz-troca 0.35s ease both; }
 @keyframes bz-troca { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 /* Espécies */
@@ -298,27 +286,6 @@ body.bz { background: var(--paper); color: var(--ink); }
 
 .bz-status { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 16px; font-size: 0.875rem; font-weight: 600; }
 .bz-status i { width: 10px; height: 10px; border-radius: 50%; background: var(--c, #7A7F7A); flex-shrink: 0; }
-
-/* Cadeia alimentar */
-.bz-rede { margin-top: 44px; border-top: 1px solid var(--ink); }
-.bz-camada {
-  display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 24px; align-items: center;
-  padding: 24px 0; border-bottom: 1px solid var(--line);
-  transition: opacity 0.25s;
-}
-.bz-camada h3 { font-size: 1.3rem; }
-.bz-camada-itens { display: flex; flex-wrap: wrap; gap: 10px; }
-.bz-rede-item {
-  padding: 10px 18px; border: 1.5px solid var(--ink); border-radius: 999px;
-  background: var(--paper); color: var(--ink); font: inherit; font-size: 0.95rem; font-weight: 500; cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-.bz-rede-item:hover { background: var(--ink); color: var(--paper); }
-.bz-rede-item[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-.bz-rede-item.conectado { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); }
-.bz-rede.selecionado .bz-camada:not(.em-foco) { opacity: 0.32; }
-.bz-rede-texto { min-height: 3.2em; margin-top: 26px; max-width: 60ch; font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); }
-.bz-rede-texto strong { color: var(--ink); }
 
 /* Ameaças */
 .bz-pressao { margin-top: 18px; max-width: 56ch; font-size: 1.125rem; line-height: 1.5; color: var(--deep-soft); }
@@ -364,16 +331,6 @@ body.bz { background: var(--paper); color: var(--ink); }
 .bz-fato-botoes svg { width: 20px; height: 20px; }
 .bz-fato :focus-visible { outline-color: var(--acc-ink); }
 
-/* Outros biomas */
-.bz-bio-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-top: 40px; }
-.bz-bio { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; background: var(--soft); }
-.bz-bio img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.bz-bio::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(8, 14, 10, 0.78), rgba(8, 14, 10, 0) 58%); }
-.bz-bio-nome { position: absolute; left: 16px; right: 12px; bottom: 14px; z-index: 1; color: #fff; font-family: var(--fonte-titulo); font-size: 1.2rem; line-height: 1.1; font-weight: 500; }
-.bz-bio[aria-current="page"] { outline: 3px solid var(--acc); outline-offset: 3px; }
-.bz-bio-aqui { position: absolute; top: 12px; left: 12px; z-index: 1; padding: 5px 10px; border-radius: 999px; background: var(--acc); color: var(--acc-ink); font-size: 0.78rem; font-weight: 600; }
-a.bz-bio:hover .bz-bio-nome { text-decoration: underline; text-underline-offset: 4px; }
-
 /* --------------------------------------------------------------------------
    Janela de detalhe da espécie (<dialog>)
    -------------------------------------------------------------------------- */
@@ -417,7 +374,6 @@ html.bz-travado { overflow: hidden; }
   .bz-pan-grid, .bz-tempo-grid, .bz-pessoas-grid { grid-template-columns: minmax(0, 1fr); }
   .bz-tempo-cab { position: static; }
   .bz-esp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .bz-bio-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .bz-modal-grid { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
   .bz-modal-img { min-height: 0; aspect-ratio: 16 / 10; }
   .bz-modal-corpo { overflow: visible; padding: 28px 24px 32px; }
@@ -427,9 +383,7 @@ html.bz-travado { overflow: hidden; }
   .bz-wrap { padding: 0 20px; }
   .bz-hero-texto { padding: 24px 20px 40px; }
   .bz-esp-grid, .bz-ameacas { grid-template-columns: minmax(0, 1fr); }
-  .bz-bio-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bz-dl > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .bz-camada { grid-template-columns: minmax(0, 1fr); gap: 14px; }
   .bz-ficha li { padding: 26px 16px 28px 20px; }
   .bz-ficha .valor { font-size: 1.4rem; }
   .bz-fato { min-height: 320px; border-radius: 20px; }
