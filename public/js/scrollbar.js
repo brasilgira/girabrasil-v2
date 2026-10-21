@@ -168,6 +168,7 @@
     }
     atualizar();
     mostrar();
+    return track;
   }
 
   function iniciar() {
@@ -177,6 +178,23 @@
       criarBarra(chat);
     } else {
       criarBarra(null);
+    }
+
+    /* Listas que rolam por dentro da página (ex.: ranking). Cada uma ganha a barra verde do site.
+       Algumas são recriadas pelo JS (trocar de aba), então observamos o DOM e ligamos/removemos as barras. */
+    var INTERNOS = '.rk-lista, .rk-premios, .rk-meu';
+    var barrasInternas = new Map();
+    function sincronizarInternos() {
+      document.querySelectorAll(INTERNOS).forEach(function (el) {
+        if (!barrasInternas.has(el)) barrasInternas.set(el, criarBarra(el));
+      });
+      barrasInternas.forEach(function (track, el) {
+        if (!document.body.contains(el)) { track.remove(); barrasInternas.delete(el); }
+      });
+    }
+    sincronizarInternos();
+    if ('MutationObserver' in window) {
+      new MutationObserver(sincronizarInternos).observe(document.body, { childList: true, subtree: true });
     }
   }
 
