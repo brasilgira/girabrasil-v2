@@ -503,3 +503,68 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
 }
+
+/* ==========================================================================
+   BOLA FLUTUANTE (jogos ↔ ranking) — fixa no topo, sempre visível.
+   Em jogos.html mostra o troféu (leva ao ranking); em ranking.html mostra o
+   controle (leva aos jogos). O texto só aparece quando o mouse está em cima.
+   ========================================================================== */
+.ranking-bola {
+  position: fixed;
+  top: 104px;               /* logo abaixo do cabeçalho */
+  right: 28px;
+  z-index: 90;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff7d6;
+  background: radial-gradient(circle at 30% 25%, #f7b733 0%, #e8890c 55%, #b85f06 100%);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: rankingBolaPulso 3.2s ease-in-out infinite;
+}
+.ranking-bola svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); transition: transform 0.25s ease; }
+.ranking-bola:hover,
+.ranking-bola:focus-visible {
+  transform: translateY(-3px) scale(1.07);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+  outline: none;
+}
+.ranking-bola:hover svg,
+.ranking-bola:focus-visible svg { transform: rotate(-8deg) scale(1.08); }
+.ranking-bola:active { transform: scale(0.96); }
+.ranking-bola-rotulo {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(20, 30, 24, 0.92);
+  color: #fff;
+  font: 600 13px/1 'Inter', system-ui, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-50%) translateX(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.ranking-bola:hover .ranking-bola-rotulo,
+.ranking-bola:focus-visible .ranking-bola-rotulo {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+@keyframes rankingBolaPulso {
+  0%, 100% { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(247, 183, 51, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+  50%      { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 14px rgba(247, 183, 51, 0), inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+}
+@media (max-width: 860px) {
+  /* telas pequenas: a bola vai pro canto de baixo, pra não cobrir o título nem o cabeçalho */
+  .ranking-bola { top: auto; bottom: 16px; right: 14px; width: 54px; height: 54px; }
+  .ranking-bola-rotulo { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ranking-bola { animation: none; } }

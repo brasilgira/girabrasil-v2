@@ -896,56 +896,120 @@ body.pagina-jogos .header-site {
 }
 
 /* ==========================================================================
-   BOLA DO RANKING (troféu) — fixa no topo da página de jogos, sempre visível.
-   Substitui o link "Ranking" do cabeçalho.
+   AVISO "GIRE O CELULAR" (js/jogos-modal.js) — celular em pé não joga
    ========================================================================== */
-.ranking-bola {
-  position: fixed;
-  top: 104px;               /* logo abaixo do cabeçalho */
-  right: 28px;
-  z-index: 90;
-  width: 64px;
-  height: 64px;
-  display: flex;
+.game-gire {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  color: #fff7d6;
-  background: radial-gradient(circle at 30% 25%, #f7b733 0%, #e8890c 55%, #b85f06 100%);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.18);
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: rankingBolaPulso 3.2s ease-in-out infinite;
+  padding: 24px;
+  text-align: center;
+  color: #F5EDD8;
+  background: #0a0e0b;
 }
-.ranking-bola svg { filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); transition: transform 0.25s ease; }
-.ranking-bola:hover,
-.ranking-bola:focus-visible {
-  transform: translateY(-3px) scale(1.07);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -3px 0 rgba(0, 0, 0, 0.18);
-  outline: none;
+.game-gire-box { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 340px; }
+.game-gire-icone { color: #F5C542; animation: gireCelular 2.4s ease-in-out infinite; }
+@keyframes gireCelular { 0%, 20% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+.game-gire h3 { font-family: var(--fonte-corpo); text-transform: uppercase; letter-spacing: 0.01em; font-weight: 700; font-size: 1.25rem; }
+.game-gire p { font-family: var(--fonte-corpo); font-size: 0.9rem; line-height: 1.5; color: rgba(245, 237, 216, 0.85); }
+.game-gire .game-confirm-btns { flex-direction: column; align-items: stretch; width: 100%; gap: 10px; margin-top: 6px; }
+.game-gire .btn-start-game { padding: 12px 24px; font-size: 0.85rem; font-family: var(--fonte-corpo); text-transform: uppercase; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .game-gire-icone { animation: none; transform: rotate(-90deg); } }
+
+/* ==========================================================================
+   RESPONSIVO — CELULAR DEITADO (pouca altura): a moldura do jogo ocupa a tela
+   toda e o cabeçalho/pontos/dica ficam compactos, pra sobrar espaço pro jogo.
+   ========================================================================== */
+@media (orientation: landscape) and (max-height: 480px) {
+  .game-overlay { padding: 0; }
+  .game-panel {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: auto;
+    border: 0;
+    border-radius: 0;
+  }
+  .game-panel .game-header { height: 32px; padding: 0 10px; }
+  .game-title { font-size: 12px; }
+  .game-close { width: 24px; height: 24px; min-width: 24px; min-height: 24px; font-size: 11px; }
+  .game-hud { margin: 0 8px 4px; padding: 3px 14px; font-size: 10px; }
+  .game-tip { padding: 3px 8px; font-size: 8px; letter-spacing: 0.03em; }
+  .especies-opcoes { padding: 6px 10px; gap: 8px; }
+  .especie-btn { padding: 6px 8px; font-size: 10px; }
+  .game-screen { padding: 8px 16px; gap: 6px; }
+  .game-screen h2 { font-size: 15px; }
+  .game-screen p { font-size: 10px; line-height: 1.35; max-width: 85%; }
+  .btn-start-game { padding: 7px 20px; font-size: 11px; }
+  .game-confirm-box h3 { font-size: 16px; }
+  .game-confirm-box p { font-size: 11px; }
 }
-.ranking-bola:hover svg,
-.ranking-bola:focus-visible svg { transform: rotate(-8deg) scale(1.08); }
-.ranking-bola:active { transform: scale(0.96); }
-.ranking-bola-rotulo {
-  position: absolute;
-  right: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 7px 14px;
-  border-radius: 999px;
-  background: rgba(20, 30, 24, 0.92);
-  color: #fff;
-  font: 600 13px/1 'Inter', system-ui, sans-serif;
-  white-space: nowrap;
-  pointer-events: none;
+
+/* ==========================================================================
+   RESPONSIVO — PÁGINA DE JOGOS com pouca altura (celular/tablet deitado):
+   cards lado a lado, cabeçalho enxuto e rolagem vertical se precisar.
+   ========================================================================== */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.pagina-jogos { height: auto; min-height: 100dvh; overflow-y: auto; }
+  .secao-jogos { flex: 1 0 auto; padding: 8px 14px 14px; max-width: none; }
+  .titulo-escolha-jogo { font-size: 0.8rem; margin: 0 0 8px; }
+  .seletor-jogos { flex-direction: row; align-items: stretch; justify-content: stretch; padding: 0; gap: 10px; min-height: 240px; }
+  .jogo-card {
+    flex: 1 1 0;
+    height: auto;
+    max-height: none;
+    aspect-ratio: auto;
+    min-height: 240px;
+    transform: none;
+    transition: flex-grow 0.45s ease, border-color 0.3s ease, box-shadow 0.45s ease;
+  }
+  .jogo-card.ativo { flex: 2.4 1 0; transform: none; }
+  .jogo-titulo-recolhido { font-size: 0.7rem; bottom: 12px; padding: 0 6px; white-space: normal; }
+  .jogo-conteudo { padding: 12px 14px; }
+  .jogo-card h3 { font-size: 0.95rem; margin-bottom: 8px; white-space: normal; }
+  .jogo-eyebrow { font-size: 0.6rem; margin-bottom: 6px; }
+  .botao-jogar { padding: 8px 16px; font-size: 0.72rem; }
+  .ranking-bola { bottom: 10px; right: 10px; width: 44px; height: 44px; }
+  .ranking-bola svg { width: 22px; height: 22px; }
+  body.pagina-jogos .header-inner { flex-wrap: nowrap; padding: 6px 14px; }
+  body.pagina-jogos .nav-site { display: flex; order: 0; flex: 1 1 auto; width: auto; justify-content: center; gap: 2px; }
+  body.pagina-jogos .nav-site .indicador-verde { display: none; }
+  body.pagina-jogos .nav-site a { white-space: nowrap; padding: 6px 10px; font-size: 0.8rem; }
+  body.pagina-jogos .nav-site a.ativo { background-color: #16281f !important; color: #fff; }
+  body.pagina-jogos .header-acoes .botao { padding: 7px 14px; font-size: 0.8rem; }
+  body.pagina-jogos .link-entrar { font-size: 0.8rem; }
+  body.pagina-jogos .logo-site { font-size: 1.1rem; }
 }
-@keyframes rankingBolaPulso {
-  0%, 100% { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(247, 183, 51, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
-  50%      { box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 14px rgba(247, 183, 51, 0), inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.18); }
+
+/* Telas muito estreitas (celular em pé): textos dos cards e botão flutuante menores */
+@media (max-width: 400px) {
+  .secao-jogos { padding: 14px 12px 16px; }
+  .jogo-card h3 { font-size: 1.15rem; white-space: normal; }
+  .jogo-conteudo { padding: 18px 16px; }
 }
-@media (max-width: 640px) {
-  .ranking-bola { top: 84px; right: 14px; width: 54px; height: 54px; }
-  .ranking-bola-rotulo { display: none; }
+
+/* Menu do cabeçalho nesta página em telas pequenas (no resto do site ele some até haver menu mobile):
+   vira uma segunda linha rolável, sem a pílula animada. */
+@media (max-width: 860px) and (orientation: portrait), (max-width: 860px) and (min-height: 521px) {
+  body.pagina-jogos .header-inner { flex-wrap: wrap; padding: 8px 14px; row-gap: 6px; }
+  body.pagina-jogos .nav-site {
+    display: flex;
+    order: 3;
+    flex: 1 0 100%;
+    gap: 4px;
+    overflow-x: auto;
+    justify-content: center;
+    scrollbar-width: none;
+  }
+  body.pagina-jogos .nav-site::-webkit-scrollbar { display: none; }
+  body.pagina-jogos .nav-site .indicador-verde { display: none; }
+  body.pagina-jogos .nav-site a { white-space: nowrap; padding: 6px 11px; font-size: 0.82rem; }
+  body.pagina-jogos .nav-site a.ativo { background-color: #16281f !important; color: #fff; }
 }
-@media (prefers-reduced-motion: reduce) { .ranking-bola { animation: none; } }
+@media (max-width: 860px) {
+  .titulo-escolha-jogo { font-size: 1.05rem; margin-bottom: 10px; }
+}
