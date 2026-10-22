@@ -63,29 +63,30 @@ async function iniciarPartida(req, res) {
       return res.status(429).json({ erro: 'Muitas partidas em pouco tempo. Aguarde um instante.' });
     }
 
+        const limiteDiario = jogo === 'sapo' ? 1000000 : PARTIDAS_VALENDO_POR_DIA;
     let partida;
     try {
-      partida = await rankingModel.criarPartida(usuarioId, jogo, PARTIDAS_VALENDO_POR_DIA);
+      partida = await rankingModel.criarPartida(usuarioId, jogo, limiteDiario);
     } catch (erro) {
       // 23503 = violação de foreign key: a conta existe no Supabase Auth mas a
       // linha de `perfil` ainda não foi criada. Cria e tenta de novo, uma vez.
       if (erro.code !== '23503') throw erro;
       await perfilModel.garantirPerfil(usuarioId, nomeParaPerfil(req.usuarioLogado));
-      partida = await rankingModel.criarPartida(usuarioId, jogo, PARTIDAS_VALENDO_POR_DIA);
+      partida = await rankingModel.criarPartida(usuarioId, jogo, limiteDiario);
     }
 
     // Quantas partidas valendo ainda restam hoje (0 se esta já é só treino).
     let restantes = 0;
     if (partida.valendo) {
       const usadas = await rankingModel.contarPartidasValendoHoje(usuarioId, jogo);
-      restantes = Math.max(0, PARTIDAS_VALENDO_POR_DIA - usadas);
+      restantes = Math.max(0, limiteDiario - usadas);
     }
 
     return res.status(201).json({
       partidaId: partida.id,
       valendo: partida.valendo,
       restantes,
-      limite: PARTIDAS_VALENDO_POR_DIA,
+      limite: limiteDiario,
     });
   } catch (erro) {
     console.error('Erro ao iniciar partida do ranking:', erro);
@@ -118,9 +119,6 @@ async function enviarPontuacao(req, res) {
     const ehMico = partida.jogo === 'mico';
     if (!ehMico && partida.finalizada_em) {
       return res.status(409).json({ erro: 'Esta partida já foi finalizada.' });
-    }
-    if (ehMico && partida.envios >= MICO_MAX_ENVIOS) {
-      return res.status(409).json({ erro: 'Limite de envios desta partida atingido.' });
     }
 
     // Partida acima do limite diário: serve de treino, não entra no ranking.
